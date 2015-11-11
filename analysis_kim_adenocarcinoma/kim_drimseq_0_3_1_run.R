@@ -92,30 +92,36 @@ switch(
     
     ### Filtering
     table(samples(d)$group)
-    
     d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_prop = 6, min_feature_prop = 0.01)
-    plotData(d, out_dir = out_dir)
-    save(d, file = paste0(out_dir, "d.Rdata"))
-    
+
   },
   
   model_null_normal1 = {
-    
     ### Keep only the normal samples
     counts <- counts[, metadata_org$condition == "normal"]
     metadata <- metadata_org[metadata_org$condition == "normal", ]
     all(colnames(counts) == metadata$sampleName)
     
-    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = c(rep("C1", 3), rep("C2", 3)))
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), each = 3))
     
     ### Filtering
     table(samples(d)$group)
-    
     d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
-    plotData(d, out_dir = out_dir)
+
+  },
+  
+  model_null_normal2 = {
+    ### Keep only the normal samples
+    counts <- counts[, metadata_org$condition == "normal"]
+    metadata <- metadata_org[metadata_org$condition == "normal", ]
+    all(colnames(counts) == metadata$sampleName)
     
-    save(d, file = paste0(out_dir, "d.Rdata"))
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), 3))
     
+    ### Filtering
+    table(samples(d)$group)
+    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+
   },
   
   model_null_tumor1 = {
@@ -125,18 +131,32 @@ switch(
     metadata <- metadata_org[metadata_org$condition == "tumor", ]
     all(colnames(counts) == metadata$sampleName)
     
-    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = c(rep("C1", 3), rep("C2", 3)))
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), each = 3))
     
     ### Filtering
     table(samples(d)$group)
-    
     d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
-    plotData(d, out_dir = out_dir)
+
+  },
+  
+  model_null_tumor2 = {
     
-    save(d, file = paste0(out_dir, "d.Rdata"))
+    ### Keep only the tumor samples
+    counts <- counts[, metadata_org$condition == "tumor"]
+    metadata <- metadata_org[metadata_org$condition == "tumor", ]
+    all(colnames(counts) == metadata$sampleName)
+    
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), 3))
+    
+    ### Filtering
+    table(samples(d)$group)
+    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
     
   }
 )
+
+plotData(d, out_dir = out_dir)
+save(d, file = paste0(out_dir, "d.Rdata"))
 
 
 

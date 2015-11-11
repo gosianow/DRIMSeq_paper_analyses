@@ -27,6 +27,7 @@ source("/home/gosia/R/drimseq_paper/simulations_dm/dm_simulate.R")
 # m=10 # Number of genes
 # 
 # n=6 # Number of samples
+# nm=100 # Mean gene expression
 # disp_prior_df=seq(0,5,by=1)
 # # Proportions
 # pi <- c(1/3, 1/3, 1/3) 
@@ -49,6 +50,7 @@ print(workers)
 print(r)
 print(m)
 print(n)
+print(nm)
 print(sim_name)
 print(param_pi_path)
 print(param_gamma_path)
@@ -75,7 +77,7 @@ setwd(rwd)
 out_dir <- "error_moderation/"
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
-out_dir <- paste0("error_moderation/", sim_name, "n", n, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
+out_dir <- paste0("error_moderation/", sim_name, "n", n, "_nm", nm, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
 
 ##############################################################################
@@ -90,7 +92,7 @@ error_list <- lapply(1:r, function(i){
   g0 <- rlnorm(m, meanlog = g0_meanlog, sdlog = g0_sdlog)
   gamma_est <- data.frame(true = g0)
   
-  counts <- dm_simulate(m = m, n = n, pi = pi, g0 = g0, nm = 100, tot = "uni", nd = 0.25, mc.cores = workers)
+  counts <- dm_simulate(m = m, n = n, pi = pi, g0 = g0, nm = nm, tot = "uni", nd = 0.25, mc.cores = workers)
   print(head(counts))
   
   group_split <- strsplit2(rownames(counts), ":")
@@ -125,7 +127,7 @@ error_list <- lapply(1:r, function(i){
     
     gamma_est[, paste0("est_", disp_prior_df[j])] <- genewise_dispersion(d)$genewise_dispersion
     
-    mse[[j]] <- data.frame(mse = abs(genewise_dispersion(d)$genewise_dispersion - g0), disp_prior_df = disp_prior_df[j])
+    mse[[j]] <- data.frame(mse = ((genewise_dispersion(d)$genewise_dispersion - g0)^2), disp_prior_df = disp_prior_df[j])
     
   }
   

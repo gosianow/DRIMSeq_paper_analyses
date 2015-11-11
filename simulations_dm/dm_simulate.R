@@ -22,7 +22,7 @@ dm_simulate <- function(m = 10, n = 5, pi = c(1/3, 1/3, 1/3), g0 = 100, nm = 100
   # g0 - dispersion gamma0 (can be a vector of length m)
   # nm - total number of counts per gene (can be a vector of length m)
   # tot - method to generate total number of counts per gene: nbinom, norm, uni
-  # nd - dispersion of nm if simulated from nbinom or norm (can be a vector of length m)
+  # nd - dispersion of nm if simulated from nbinom or norm (can be a vector of length m) BCV = sqrt(theta) = sqrt(nd) = sqrt(1/size)
   
   if(length(g0 == 1))
     g0 <- rep(g0, m)
