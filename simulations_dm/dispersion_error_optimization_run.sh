@@ -9,31 +9,31 @@ DMPARAMS=$RWD/dm_parameters
 
 ## Run R scripts
 
-# lognormal dispersion from kallisto & uniform proportions
+# common dispersion from kallisto & uniform proportions
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run1.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run1.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run2.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run2.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run3.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run3.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run4.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run4.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_moderation_plots_run.R $ROUT/dispersion_error_moderation_plots_run.Rout
-
-
-# lognormal dispersion from kallisto & descending proportions
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run5.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run6.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_optimization_plots_run.R $ROUT/dispersion_error_optimization_plots_run.Rout
 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run7.Rout
+# common dispersion from kallisto & descending proportions
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run8.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run5.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_moderation_plots_run.R $ROUT/dispersion_error_moderation_plots_run.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run6.Rout
+
+
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run7.Rout
+
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run8.Rout
+
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_optimization_plots_run.R $ROUT/dispersion_error_optimization_plots_run.Rout
 
 
 

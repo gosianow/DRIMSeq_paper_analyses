@@ -53,11 +53,6 @@ estimates_files
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
 whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
-gg_color_hue <- function(n){
-  hues = seq(15, 375, length=n+1)
-  hcl(h=hues, l=65, c=100)[1:n]
-}
-
 
 error_files_list <- paste0(out_dir, error_files)
 estimates_files_list <- paste0(out_dir, estimates_files)
@@ -173,8 +168,10 @@ for(i in 1:length(error_files)){
   
   estimates <- read.table(estimates_files_list[i], header = TRUE)
   
-  estimatesm <- melt(estimates)
-  estimatesm$variable <- factor(estimatesm$variable, levels = c("true", "grid", "optimize", "optim", "constrOptim"))
+  true_disp <- estimates[1, "true"]
+  
+  estimatesm <- melt(estimates[, c("grid", "optimize", "optim", "constrOptim")])
+  estimatesm$variable <- factor(estimatesm$variable, levels = c("grid", "optimize", "optim", "constrOptim"))
   levels(estimatesm$variable)
   
   
@@ -183,8 +180,8 @@ for(i in 1:length(error_files)){
     xlab("Method") +
     ylab("Log 10 of gamma_+") +
     geom_violin(trim = FALSE, show_guide = FALSE) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16)) +
-    scale_fill_manual(values = c("grey", gg_color_hue(nlevels(estimatesm$variable) -1)))
+    geom_hline(yintercept = log10(true_disp), color="black", linetype = 2, size = 0.5) +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
   
   pdf(paste0(out_dir, "_violin_log.pdf"))
   print(ggp)

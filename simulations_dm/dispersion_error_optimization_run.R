@@ -29,7 +29,7 @@ n=3 # Number of samples
 nm=100 # Mean gene expression
 nd=0 # Negative binomial dispersion of gene expression
 param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/prop_q3_uniform.txt'
-param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/disp_genewise_kim_kallisto_lognormal.txt' # Parameters for a distribution
+param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/disp_common_kim_kallisto.txt' # Parameters for a distribution
 
 
 ##############################################################################
@@ -60,20 +60,16 @@ print(param_gamma_path)
 pi <- as.numeric(read.table(param_pi_path, header = FALSE, sep = "\t", as.is = TRUE)[, 1])
 pi <- pi/sum(pi) ### Make sure sum(pi) = 1
 
-params <- as.numeric(read.table(param_gamma_path, header = FALSE, sep = "\t")[, 2])
-
-g0_meanlog <- params[1]
-g0_sdlog <- params[2]
+g0 <- as.numeric(read.table(param_gamma_path, header = FALSE, sep = "\t"))
 
 print(pi)
-print(g0_meanlog)
-print(g0_sdlog)
+print(g0)
 
 # # Proportions
 # pi <- c(1/3, 1/3, 1/3) 
-# # Genewise dispersion gamma_+
-# g0_meanlog <- 3
-# g0_sdlog <- 1
+# # Common dispersion gamma_+
+# g0 <- 28
+
 
 
 
@@ -90,15 +86,14 @@ out_dir <- paste0("error_optimization/", sim_name, "n", n, "_nm", nm, "_nd", nd,
 ### Simulations for genewise dispersion - different optimization methods 
 ##############################################################################
 
-
 error_list <- list()
 estimates_list <- list()
+
 
 for(i in 1:r){
   # i = 1
   
-  g0 <- rlnorm(m, meanlog = g0_meanlog, sdlog = g0_sdlog)
-  estimates <- data.frame(true = g0)
+  estimates <- data.frame(true = rep(g0, m))
   
   counts <- dm_simulate(m = m, n = n, pi = pi, g0 = g0, nm = nm, nd = nd, mc.cores = workers)
   print(head(counts))
