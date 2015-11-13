@@ -109,7 +109,8 @@ pdf(paste0(out_dir, "disp_genewise_kim_", count_method, "_hist_gamma.pdf"))
 ggp <- ggplot(data = genewise_disp, aes(x = genewise_dispersion)) + 
   geom_density() +
   xlim(-1, quant_up) +
-  geom_line(data = data.frame(x = seq(1, round(quant_up)), y = dgamma(seq(1, round(quant_up)), shape = g0_shape, scale = g0_scale, log = FALSE)), aes(x = x, y = y), colour = "red")
+  geom_line(data = data.frame(x = seq(1, round(quant_up)), y = dgamma(seq(1, round(quant_up)), shape = g0_shape, scale = g0_scale, log = FALSE)), aes(x = x, y = y), colour = "red") +
+  ggtitle("Gamma fit with shape = ", round(g0_shape, 2), " and scale = ", round(g0_scale, 2))
 
 print(ggp)
 dev.off()
@@ -127,7 +128,8 @@ pdf(paste0(out_dir, "disp_genewise_kim_", count_method, "_hist_lognormal.pdf"))
 ggp <- ggplot(data = genewise_disp, aes(x = genewise_dispersion)) + 
   geom_density() +
   xlim(-1, whisker_up) +
-  geom_line(data = data.frame(x = seq(1, round(whisker_up)), y = dlnorm(seq(1, round(whisker_up)), meanlog = g0_meanlog, sdlog = g0_sdlog)), aes(x = x, y = y), colour = "red")
+  geom_line(data = data.frame(x = seq(1, round(whisker_up)), y = dlnorm(seq(1, round(whisker_up)), meanlog = g0_meanlog, sdlog = g0_sdlog)), aes(x = x, y = y), colour = "red") +
+  ggtitle("Lognormal fit with meanlog = ", round(g0_meanlog, 2), " and sdlog = ", round(g0_sdlog, 2))
 
 print(ggp)
 dev.off()
@@ -147,7 +149,8 @@ g0_sd <- params[[1]][2]
 pdf(paste0(out_dir, "disp_genewise_kim_", count_method, "_hist_normal.pdf"))
 ggp <- ggplot(data = genewise_disp, aes(x = log(genewise_dispersion))) + 
   geom_density() +
-  geom_line(data = data.frame(x = seq(min(log(genewise_disp$genewise_dispersion)), max(log(genewise_disp$genewise_dispersion)), by = 0.01), y = dnorm(seq(min(log(genewise_disp$genewise_dispersion)), max(log(genewise_disp$genewise_dispersion)), by = 0.01), mean = g0_mean, sd = g0_sd)), aes(x = x, y = y), colour = "red")
+  geom_line(data = data.frame(x = seq(min(log(genewise_disp$genewise_dispersion)), max(log(genewise_disp$genewise_dispersion)), by = 0.01), y = dnorm(seq(min(log(genewise_disp$genewise_dispersion)), max(log(genewise_disp$genewise_dispersion)), by = 0.01), mean = g0_mean, sd = g0_sd)), aes(x = x, y = y), colour = "red") +
+  ggtitle("Normal fit with mean = ", round(g0_mean, 2), " and sd = ", round(g0_sd, 2))
 
 print(ggp)
 dev.off()

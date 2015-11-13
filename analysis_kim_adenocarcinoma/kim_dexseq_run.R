@@ -130,7 +130,7 @@ write.table(dxrf[, -ncol(dxrf)], paste0(out_dir, "/dexseq_exon_results.txt"), se
 ### gene level test
 perGeneRes <- perGeneQValue(dxr)
 
-write.table(data.frame(geneID=names(perGeneRes), pvalue=perGeneRes), paste0(out_dir, "/dexseq_gene_results.txt"), sep="\t", row.names=FALSE, quote=F) 
+write.table(data.frame(geneID = names(perGeneRes), pvalue = perGeneRes), paste0(out_dir, "/dexseq_gene_results.txt"), sep="\t", row.names=FALSE, quote=F)
 
 
 
