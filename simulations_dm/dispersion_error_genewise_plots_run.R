@@ -51,15 +51,15 @@ error_files
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
 whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
-out_dir_list <- paste0(out_dir, error_files)
+error_files_list <- paste0(out_dir, error_files)
 
 
 for(i in 1:length(error_files)){
   # i = 1
   
-  out_dir <- file_path_sans_ext(out_dir_list[i])
+  out_dir <- file_path_sans_ext(error_files_list[i])
   
-  error <- read.table(out_dir_list[i], header = TRUE)
+  error <- read.table(error_files_list[i], header = TRUE)
   
   error$dispersion <- factor(error$dispersion, levels = c("common", "genewise", "moderated"))
   error$method <- factor(error$method, levels = c("ML-dirmult", "PL", "CR"))
@@ -107,8 +107,9 @@ for(i in 1:length(error_files)){
   ggp <- ggplot(data = error, aes(y = log10(Error), x = Dispersion, fill = Method)) + 
     theme_bw() +
     ylab("Log10 of absolute error") +
-    geom_violin(trim = FALSE) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
+    geom_violin(trim = FALSE, position = position_dodge(width = 0.9)) +
+    geom_boxplot(outlier.size = 1, alpha = 0, position = position_dodge(width = 0.9), width = 0.2) +
+    theme(axis.text = element_text(size = 14), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 14))
   
   pdf(paste0(out_dir, "_violin_absolute_log.pdf"))
   print(ggp)

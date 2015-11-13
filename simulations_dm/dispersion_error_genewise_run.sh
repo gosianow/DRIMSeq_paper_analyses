@@ -23,8 +23,17 @@ R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error
 
 
 
+# lognormal dispersion from kallisto & descending proportions
 
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run5.Rout
 
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run6.Rout
+
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run7.Rout
+
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run8.Rout
+
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_genewise_plots_run.R $ROUT/dispersion_error_genewise_plots_run.Rout
 
 
 
