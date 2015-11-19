@@ -86,14 +86,13 @@ out_dir <- paste0("error_optimization/", sim_name, "n", n, "_nm", nm, "_nd", nd,
 ### Simulations for genewise dispersion - different optimization methods 
 ##############################################################################
 
-error_list <- list()
-estimates_list <- list()
 
 
-for(i in 1:r){
+est_list <- lapply(1:r, function(i){
   # i = 1
+  print(i)
   
-  estimates <- data.frame(true = rep(g0, m))
+  est <- list()
   
   counts <- dm_simulate(m = m, n = n, pi = pi, g0 = g0, nm = nm, nd = nd, mc.cores = workers)
   print(head(counts))
@@ -101,79 +100,51 @@ for(i in 1:r){
   group_split <- strsplit2(rownames(counts), ":")
   
   d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = paste0("s", 1:ncol(counts)), group = rep("c1", ncol(counts)))
-  
-  disp_interval <- c(0, max(g0)*100)
-  
-  mse <- list()
+
   
   ### With CR adjustement
   
   ## grid
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
   
-  mse[[1]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, method = "grid")
-  estimates$grid <- genewise_dispersion(d)$genewise_dispersion
+  est[[1]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "grid")
     
     
   ## optimize
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "optimize", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "optimize", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
   
-  mse[[2]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, method = "optimize")
-  estimates$optimize <- genewise_dispersion(d)$genewise_dispersion
-  
+  est[[2]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "optimize")
+
   ## optim
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "optim", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "optim", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
   
-  mse[[3]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, method = "optim")
-  estimates$optim <- genewise_dispersion(d)$genewise_dispersion
-  
+  est[[3]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "optim")
+ 
   
   ## constrOptim
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "constrOptim", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "constrOptim", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
   
-  mse[[4]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, method = "constrOptim")
-  estimates$constrOptim <- genewise_dispersion(d)$genewise_dispersion
+  est[[4]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "constrOptim")
+
+  est <- do.call(rbind, est)
+  rownames(est) <- NULL
   
+  rm("d")
+  gc()
   
-  error_list[[i]] <- do.call(rbind, mse)
-  estimates_list[[i]] <- estimates
+  return(est)
   
-}
+})
 
 
-error <- do.call(rbind, error_list)
-write.table(error, paste0(out_dir, "error_optimization.txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
+est <- do.call(rbind, est_list)
 
-estimates <- do.call(rbind, estimates_list)
-write.table(estimates, paste0(out_dir, "estimates_optimization.txt"), quote = FALSE, sep = "\t", row.names = FALSE)
-
-
-##############################################################################
-### Plots for genewise dispersion - different optimization methods 
-##############################################################################
-
+write.table(est, paste0(out_dir, "est_optimization.txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 
 sessionInfo()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

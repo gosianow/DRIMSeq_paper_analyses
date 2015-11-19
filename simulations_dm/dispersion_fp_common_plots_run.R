@@ -1,9 +1,9 @@
 ######################################################
-## ----- dispersion_error_optimization_plots_run
-## <<dispersion_error_optimization_plots_run.R>>
+## ----- dispersion_fp_common_plots_run
+## <<dispersion_fp_common_plots_run.R>>
 
 # BioC 3.1
-# Created 12 Nov 2015 
+# Created 16 Nov 2015 
 
 ##############################################################################
 
@@ -37,46 +37,51 @@ print(rwd)
 
 setwd(rwd)
 
-out_dir <- "error_optimization/"
+out_dir <- "fp_common/"
 
-files <- list.files(out_dir, pattern = ".txt")
-files
+fp_files <- list.files(out_dir, pattern = ".txt")
+fp_files
+
+
 
 ##############################################################################
-### Plots for genewise dispersion - different optimization methods 
+### Plots  
 ##############################################################################
 
-whisker_upper <- function(x) boxplot.stats(x)$stats[5]
-whisker_lower <- function(x) boxplot.stats(x)$stats[1]
+
+fp_files_list <- paste0(out_dir, fp_files)
 
 
-files_list <- paste0(out_dir, files)
-
-
-for(i in 1:length(files)){
+for(i in 1:length(fp_files)){
   # i = 1
   
-  ### Plot estimates
-
-  out_dir <- file_path_sans_ext(files_list[i])
+  out_dir <- file_path_sans_ext(fp_files_list[i])
   
-  est <- read.table(files_list[i], header = TRUE, sep = "\t")
+  fp <- read.table(fp_files_list[i], header = TRUE)
   
-  true_disp <- est$true[1]
+  fp$dispersion <- factor(fp$dispersion, levels = c("genewise", "moderated", "common"))
   
-  ggp <- ggplot(data = est, aes(y = log10(est), x = method, fill = method)) + 
+  colnames(fp) <- c("fp", "Dispersion", "Method")
+  
+  ### fp
+  
+  ggp <- ggplot(data = fp, aes(y = fp, x = Dispersion)) + 
     theme_bw() +
-    ylab("Log 10 of gamma_+") +
-    geom_violin(trim = FALSE, show_guide = FALSE) +
-    geom_hline(yintercept = log10(true_disp), color="black", linetype = 2, size = 0.5) +
+    ylab("FP rate") +
+    geom_boxplot(outlier.size = 1, fill = "grey80") +
+    geom_hline(yintercept = 0.05, color="black", linetype = 2, size = 0.5) +
     theme(axis.text = element_text(size = 16), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
   
-  pdf(paste0(out_dir, "_violin_log.pdf"), 5, 5)
+  pdf(paste0(out_dir, "_boxplot.pdf"), 5, 5)
   print(ggp)
   dev.off()
   
   
 }
+
+
+
+
 
 
 

@@ -12,13 +12,17 @@ library("BiocParallel")
 library("DEXSeq")
 
 ##############################################################################
-# Read in the arguments
+# Test arguments
 ##############################################################################
 
 # rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
 # workers=4
 # count_method=c('htseq','kallisto')[1]
 # model=c('model_full','model_null_normal1','model_null_tumor1')[2]
+
+##############################################################################
+# Read in the arguments
+##############################################################################
 
 
 ## Read input arguments
@@ -51,13 +55,7 @@ dir.create(out_dir, recursive = TRUE)
 ###############################################################################
 
 
-metadata <- read.table("3_metadata/Malgorzata Nowicka2014-11-04GSE37764.csv", stringsAsFactors=F, sep=",", header=T) 
-metadata <- metadata[metadata$X == "RNA-seq",]
-
-metadata$sampleName <- metadata$ids
-metadata$condition <- metadata$Tissue.Type
-
-metadata <- metadata[order(metadata$condition), ]
+metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors = FALSE, sep="\t", header=TRUE) 
 
 metadata_org <- metadata
 

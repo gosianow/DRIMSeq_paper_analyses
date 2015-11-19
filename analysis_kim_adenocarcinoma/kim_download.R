@@ -6,16 +6,21 @@
 
 #######################################################
 
-
-
 setwd("/home/Shared/data/seq/kim_adenocarcinoma/")
 
 
-metadata <- read.table("metadata/Malgorzata Nowicka2014-11-04GSE37764.csv", stringsAsFactors=F, sep=",", header=T) 
+##############################################################################
+# prepare metadata file
+##############################################################################
 
-metadataOrg <- metadata <- metadata[metadata$X == "RNA-seq",]
 
+metadata <- read.table("3_metadata/Malgorzata Nowicka2014-11-04GSE37764.csv", stringsAsFactors=F, sep=",", header=T) 
+metadata <- metadata[metadata$X == "RNA-seq",]
 
+metadata$sampleName <- metadata$ids
+metadata$condition <- metadata$Tissue.Type
+
+write.table(metadata, "3_metadata/metadata.xls", sep="\t", row.names=F, quote=F)
 
 
 ##############################################################################

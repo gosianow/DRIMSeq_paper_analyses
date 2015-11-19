@@ -11,24 +11,13 @@ setwd("/home/Shared/data/seq/Kim_adenocarcinoma/")
 ##########################################################################
 
 
-metadata <- read.table("3_metadata/Malgorzata Nowicka2014-11-04GSE37764.csv", stringsAsFactors=F, sep=",", header=T) 
-metadata <- metadata[metadata$X == "RNA-seq",]
-
-metadata$sampleName <- metadata$ids
-metadata$condition <- metadata$Tissue.Type
-
-metadata <- metadata[order(metadata$condition), ]
-
-metadata
+metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors = FALSE, sep="\t", header=TRUE) 
 
 
-
-sri <- read.table("3_metadata/SraRunInfo.csv", stringsAsFactors = F, sep = ",",
-                  header = T)
+sri <- read.table("3_metadata/SraRunInfo.csv", stringsAsFactors = F, sep = ",", header = T)
 
 keep <- grep(" RNA-seq", sri$LibraryName)
 sri <- sri[keep, ]
-
 
 
 
@@ -41,6 +30,7 @@ sri <- sri[keep, ]
 
 cDNA.fasta <- "/home/Shared/data/annotation/Human/Ensembl_GRCh37.71/cDNA/Homo_sapiens.GRCh37.71.cdna.all.fa"
 index <- "/home/Shared/data/annotation/Human/Ensembl_GRCh37.71/kallisto/Homo_sapiens.GRCh37.71.cdna.all.idx"
+
 dir.create(dirname(index), recursive = TRUE, showWarnings = FALSE)
 
 
@@ -57,7 +47,7 @@ system(cmd)
 # kallisto quant -i transcripts.idx -o output -b 100 -t 10 reads_1.fastq.gz reads_2.fastq.gz
 # kallisto quant -i index -o output pairA_1.fastq pairA_2.fastq pairB_1.fastq pairB_2.fastq
 
-working_dir <- "/home/Shared/data/seq/Kim_adenocarcinoma/"
+working_dir <- "/home/Shared/data/seq/kim_adenocarcinoma/"
 
 
 fastq.path <- paste0(working_dir, "1_reads/fastq/")
@@ -66,7 +56,7 @@ samples <- unique(sri$SampleName)
 
 
 for(i in 1:length(samples)){
-	# i = 1
+  # i = 1
   
   out.path <- paste0(working_dir, "2_counts/kallisto/", samples[i], "/")
   dir.create(out.path, recursive = TRUE, showWarnings = FALSE)
@@ -81,10 +71,10 @@ for(i in 1:length(samples)){
   
   fastq <- do.call(paste, fastqList)
   
-	cmd <- paste("kallisto quant -i", index, "-o", out.path, "-b 0 -t 10", fastq)	
-	
-	system(cmd)
-	
+  cmd <- paste("kallisto quant -i", index, "-o", out.path, "-b 0 -t 10", fastq) 
+  
+  system(cmd)
+  
 }
 
 
@@ -92,8 +82,9 @@ for(i in 1:length(samples)){
 
 
 #########################################################################################
-# Adjust the abundance.txt file to DM needs 
+# Save abundance in files that can be an input for DEXSeq (estimated counts)
 #########################################################################################
+
 
 library(rtracklayer)
 
@@ -116,10 +107,10 @@ countsList <- lapply(1:length(samples), function(i){
   
   out.path <- paste0(working_dir, "2_counts/kallisto/", samples[i], "/")
   
-	abundance <- read.table(paste0(out.path, "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+  abundance <- read.table(paste0(out.path, "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
   
   counts <- data.frame(paste0(geneTrans[abundance$target_id, "gene_id"], ":", abundance$target_id), counts = round(abundance$est_counts), stringsAsFactors = FALSE)
-	
+  
   colnames(counts) <- c("group_id", samples[i])
   
   write.table(counts, paste0(out.path.tmp, samples[i], ".counts"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)

@@ -1,9 +1,9 @@
 ######################################################
-## ----- kim_drimseq_0_3_1_run
-## <<kim_drimseq_0_3_1_run.R>>
+## ----- brooks_drimseq_0_3_1_run
+## <<brooks_drimseq_0_3_1_run.R>>
 
 # BioC 3.1
-# Created 5 Nov 2015 
+# Created 16 Nov 2015 
 
 ##############################################################################
 
@@ -14,21 +14,20 @@ library(limma)
 # Test arguments
 ##############################################################################
 
-# rwd="/home/Shared/data/seq/kim_adenocarcinoma/"
-# workers=2
-# count_method=c("htseq", "kallisto")[1]
-# model=c("model_full", "model_null_normal1", "model_null_tumor1")[2]
-# dispersion_common=TRUE
-# results_common=TRUE
-# disp_mode_list=c("grid","grid","optimize","optim","constrOptim")
-# disp_moderation_list=c("none","common","none","none","none")
+rwd='/home/Shared/data/seq/brooks_pasilla/'
+workers=4
+count_method=c('htseq','kallisto')[2]
+model=c('model_full','model_full_paired','model_null1','model_null2','model_null3')[1]
+dispersion_common=TRUE
+results_common=TRUE
+disp_mode_list=c('grid','grid','optimize','optim','constrOptim')
+disp_moderation_list=c('none','common','none','none','none')
+
 
 ##############################################################################
 # Read in the arguments
 ##############################################################################
 
-
-## Read input arguments
 args <- (commandArgs(trailingOnly = TRUE))
 for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
@@ -64,7 +63,7 @@ metadata_org <- metadata
 ##########################################################################
 
 out_dir <- paste0(method_out, "/",  model, "/", count_method, "/")
-dir.create(out_dir, recursive = TRUE)
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 
 
@@ -89,65 +88,63 @@ switch(
     
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_prop = 6, min_feature_prop = 0.01)
-
-  },
-  
-  model_null_normal1 = {
-    ### Keep only the normal samples
-    counts <- counts[, metadata_org$condition == "normal"]
-    metadata <- metadata_org[metadata_org$condition == "normal", ]
-    all(colnames(counts) == metadata$sampleName)
-    
-    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), each = 3))
-    
-    ### Filtering
-    table(samples(d)$group)
     d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
 
   },
   
-  model_null_normal2 = {
-    ### Keep only the normal samples
-    counts <- counts[, metadata_org$condition == "normal"]
-    metadata <- metadata_org[metadata_org$condition == "normal", ]
+  model_full_paired = {
+    
+    counts <- counts[, metadata_org$LibraryLayout == "PAIRED"]
+    metadata <- metadata_org[metadata_org$LibraryLayout == "PAIRED", ]
     all(colnames(counts) == metadata$sampleName)
     
-    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), 3))
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = metadata$condition)
     
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+    d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
 
   },
   
-  model_null_tumor1 = {
-    
-    ### Keep only the tumor samples
-    counts <- counts[, metadata_org$condition == "tumor"]
-    metadata <- metadata_org[metadata_org$condition == "tumor", ]
+  model_null1 = {
+
+    counts <- counts[, metadata_org$condition == "CTL"]
+    metadata <- metadata_org[metadata_org$condition == "CTL", ]
     all(colnames(counts) == metadata$sampleName)
     
-    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), each = 3))
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), 2))
     
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+    d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
 
   },
   
-  model_null_tumor2 = {
-    
-    ### Keep only the tumor samples
-    counts <- counts[, metadata_org$condition == "tumor"]
-    metadata <- metadata_org[metadata_org$condition == "tumor", ]
+  model_null2 = {
+
+    counts <- counts[, metadata_org$condition == "CTL"]
+    metadata <- metadata_org[metadata_org$condition == "CTL", ]
     all(colnames(counts) == metadata$sampleName)
     
-    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), 3))
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), each = 2))
     
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+    d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
+
+  },
+  
+  model_null3 = {
+    
+    counts <- counts[, metadata_org$condition == "CTL"]
+    metadata <- metadata_org[metadata_org$condition == "CTL", ]
+    all(colnames(counts) == metadata$sampleName)
+    
+    d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = c("C1", "C2", "C2", "C1"))
+    
+    ### Filtering
+    table(samples(d)$group)
+    d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
     
   }
 )

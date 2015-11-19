@@ -19,15 +19,8 @@ library("DEXSeq")
 # metadata
 ######################################################################################################
 
-metadata <- read.table("3_metadata/Malgorzata Nowicka2014-11-04GSE37764.csv", stringsAsFactors=F, sep=",", header=T) 
-metadata <- metadata[metadata$X == "RNA-seq",]
+metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors = FALSE, sep="\t", header=TRUE) 
 
-metadata$sampleName <- metadata$ids
-metadata$condition <- metadata$Tissue.Type
-
-metadata <- metadata[order(metadata$condition), ]
-
-metadata
 
 
 ######################################################################################################
@@ -35,7 +28,7 @@ metadata
 ######################################################################################################
 
 counts_out <- "2_counts/htseq/"
-dir.create(counts_out)
+dir.create(counts_out, recursive = TRUE)
 
 
 gtf= "/home/Shared_penticton/data/annotation/Human/Ensembl_GRCh37.71/gtf/Homo_sapiens.GRCh37.71.gtf"
@@ -69,12 +62,34 @@ system(paste0("python ", pythDir, "/dexseq_count.py --help "))
 python.cmd2 <- with(metadata, paste0("python ", pythDir, "/dexseq_count.py -p yes -s no -f bam -r pos ", DEXSeq.gff, " bam_insilicodb/", ids, "_s.bam ", counts_out, ids , ".counts \n"))
 cat(python.cmd2)
 
- for(i in 1:nrow(metadata)){
-   # i = 1 
-   system(python.cmd2[i])
-   
- }
+for(i in 1:nrow(metadata)){
+  # i = 1 
+  system(python.cmd2[i])
+  
+}
 
+
+
+### Merge counts into one file
+
+counts_list <- lapply(1:nrow(metadata), function(i){
+  # i = 1
+  
+  cts <- read.table(paste0(counts_out, metadata$ids[i], ".counts"), header = FALSE, as.is = TRUE)
+  colnames(cts) <- c("group_id", metadata$ids[i])
+  
+  return(cts)
+  
+})
+
+
+counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
+
+tail(counts)
+counts <- counts[!grepl(pattern = "_", counts$group_id), ]
+
+
+write.table(counts, paste0(counts_out, "htseq_counts.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 

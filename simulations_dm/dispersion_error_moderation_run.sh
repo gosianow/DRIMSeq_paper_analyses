@@ -9,33 +9,99 @@ DMPARAMS=$RWD/dm_parameters
 
 ## Run R scripts
 
-# lognormal dispersion from kallisto & uniform proportions
+# lognormal dispersion from kallisto: disp_genewise_kim_kallisto_lognormal.txt
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=1000 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run1.Rout
+for n in 3 6
+do
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=1000 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run2.Rout
+  for nm in 100 1000
+  do
+    
+    for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_overall' 'prop_q10_kim_kallisto_overall'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 sim_name='' r=10 m=500 n=${n} nm=${nm} nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run_n${n}_nm${nm}_${prop}.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=100 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run3.Rout
+    done
+  done
+done
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=100 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run4.Rout
+
+
+# common dispersion from kallisto: disp_common_kim_kallisto.txt
+
+for n in 3 6
+do
+
+  for nm in 100 1000
+  do
+    
+    for prop in 'prop_q3_uniform' 'prop_q10_uniform'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=10 sim_name='' r=10 m=500 n=${n} nm=${nm} nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_disp_common_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
+
+
 
 R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_moderation_plots_run.R $ROUT/dispersion_error_moderation_plots_run.Rout
 
 
-# lognormal dispersion from kallisto & descending proportions
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=1000 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run5.Rout
+##############################################################################
+### Test
+##############################################################################
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=1000 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run6.Rout
+# lognormal dispersion from kallisto 
+
+for n in 3
+do
+
+  for nm in 100
+  do
+    
+    for prop in 'prop_q3_uniform'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='test_' r=1 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=100 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run7.Rout
+# common dispersion from kallisto 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=1 m=500 n=3 nm=100 nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_run8.Rout
+for n in 3
+do
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_moderation_plots_run.R $ROUT/dispersion_error_moderation_plots_run.Rout
+  for nm in 100
+  do
+    
+    for prop in 'prop_q3_uniform'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='test_' r=1 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=c(seq(0,1,by=0.1),2,3) param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_moderation_run.R $ROUT/dispersion_error_moderation_disp_common_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
 
 
+##############################################################################
+### Individual runs
+##############################################################################
 
 
 

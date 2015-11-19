@@ -39,109 +39,85 @@ setwd(rwd)
 
 out_dir <- "error_common/"
 
-error_files <- list.files(out_dir, pattern = ".txt")
-error_files
+files <- list.files(out_dir, pattern = ".txt")
+files
 
 
 
 ##############################################################################
-### Plots for common dispersion 
+### Plots
 ##############################################################################
 
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
 whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
-out_dir_list <- paste0(out_dir, error_files)
+files_list <- paste0(out_dir, files)
 
 
-for(i in 1:length(error_files)){
+for(i in 1:length(files)){
   # i = 1
   
-  out_dir <- file_path_sans_ext(out_dir_list[i])
+  out_dir <- file_path_sans_ext(files_list[i])
   
-  error <- read.table(out_dir_list[i], header = TRUE)
+  est <- read.table(files_list[i], header = TRUE, sep = "\t")
   
-  error$dispersion <- factor(error$dispersion, levels = c("common", "genewise", "moderated"))
-  error$method <- factor(error$method, levels = c("ML-dirmult", "PL", "CR"))
+  est$dispersion <- factor(est$dispersion, levels = c("genewise", "moderated", "common"))
+  est$method <- factor(est$method, levels = c("ML-dirmult", "PL", "CR"))
   
-  colnames(error) <- c("Error", "Dispersion", "Method")
-  error$DispersionMethod <- interaction(error$Dispersion, error$Method)
+  ### Error as a difference
   
-  
-  ### Error
-  
-  ylim <- c(min(aggregate(. ~ DispersionMethod, error[, c("Error", "DispersionMethod")], whisker_lower)[, 2]) - 1, max(aggregate(. ~ DispersionMethod, error[, c("Error", "DispersionMethod")], whisker_upper)[, 2]) + 1)
-  
-  ggp <- ggplot(data = error, aes(y = Error, x = Dispersion, fill = Method)) + 
-    theme_bw() +
-    geom_boxplot(outlier.size = 0) +
-    coord_cartesian(ylim = ylim) +
-    geom_hline(yintercept = 0, color="grey", linetype = 2, size = 0.5) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  
-  
-  pdf(paste0(out_dir, "_boxplot_raw.pdf"))
-  print(ggp)
-  dev.off()
-  
+  error <- data.frame(error = est$est - est$true, dispersion = est$dispersion, method = est$method)
+  error$dispersionmethod <- interaction(error$dispersion, error$method)
   
   ### Absolute error
   
-  error$Error <- abs(error$Error)
+  error$error <- abs(error$error)
   
-  ylim <- c(min(aggregate(. ~ DispersionMethod, error[, c("Error", "DispersionMethod")], whisker_lower)[, 2]) - 1, max(aggregate(. ~ DispersionMethod, error[, c("Error", "DispersionMethod")], whisker_upper)[, 2]) + 1)
+  ylim <- c(min(aggregate(. ~ dispersionmethod, error[, c("error", "dispersionmethod")], whisker_lower)[, 2]) - 1, max(aggregate(. ~ dispersionmethod, error[, c("error", "dispersionmethod")], whisker_upper)[, 2]) + 1)
   
   
-  ggp <- ggplot(data = error, aes(y = Error, x = Dispersion, fill = Method)) + 
+  ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) + 
     theme_bw() +
     ylab("Absolute error") +
     geom_boxplot(outlier.size = 0) +
     coord_cartesian(ylim = ylim) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
+    theme(axis.text = element_text(size = 16), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
   
-  pdf(paste0(out_dir, "_boxplot_absolute.pdf"))
+  pdf(paste0(out_dir, "_boxplot_absolute.pdf"), 5, 5)
   print(ggp)
   dev.off()
   
   
+  ### Error as a ratio
   
-#   ggp <- ggplot(data = error, aes(y = Error, x = Dispersion, fill = Method)) + 
-#     theme_bw() +
-#     ylab("Absolute error") +
-#     geom_violin(trim = FALSE) +
-#     # coord_cartesian(ylim = ylim) +
-#     ylim(ylim[1], ylim[2]) +
-#     theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-# 
-#   pdf(paste0(out_dir, "_violin_absolute.pdf"))
-#   print(ggp)
-#   dev.off()
+  error <- data.frame(error = est$est/est$true, dispersion = est$dispersion, method = est$method)
+  error$dispersionmethod <- interaction(error$dispersion, error$method)
   
   
-  ### Squared error
-  
-  error$Error <- error$Error^2
-  
-  ylim <- c(min(aggregate(. ~ DispersionMethod, error[, c("Error", "DispersionMethod")], whisker_lower)[, 2]) - 1, max(aggregate(. ~ DispersionMethod, error[, c("Error", "DispersionMethod")], whisker_upper)[, 2]) + 1)
-  
-  
-  ggp <- ggplot(data = error, aes(y = Error, x = Dispersion, fill = Method)) + 
+  ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
     theme_bw() +
-    ylab("Squared error") +
-    geom_boxplot(outlier.size = 0) +
-    coord_cartesian(ylim = ylim) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
+    ylab("Log10 of error ratio") +
+    geom_boxplot(outlier.size = 1) +
+    geom_hline(yintercept = 0, color="grey50", linetype = 2, size = 0.5) +
+    theme(axis.text = element_text(size = 16), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
   
-  
-  pdf(paste0(out_dir, "_boxplot_squared.pdf"))
+  pdf(paste0(out_dir, "_boxplot_ratio_log.pdf"), 5, 5)
   print(ggp)
   dev.off()
   
-
+  #     ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
+  #       theme_bw() +
+  #       ylab("Log10 of error ratio") +
+  #       geom_violin(trim = FALSE, position = position_dodge(width = 0.9)) +
+  #       geom_boxplot(outlier.size = 1, alpha = 0, position = position_dodge(width = 0.9), width = 0.1) +
+  #       theme(axis.text = element_text(size = 16), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
+  #     
+  #     pdf(paste0(out_dir, "_violin_ratio_log.pdf"))
+  #     print(ggp)
+  #     dev.off()
+  
+  
 }
-
-
-
 
 
 

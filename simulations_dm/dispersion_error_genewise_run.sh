@@ -9,31 +9,96 @@ DMPARAMS=$RWD/dm_parameters
 
 ## Run R scripts
 
-# lognormal dispersion from kallisto & uniform proportions
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run1.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run2.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run3.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run4.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_genewise_plots_run.R $ROUT/dispersion_error_genewise_plots_run.Rout
+# lognormal dispersion from kallisto 
 
 
+for n in 3 6
+do
 
-# lognormal dispersion from kallisto & descending proportions
+  for nm in 100 1000
+  do
+    
+    for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_overall' 'prop_q10_kim_kallisto_overall'
+    do 
+    
+      echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=50 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run_n${n}_nm${nm}_${prop}.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run5.Rout
+    done
+  done
+done
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run6.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run7.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run8.Rout
 
 R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_genewise_plots_run.R $ROUT/dispersion_error_genewise_plots_run.Rout
+
+
+
+
+
+#############################################################################
+### Test
+#############################################################################
+
+for n in 3
+do
+
+  for nm in 100
+  do
+    
+    for prop in 'prop_q3_uniform'
+    do 
+    
+      echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='test_' r=3 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
+
+
+#############################################################################
+### Individual runs
+#############################################################################
+
+
+for n in 3
+do
+
+  for nm in 100
+  do
+    
+    for prop in 'prop_q3_kim_kallisto_overall'
+    do 
+    
+      echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=50 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
+
+
+
+for n in 3
+do
+
+  for nm in 1000
+  do
+    
+    for prop in 'prop_q3_uniform' 'prop_q10_uniform'
+    do 
+    
+      echo "n${n}_nm${nm}_${prop}"
+    
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=50 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_genewise_kim_kallisto_lognormal.txt'" $RCODE/dispersion_error_genewise_run.R $ROUT/dispersion_error_genewise_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
+
 
 
 

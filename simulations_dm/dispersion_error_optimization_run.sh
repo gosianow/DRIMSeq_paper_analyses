@@ -9,34 +9,50 @@ DMPARAMS=$RWD/dm_parameters
 
 ## Run R scripts
 
-# common dispersion from kallisto & uniform proportions
+# common dispersion from kallisto 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run1.Rout
+for n in 3 6
+do
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run2.Rout
+  for nm in 100 1000
+  do
+    
+    for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_overall' 'prop_q10_kim_kallisto_overall'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run3.Rout
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=10 m=500 n=${n} nm=${nm} nd=0 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run_n${n}_nm${nm}_${prop}.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run4.Rout
+    done
+  done
+done
+
 
 R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_optimization_plots_run.R $ROUT/dispersion_error_optimization_plots_run.Rout
 
 
-# common dispersion from kallisto & descending proportions
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run5.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=1000 nd=0 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run6.Rout
-
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run7.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=2 m=500 n=3 nm=100 nd=0 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run8.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_optimization_plots_run.R $ROUT/dispersion_error_optimization_plots_run.Rout
+#############################################################################
+### Individual run
+#############################################################################
 
 
 
+
+for n in 6
+do
+  for nm in 100
+  do   
+    for prop in 'prop_q3_uniform'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
+
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=10 sim_name='' r=10 m=500 n=${n} nm=${nm} nd=0 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_optimization_run.R $ROUT/dispersion_error_optimization_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
 
 
 

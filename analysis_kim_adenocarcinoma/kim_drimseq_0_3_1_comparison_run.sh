@@ -8,35 +8,21 @@ mkdir $ROUT
 
 ## Run R scripts
 
-# full
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='kallisto' model='model_full'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
+for model in 'model_full' 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
+do 
+  for count_method in 'kallisto' 'htseq'
+  do 
+  
+    echo "${model}_${count_method}"
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='htseq' model='model_full'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run_${model}_${count_method}.Rout
 
-# null 1
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='kallisto' model='model_null_normal1'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='htseq' model='model_null_normal1'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='kallisto' model='model_null_tumor1'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='htseq' model='model_null_tumor1'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
-
-# null 2
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='kallisto' model='model_null_normal2'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='htseq' model='model_null_normal2'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='kallisto' model='model_null_tumor2'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='htseq' model='model_null_tumor2'" $RCODE/kim_drimseq_0_3_1_comparison_run.R $ROUT/kim_drimseq_0_3_1_comparison_run.Rout
+  done
+done
 
 
 
-
-
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/kim_summary.R $ROUT/kim_summary.Rout
 
 

@@ -7,19 +7,19 @@
 
 ##############################################################################
 
-library(DRIMSeq)
 library(iCOBRA)
 
-source("/home/gosia/R/drimseq_paper/dm_comparison_functions/dm_plotVenn.R")
+##############################################################################
+# Test arguments
+##############################################################################
+
+rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
+count_method=c('htseq', 'kallisto')[1]
+model=c('model_full', 'model_null_normal1', 'model_null_tumor1')[1]
 
 ##############################################################################
 # Read in the arguments
 ##############################################################################
-
-# rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
-# count_method=c('htseq', 'kallisto')[1]
-# model=c('model_full', 'model_null_normal1', 'model_null_tumor1')[1]
-
 
 ## Read input arguments
 args <- (commandArgs(trailingOnly = TRUE))
@@ -37,11 +37,11 @@ print(count_method)
 
 setwd(rwd)
 method_out <- "drimseq_0_3_1"
-comparison_out <- "drimseq_0_3_1_comparison"
+comparison_out <- "drimseq_0_3_1_comparison/"
 
 
-out_dir <- paste0(comparison_out, "/",  model, "/", count_method, "/")
-dir.create(out_dir, recursive = TRUE)
+out_dir <- paste0(comparison_out,  model, "/", count_method, "/")
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 
 
@@ -86,17 +86,48 @@ for(i in 1:length(files)){
 
 results_padj <- Reduce(function(...) merge(..., by = "gene_id", all=TRUE, sort = FALSE), results_padj)
 rownames(results_padj) <- results_padj$gene_id
-
+results_padj <- results_padj[, -1]
 
 ####################### use iCOBRA
 
+summary <- data.frame(model = model, count_method = count_method, ds_method = colnames(results_padj))
 
-cobradata <- COBRAData(padj = results_padj[, -1])
+
+
+cobradata <- COBRAData(padj = results_padj)
+
+cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 1.1)
+
+overlap <- !is.na(cobraperf@overlap)
+
+summary$counts_genes_all <- apply(overlap, 2, sum)
+
+ref_dexseq <- overlap[, "dexseq"]
+
+summary$counts_genes_all_overlap <- apply(overlap, 2, function(i){
+  sum((ref_dexseq + i) == 2)
+  })
+
+
 
 cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 0.05)
 
-basemethods(cobraperf)
 
+overlap <- cobraperf@overlap 
+overlap[is.na(overlap)] <- 0
+
+summary$counts_genes_ds <- apply(overlap, 2, sum)
+
+ref_dexseq <- overlap[, "dexseq"]
+
+summary$counts_genes_ds_overlap <- apply(overlap, 2, function(i){
+  sum((ref_dexseq + i) == 2)
+})
+
+
+
+
+basemethods(cobraperf)
 
 for(i in 2:length(basemethods(cobraperf))){
   # i = 2
@@ -112,7 +143,7 @@ for(i in 2:length(basemethods(cobraperf))){
 
 
 
-
+write.table(summary, file = paste0(comparison_out, model, "_", count_method, "_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 

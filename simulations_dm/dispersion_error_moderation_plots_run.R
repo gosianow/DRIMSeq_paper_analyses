@@ -40,8 +40,8 @@ setwd(rwd)
 
 out_dir <- "error_moderation/"
 
-error_files <- list.files(out_dir, pattern = ".txt")
-
+files <- list.files(out_dir, pattern = ".txt")
+files
 
 
 ##############################################################################
@@ -51,97 +51,53 @@ error_files <- list.files(out_dir, pattern = ".txt")
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
 whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
-error_files_list <- paste0(out_dir, error_files)
+files_list <- paste0(out_dir, files)
 
 
-for(i in 1:length(error_files)){
+for(i in 1:length(files)){
   # i = 1
   
-  error <- read.table(error_files_list[i], header = TRUE)
+  out_dir <- file_path_sans_ext(files_list[i])
   
-  out_dir <- file_path_sans_ext(error_files_list[i])
+  est <- read.table(files_list[i], header = TRUE)
   
-  error$disp_prior_df <- factor(error$disp_prior_df)
-  colnames(error) <- c("Error", "Moderation")
+  est$disp_prior_df <- factor(est$disp_prior_df)
   
-  ### Error
+  ### Error as a difference
   
-  min_median <- min(aggregate(. ~ Moderation, error, median)[, 2])
-  
-  ylim <- c(min(aggregate(. ~ Moderation, error, whisker_lower)[, 2]) - 1, max(aggregate(. ~ Moderation, error, whisker_upper)[, 2]) + 1)
-  
-  ggp <- ggplot(data = error, aes(y = Error, x = Moderation)) + 
-    theme_bw() +
-    ylab("Error") +
-    geom_boxplot(outlier.size = 0, fill = "grey80") +
-    coord_cartesian(ylim = ylim) +
-    geom_hline(yintercept = 0, color = "grey", linetype = 1, size = 0.5) +
-    geom_hline(yintercept = min_median, color = "red", linetype = 2, size = 0.3) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  
-  
-  pdf(paste0(out_dir, "_boxplot_raw.pdf"))
-  print(ggp)
-  dev.off()
-  
+  error <- data.frame(error = est$est - est$true, disp_prior_df = est$disp_prior_df)
   
   ### Absolute error
   
-  error$Error <- abs(error$Error)
+  error$error <- abs(error$error)
   
-  min_median <- min(aggregate(. ~ Moderation, error, median)[, 2])
+  min_median <- min(aggregate(. ~ disp_prior_df, error, median)[, 2])
+  ylim <- c(min(aggregate(. ~ disp_prior_df, error, whisker_lower)[, 2]) - 1, max(aggregate(. ~ disp_prior_df, error, whisker_upper)[, 2]) + 1)
   
-  ylim <- c(min(aggregate(. ~ Moderation, error, whisker_lower)[, 2]) - 1, max(aggregate(. ~ Moderation, error, whisker_upper)[, 2]) + 1)
-  
-  ggp <- ggplot(data = error, aes(y = Error, x = Moderation)) + 
-    theme_bw() +
-    ylab("Absolute error") +
-    geom_boxplot(outlier.size = 0, fill = "grey80") +
-    coord_cartesian(ylim = ylim) +
-    geom_hline(yintercept = min_median, color = "red", linetype = 2, size = 0.3) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  
-  pdf(paste0(out_dir, "_boxplot_absolute.pdf"))
-  print(ggp)
-  dev.off()
-  
-  
-  ggp <- ggplot(data = error, aes(y = Error, x = Moderation)) + 
-    theme_bw() +
-    ylab("Absolute error") +
-    geom_violin(trim = FALSE, show_guide = FALSE, fill = "grey80", colour = "grey80") +
-    geom_boxplot(outlier.size = 1, fill = NA, width = 0.1, alpha = 0.1) +
-    coord_cartesian(ylim = ylim) +
-    geom_hline(yintercept = min_median, color = "red", linetype = 2, size = 0.3) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  
-  pdf(paste0(out_dir, "_violin_absolute.pdf"))
-  print(ggp)
-  dev.off()
+
+#   ggp <- ggplot(data = error, aes(y = error, x = disp_prior_df)) + 
+#     theme_bw() +
+#     ylab("Absolute error") +
+#     xlab("Moderation") +
+#     geom_violin(trim = FALSE, show_guide = FALSE, fill = "grey80", colour = "grey80") +
+#     geom_boxplot(outlier.size = 1, fill = NA, width = 0.1, alpha = 0.1) +
+#     coord_cartesian(ylim = ylim) +
+#     geom_hline(yintercept = min_median, color = "red", linetype = 2, size = 0.3) +
+#     theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
+#   
+#   pdf(paste0(out_dir, "_violin_absolute.pdf"))
+#   print(ggp)
+#   dev.off()
   
   
   
-  # log
-  ggp <- ggplot(data = error, aes(y = log10(Error), x = Moderation)) + 
-    theme_bw() +
-    ylab("Log 10 of absolute error") +
-    geom_boxplot(outlier.size = 1, fill = "grey80") +
-    geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.3) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  
-  
-  pdf(paste0(out_dir, "_boxplot_absolute_log.pdf"))
-  print(ggp)
-  dev.off()
-  
-  
-  
-  ggp <- ggplot(data = error, aes(y = log10(Error), x = Moderation)) + 
+  ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) + 
     theme_bw() +
     ylab("Log10 of absolute error") +
+    xlab("Moderation") +
     geom_violin(trim = FALSE, show_guide = FALSE, fill = "grey80", colour = "grey80") +
-    geom_boxplot(outlier.size = 1.2, fill = "grey80", width = 0.5) +
-    geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.3) +
+    geom_boxplot(outlier.size = 1.2, fill = NA, width = 0.5) +
+    geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.5) +
     theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
   
   pdf(paste0(out_dir, "_violin_absolute_log.pdf"))
@@ -150,65 +106,22 @@ for(i in 1:length(error_files)){
   
   
   
-  ### Squared error
+  ### Error as a ratio
   
-  error$Error <- error$Error^2
-  
-  min_median <- min(aggregate(. ~ Moderation, error, median)[, 2])
-  
-  ylim <- c(min(aggregate(. ~ Moderation, error, whisker_lower)[, 2]) - 1, max(aggregate(. ~ Moderation, error, whisker_upper)[, 2]) + 1)
-  
-  ggp <- ggplot(data = error, aes(y = Error, x = Moderation)) + 
-    theme_bw() +
-    ylab("Squared error") +
-    geom_boxplot(outlier.size = 0, fill = "grey80") +
-    coord_cartesian(ylim = ylim) +
-    geom_hline(yintercept = min_median, color = "red", linetype = 2, size = 0.3) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  
-  
-  pdf(paste0(out_dir, "_boxplot_squared.pdf"))
-  print(ggp)
-  dev.off()
-  
-  
-  # log
-  ggp <- ggplot(data = error, aes(y = log10(Error), x = Moderation)) + 
-    theme_bw() +
-    ylab("Log 10 of squared error") +
-    geom_boxplot(outlier.size = 1, fill = "grey80") +
-    geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.3) +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  
-  
-  pdf(paste0(out_dir, "_boxplot_squared_log.pdf"))
-  print(ggp)
-  dev.off()
+  error <- data.frame(error = est$est/est$true, disp_prior_df = est$disp_prior_df)
 
+  ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) + 
+    theme_bw() +
+    ylab("Log10 of error ratio") +
+    xlab("Moderation") +
+    geom_violin(trim = FALSE, show_guide = FALSE, fill = "grey80", colour = "grey80") +
+    geom_boxplot(outlier.size = 1.2, fill = NA, width = 0.5) +
+    geom_hline(yintercept = 0, color="red", linetype = 2, size = 0.5) +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
   
-  ### violinplot
-  
-  # ggp <- ggplot(data = error, aes(y = Error, x = Moderation)) + 
-  #   theme_bw() +
-  #   ylab("Squared error") +
-  #   geom_violin(trim = FALSE, fill = "grey80") +
-  #   theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  # 
-  # pdf(paste0(out_dir, "_violin_squared.pdf"))
-  # print(ggp)
-  # dev.off()
-  
-  # log
-  
-  # ggp <- ggplot(data = error, aes(y = log10(Error), x = Moderation)) + 
-  #   theme_bw() +
-  #   ylab("Log 10 of squared error") +
-  #   geom_violin(trim = FALSE, fill = "grey80") +
-  #   theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16), legend.text = element_text(size = 16))
-  # 
-  # pdf(paste0(out_dir, "_violin_squared_log.pdf"))
-  # print(ggp)
-  # dev.off()
+  pdf(paste0(out_dir, "_violin_ratio_log.pdf"))
+  print(ggp)
+  dev.off()
   
   
   

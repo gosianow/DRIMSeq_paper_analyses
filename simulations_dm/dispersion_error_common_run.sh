@@ -9,36 +9,72 @@ DMPARAMS=$RWD/dm_parameters
 
 ## Run R scripts
 
-# common dispersion from kallisto & uniform proportions
+# common dispersion from kallisto
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run1.Rout
+for n in 3 6
+do
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run2.Rout
+  for nm in 100 1000
+  do
+    
+    for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_overall' 'prop_q10_kim_kallisto_overall'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run3.Rout
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=50 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run_n${n}_nm${nm}_${prop}.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_uniform.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run4.Rout
+    done
+  done
+done
+
 
 R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_common_plots_run.R $ROUT/dispersion_error_common_plots_run.Rout
 
 
-# common dispersion from kallisto & descending proportions
+#############################################################################
+### Test
+#############################################################################
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run5.Rout
+for n in 3
+do
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=1000 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run6.Rout
+  for nm in 100
+  do
+    
+    for prop in 'prop_q3_uniform'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q3_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run7.Rout
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 sim_name='test_' r=2 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run_n${n}_nm${nm}_${prop}.Rout
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 sim_name='' r=5 m=100 n=3 nm=100 nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/prop_q10_kim_kallisto_overall.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run8.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_common_plots_run.R $ROUT/dispersion_error_common_plots_run.Rout
-
-
+    done
+  done
+done
 
 
+#############################################################################
+### Individual run
+#############################################################################
 
 
+for n in 3 6
+do
+
+  for nm in 1000
+  do
+    
+    for prop in 'prop_q3_uniform' 'prop_q10_uniform'
+    do 
+    
+    echo "n${n}_nm${nm}_${prop}"
+
+      R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=2 sim_name='' r=50 m=100 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/${prop}.txt' param_gamma_path='$DMPARAMS/disp_common_kim_kallisto.txt'" $RCODE/dispersion_error_common_run.R $ROUT/dispersion_error_common_run_n${n}_nm${nm}_${prop}.Rout
+
+    done
+  done
+done
 
 
 

@@ -7,6 +7,7 @@
 
 ##############################################################################
 
+library(BiocParallel)
 library(pryr)
 library(dirmult)
 library(limma)
@@ -93,11 +94,15 @@ out_dir <- paste0("error_genewise/", sim_name, "n", n, "_nm", nm, "_nd", nd, "_"
 ### Simulations for genewise dispersion 
 ##############################################################################
 
+BPPARAM <- BiocParallel::MulticoreParam(workers = workers, log = TRUE, logdir = "logdir/")
+verbose <- TRUE
 
-error_list <- lapply(1:r, function(i){
+est_list <- lapply(1:r, function(i){
   # i = 1
   
-  mse <- list()
+  print(i)
+  
+  est <- list()
   
   g0 <- rlnorm(m, meanlog = g0_meanlog, sdlog = g0_sdlog)
   
@@ -108,32 +113,30 @@ error_list <- lapply(1:r, function(i){
   
   d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = paste0("s", 1:ncol(counts)), group = rep("c1", ncol(counts)))
   
-  disp_interval <- c(0, max(g0)*100)
-  
   ### No CR adjustement
   
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = FALSE, disp_mode = "grid", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = FALSE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = verbose, BPPARAM = BPPARAM)
   
-  mse[[1]] <- data.frame(mse = common_dispersion(d) - g0, dispersion = "common", method = "PL")
+  est[[1]] <- data.frame(est = common_dispersion(d), true = g0, dispersion = "common", method = "PL")
   
-  mse[[2]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, dispersion = "genewise", method = "PL")
+  est[[2]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, dispersion = "genewise", method = "PL")
   
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = FALSE, disp_mode = "grid", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = common_dispersion(d), disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = FALSE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = common_dispersion(d), disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
-  mse[[3]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, dispersion = "moderated", method = "PL")
+  est[[3]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, dispersion = "moderated", method = "PL")
   
   
   ### With CR adjustement
   
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
-  mse[[4]] <- data.frame(mse = common_dispersion(d) - g0, dispersion = "common", method = "CR")
+  est[[4]] <- data.frame(est = common_dispersion(d), true = g0, dispersion = "common", method = "CR")
   
-  mse[[5]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, dispersion = "genewise", method = "CR")
+  est[[5]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, dispersion = "genewise", method = "CR")
   
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = disp_interval, disp_tol = 1e-08, disp_init = common_dispersion(d), disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = common_dispersion(d), disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
-  mse[[6]] <- data.frame(mse = genewise_dispersion(d)$genewise_dispersion - g0, dispersion = "moderated", method = "CR")
+  est[[6]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, dispersion = "moderated", method = "CR")
   
   
   ### gammas estimated with dirmult package
@@ -146,32 +149,24 @@ error_list <- lapply(1:r, function(i){
     # (1-out$theta)/out$theta
   }))
   
-  mse[[7]] <- data.frame(mse = dirmult_dispersion - g0, dispersion = "genewise", method = "ML-dirmult")
+  est[[7]] <- data.frame(est = dirmult_dispersion, true = g0, dispersion = "genewise", method = "ML-dirmult")
   
-  mse <- do.call(rbind, mse)
+  est <- do.call(rbind, est)
+  rownames(est) <- NULL
   
-  print(mem_used())
   rm("d")
-  gc()
-  print(mem_used())
+  gc(verbose = TRUE)
   
-  return(mse)
+  return(est)
   
 })
 
 
 
 
-error <- do.call(rbind, error_list)
+est <- do.call(rbind, est_list)
 
-write.table(error, paste0(out_dir, "error_genewise.txt"), quote = FALSE, sep = "\t", row.names = FALSE)
-
-
-##############################################################################
-### Plots for genewise dispersion 
-##############################################################################
-
-
+write.table(est, paste0(out_dir, "est_genewise.txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 
