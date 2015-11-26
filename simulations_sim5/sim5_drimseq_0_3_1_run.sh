@@ -9,7 +9,7 @@ mkdir $ROUT
 ### Run R scripts
 
 
-for i in 'drosophila_node_nonull'
+for i in 'drosophila_node_nonull' 'hsapiens_node_nonull' 'hsapiens_withde_nonull'
 do 
   for j in 'kallisto' 'htseq'
   do
@@ -22,9 +22,9 @@ do
 done
 
 
-for i in 'drosophila_node_nonull'
+for i in 'drosophila_node_nonull' 'hsapiens_node_nonull'
 do 
-  for j in 'htseq_prefiltered15'
+  for j in 'htseqprefiltered15'
   do
 
     R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${j}' simulation='${i}' dispersion_common=TRUE results_common=TRUE disp_mode_list=c('grid','grid') disp_moderation_list=c('none','common')" $RCODE/sim5_drimseq_0_3_1_run.R $ROUT/sim5_drimseq_0_3_1_run_${i}_${j}_grid.Rout
@@ -34,44 +34,52 @@ done
 
 
 
-for i in 'hsapiens_node_nonull'
+for i in 'drosophila_node_nonull' 'hsapiens_node_nonull'
 do 
-  for j in 'kallisto' 'htseq'
-  do
 
+  for j in 'kallistofiltered5' 'htseqprefiltered5' 'kallistoprefiltered5'
+  do
+    
+    echo "${i}_${j}"
+    
     R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${j}' simulation='${i}' dispersion_common=TRUE results_common=TRUE disp_mode_list=c('grid','grid') disp_moderation_list=c('none','common')" $RCODE/sim5_drimseq_0_3_1_run.R $ROUT/sim5_drimseq_0_3_1_run_${i}_${j}_grid.Rout
     
-    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${j}' simulation='${i}' dispersion_common=FALSE results_common=FALSE disp_mode_list=c('optimize','optim','constrOptim') disp_moderation_list=c('none','none','none')" $RCODE/sim5_drimseq_0_3_1_run.R $ROUT/sim5_drimseq_0_3_1_run_${i}_${j}_optim.Rout
-
   done
 done
 
 
-for i in 'hsapiens_node_nonull'
+
+
+
+for i in 'drosophila_node_nonull' 'hsapiens_node_nonull'
 do 
-  for j in 'htseq_prefiltered15'
+
+  for j in 'kallistoprefiltered5'
   do
-
+    
+    echo "${i}_${j}"
+    
     R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${j}' simulation='${i}' dispersion_common=TRUE results_common=TRUE disp_mode_list=c('grid','grid') disp_moderation_list=c('none','common')" $RCODE/sim5_drimseq_0_3_1_run.R $ROUT/sim5_drimseq_0_3_1_run_${i}_${j}_grid.Rout
-
+    
   done
 done
 
 
 
-for i in 'hsapiens_withde_nonull'
+
+
+for i in 'drosophila_node_nonull' 'hsapiens_node_nonull' 'hsapiens_withde_nonull'
 do 
-  for j in 'kallisto' 'htseq'
+
+  for j in 'kallisto' 'htseq' 'htseqprefiltered15' 'kallistofiltered5' 'htseqprefiltered5' 'kallistoprefiltered5'
   do
-
-    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${j}' simulation='${i}' dispersion_common=TRUE results_common=TRUE disp_mode_list=c('grid','grid') disp_moderation_list=c('none','common')" $RCODE/sim5_drimseq_0_3_1_run.R $ROUT/sim5_drimseq_0_3_1_run_${i}_${j}_grid.Rout
-
+    
+    echo "${i}_${j}"
+    
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${j}' simulation='${i}' dispersion_common=TRUE results_common=TRUE disp_mode_list=c('grid','grid') disp_moderation_list=c('none','common')" $RCODE/sim5_drimseq_0_3_1_run_plot_data.R $ROUT/sim5_drimseq_0_3_1_run_plot_data.Rout
+    
   done
 done
-
-
-
-
 
 
 

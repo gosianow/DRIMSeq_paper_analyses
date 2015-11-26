@@ -3,7 +3,7 @@
 # Crated 19 June 2015
 
 
-setwd("/home/Shared/data/seq/Kim_adenocarcinoma/")
+setwd("/home/Shared/data/seq/kim_adenocarcinoma/")
 
 
 ##########################################################################
@@ -88,6 +88,8 @@ for(i in 1:length(samples)){
 
 library(rtracklayer)
 
+out.path.tmp <- paste0(working_dir, "2_counts/kallisto/")
+
 gtf.path = "/home/Shared/data/annotation/Human/Ensembl_GRCh37.71/gtf/Homo_sapiens.GRCh37.71.gtf"
 
 gtf <- import(gtf.path)
@@ -99,15 +101,13 @@ rownames(geneTrans) <- geneTrans$transcript_id
 
 ############## save results in tables
 
-out.path.tmp <- paste0(working_dir, "2_counts/kallisto/")
+samples <- metadata$sampleName
 
-countsList <- lapply(1:length(samples), function(i){
+counts_list <- lapply(1:length(samples), function(i){
   # i = 1
-  print[i]
+  print(i)
   
-  out.path <- paste0(working_dir, "2_counts/kallisto/", samples[i], "/")
-  
-  abundance <- read.table(paste0(out.path, "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+  abundance <- read.table(paste0(working_dir, "2_counts/kallisto/", samples[i], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
   
   counts <- data.frame(paste0(geneTrans[abundance$target_id, "gene_id"], ":", abundance$target_id), counts = round(abundance$est_counts), stringsAsFactors = FALSE)
   
@@ -121,10 +121,8 @@ countsList <- lapply(1:length(samples), function(i){
   
 
 
-counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), countsList)
+counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
 
-
-write.table(counts, paste0(out.path.tmp, "kallisto_counts.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 

@@ -67,10 +67,22 @@ out_dir <- paste0(method_out, "/",  model, "/", count_method, "/")
 dir.create(out_dir, recursive = TRUE)
 
 
+count_dir <- paste0("2_counts/", count_method, "/")
+  
+  
+### load counts
+counts_list <- lapply(1:length(metadata_org$sampleName), function(i){
+  # i = 1
+  cts <- read.table(paste0(count_dir, metadata_org$sampleName[i], ".counts"), header = FALSE, as.is = TRUE)
+  colnames(cts) <- c("group_id", metadata_org$sampleName[i])  
+  return(cts)
+})
+
+counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
+counts <- counts[!grepl(pattern = "_", counts$group_id),]
+
 
 ### Prepare data
-counts <- read.table(paste0("2_counts/", count_method, "/", count_method, "_counts.txt"), header = TRUE, as.is = TRUE)
-counts <- counts[!grepl(pattern = "_", counts$group_id),]
 group_split <- strsplit2(counts[,1], ":")
 counts <- counts[, -1]
 ### order the samples like in metadata!!!

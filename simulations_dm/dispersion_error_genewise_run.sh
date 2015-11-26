@@ -62,14 +62,19 @@ done
 ### Individual runs
 #############################################################################
 
+RCODE=/home/gosia/R/drimseq_paper/simulations_dm
+RWD=/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1
+ROUT=$RWD/Rout
+DMPARAMS=$RWD/dm_parameters
 
-for n in 3
+
+for n in 6
 do
 
   for nm in 100
   do
     
-    for prop in 'prop_q3_kim_kallisto_overall'
+    for prop in 'prop_q3_uniform'
     do 
     
       echo "n${n}_nm${nm}_${prop}"
@@ -82,13 +87,13 @@ done
 
 
 
-for n in 3
+for n in 6
 do
 
-  for nm in 1000
+  for nm in 1000 
   do
     
-    for prop in 'prop_q3_uniform' 'prop_q10_uniform'
+    for prop in 'prop_q3_kim_kallisto_overall' 'prop_q10_kim_kallisto_overall'
     do 
     
       echo "n${n}_nm${nm}_${prop}"

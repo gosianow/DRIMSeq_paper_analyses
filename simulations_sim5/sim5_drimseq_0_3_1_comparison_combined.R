@@ -17,6 +17,13 @@ library(plyr)
 
 rwd='/home/gosia/multinomial_project/simulations_sim5'
 
+simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull')
+count_method_list=c('kallisto','kallistofiltered5','kallistoprefiltered5','htseq','htseqprefiltered5','htseqprefiltered15')
+name=''
+legend_nrow=1
+pdf_width=15
+pdf_height=6
+
 ##############################################################################
 # Read in the arguments
 ##############################################################################
@@ -28,27 +35,26 @@ for (i in 1:length(args)) {
 
 
 print(rwd)
+print(simulation_list)
+print(count_method_list)
+print(legend_nrow)
+print(pdf_width)
+print(pdf_height)
 
 
 ##############################################################################
-
 
 setwd(rwd)
 method_out <- "drimseq_0_3_1"
 
 
-### Methods
+### colors
 
-simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull')
-count_method_list=c('kallisto','htseq','htseq_prefiltered15')
+load(paste0(rwd, "/colors.Rdata"))
+colors
+colors_df
 
-
-
-### Colors
-colors_tmp <- read.table(paste0(rwd, "/colors.txt"), header = TRUE, as.is = TRUE)
-colors <- colors_tmp$colors
-names(colors) <- colors_tmp$methods
-
+colors_df$methods <- as.character(colors_df$methods)
 
 
 ##############################################################################
@@ -142,17 +148,25 @@ cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv =
 
 cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE, colorscheme = colors[basemethods(cobraperf)])
 
+
+colors_df <- colors_df[colors_df$methods %in% basemethods(cobraperf), , drop = FALSE]
+
+cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
+
+
 levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
+
+facet_nrow <- length(simulation_list)
 
 
 ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
 ggp <- ggp + 
   theme(legend.position = "bottom") + 
-  guides(colour = guide_legend(nrow = 2)) + 
-  facet_wrap(~splitval, nrow = 2)
+  guides(colour = guide_legend(nrow = legend_nrow)) + 
+  facet_wrap(~splitval, nrow = facet_nrow)
 
 
-pdf(paste0(out_dir, "fdrtpr_simulation_count_method.pdf"), 9, 7)
+pdf(paste0(out_dir, "fdrtpr_simulation_count_method", name, ".pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 

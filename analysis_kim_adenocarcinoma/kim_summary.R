@@ -14,7 +14,7 @@ library(ggplot2)
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
+rwd='/home/Shared/data/seq/kim_adenocarcinoma'
 
 
 ##############################################################################
@@ -41,18 +41,26 @@ comparison_out <- "drimseq_0_3_1_comparison/"
 
 out_dir <- paste0(comparison_out)
 
-### Colors
+### colors
 
-colors_tmp <- read.table(paste0(comparison_out, "colors.txt"), header = TRUE, as.is = TRUE)
-colors <- colors_tmp$colors
-names(colors) <- colors_tmp$methods
+load(paste0(rwd, "/", comparison_out, "colors.Rdata"))
+colors
+colors_df
+
+colors_df$methods <- as.character(colors_df$methods)
+
+keep_methods <- c("dexseq", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none")
+
+colors <- colors[keep_methods]
+colors_df <- colors_df[colors_df$methods %in% keep_methods, , drop = FALSE]
+
 
 
 ##############################################################################
 
 
 
-files <- list.files(comparison_out, pattern = "summary.txt")
+files <- list.files(comparison_out, pattern = "_summary.txt")
 files
 
 
@@ -72,6 +80,10 @@ write.table(summary, file = paste0(comparison_out, "summary.txt"), quote = FALSE
 
 summary <- read.table(paste0(comparison_out, "summary.txt"), header = TRUE)
 
+summary <- summary[summary$ds_method %in% colors_df$methods, , drop = FALSE]
+summary$ds_method <- factor(summary$ds_method, levels = colors_df$methods)
+
+
 
 
 ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_ds, fill = ds_method)) +
@@ -79,7 +91,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_ds, fill = 
   facet_wrap(~ model, nrow = 1) +
   ylab("Number of genes") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16), axis.text.y = element_text(size = 16), axis.title.x = element_blank(), axis.title.y = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16), legend.title = element_blank(), legend.position = "bottom", strip.text = element_text(size = 14)) +
-  guides(fill = guide_legend(nrow = 2)) + 
+  guides(fill = guide_legend(nrow = 1)) + 
   scale_fill_manual(values = colors[levels(summary$ds_method)])
 
 
@@ -90,6 +102,21 @@ dev.off()
 
 
 
+ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_ds_overlap, fill = ds_method)) +
+  geom_bar(stat = "identity", position="dodge") +
+  facet_wrap(~ model, nrow = 1) +
+  ylab("Number of genes") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16), axis.text.y = element_text(size = 16), axis.title.x = element_blank(), axis.title.y = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16), legend.title = element_blank(), legend.position = "bottom", strip.text = element_text(size = 14)) +
+  guides(fill = guide_legend(nrow = 1)) + 
+  scale_fill_manual(values = colors[levels(summary$ds_method)])
+
+
+
+pdf(paste0(comparison_out, "summary_genes_ds_overlap.pdf"), 17, 7)
+print(ggp)
+dev.off()
+
+
 
 
 ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_all, fill = ds_method)) +
@@ -97,7 +124,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_all, fill =
   facet_wrap(~ model, nrow = 1) +
   ylab("Number of genes") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16), axis.text.y = element_text(size = 16), axis.title.x = element_blank(), axis.title.y = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16), legend.title = element_blank(), legend.position = "bottom", strip.text = element_text(size = 14)) +
-  guides(fill = guide_legend(nrow = 2)) + 
+  guides(fill = guide_legend(nrow = 1)) + 
   scale_fill_manual(values = colors[levels(summary$ds_method)])
 
 
@@ -109,6 +136,39 @@ dev.off()
 
 
 
+
+summary$counts_genes_ds_unique <- summary$counts_genes_ds - summary$counts_genes_ds_overlap
+
+
+summary_overlap <- summary[, c("model", "count_method", "ds_method", "counts_genes_ds_overlap")]
+summary_overlap$set <- "overlap_with_dexseq"
+colnames(summary_overlap)[4] <- "counts_genes_ds"
+
+
+summary_unique <- summary[, c("model", "count_method", "ds_method", "counts_genes_ds_unique")]
+summary_unique$set <- "unique"
+colnames(summary_unique)[4] <- "counts_genes_ds"
+
+
+summary2 <- rbind(summary_overlap, summary_unique)
+
+summary2$set <- factor(summary2$set, levels = c("overlap_with_dexseq", "unique"))
+
+
+ggp <- ggplot(data = summary2, aes(x = count_method, y = counts_genes_ds, group = ds_method, fill = ds_method, alpha = set)) +
+  geom_bar(stat = "identity", position="dodge") +
+  facet_wrap(~ model, nrow = 1) +
+  ylab("Number of genes") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16), axis.text.y = element_text(size = 16), axis.title.x = element_blank(), axis.title.y = element_text(size = 16, face = "bold"), legend.text = element_text(size = 12), legend.title = element_blank(), legend.position = "bottom", strip.text = element_text(size = 14)) +
+  guides(fill = guide_legend(nrow = 1)) + 
+  scale_fill_manual(values = colors[levels(summary$ds_method)]) +
+  scale_alpha_manual(values = c(1, 0.6))
+
+
+
+pdf(paste0(comparison_out, "summary_genes_ds_overlap2.pdf"), 12, 5)
+print(ggp)
+dev.off()
 
 
 

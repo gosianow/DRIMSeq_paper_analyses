@@ -47,15 +47,17 @@ out_dir <- paste0(comparison_out, "/", count_method, "_")
 
 dir.create(dirname(out_dir), recursive = TRUE, showWarnings = FALSE)
 
+### colors
 
+load(paste0(rwd, "/colors.Rdata"))
+colors
+colors_df
+
+colors_df$methods <- as.character(colors_df$methods)
 
 #######################################################
 # merge results for iCOBRA
 #######################################################
-
-
-results_padj <- list()
-
 
 ####################### results from DEXSeq
 
@@ -63,8 +65,21 @@ if(count_method == "htseq")
   results_dir <- "4_results/dexseq_htseq_nomerge"
 if(count_method == "kallisto")
   results_dir <- "4_results/dexseq_kallisto"
-if(count_method == "htseq_prefiltered15")
+if(count_method == "htseqprefiltered15")
   results_dir <- "4_results/INCOMPLETE_KALLISTOEST/dexseq_htseq_nomerge_kallistoest_atleast15"
+if(count_method == "htseqprefiltered5")
+  results_dir <- "4_results/INCOMPLETE_KALLISTOEST/dexseq_htseq_nomerge_kallistoest_atleast5"
+if(count_method == "kallistofiltered5")
+  results_dir <- "4_results/dexseq_kallisto_txfilt_5"
+if(count_method == "kallistoprefiltered5")
+  results_dir <- "4_results/INCOMPLETE_KALLISTOEST/dexseq_kallisto_kallistoest_atleast5"
+
+results_dir
+
+
+
+
+results_padj <- list()
 
 
 rt <- read.table(paste0(results_dir, ".txt"), header = TRUE, as.is = TRUE)
@@ -100,12 +115,19 @@ for(i in 1:length(files)){
 results_padj <- Reduce(function(...) merge(..., by = "gene_id", all=TRUE, sort = FALSE), results_padj)
 rownames(results_padj) <- results_padj$gene_id
 
-results_padj <- results_padj[, -1]
 
 
-# colors <- data.frame(methods = c(colnames(results_padj), "truth"), colors = c("dodgerblue3", "forestgreen",  "maroon2", "firebrick2","darkorange1", "blueviolet", "orchid2", "grey"))
-# 
-# write.table(colors, paste0(rwd, "/colors.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+results_padj <- results_padj[, colnames(results_padj) %in% colors_df$methods]
+
+keep_methods <- colors_df$methods %in% colnames(results_padj)
+
+clolors <- colors[keep_methods]
+colors_df <- colors_df[keep_methods, , drop = FALSE]
+
+results_padj <- results_padj[, colors_df$methods]
+
+
 
 #######################################################
 # load simulation info
@@ -129,7 +151,7 @@ rownames(truth) <- truth$gene
 
 ### diff_IsoPct
 
-truth$diff_IsoPct_cat <- cut2(truth$diff_IsoPct, cuts = c(1/3, 2/3))
+truth$diff_IsoPct_cat <- cut2(truth$diff_IsoPct, cuts = c(1/4, 2/4))
 
 n <- table(truth$diff_IsoPct_cat)
 n
@@ -145,12 +167,17 @@ levels(truth$diff_IsoPct_catn)
 
 table(truth$nbr_isoforms)
 
-truth$nbr_isoforms_cat <- cut2(truth$nbr_isoforms, cuts = c(4, 8))
+cuts <- quantile(truth$nbr_isoforms[truth$ds_status == 1], probs = c(1/3, 2/3), na.rm = TRUE)
+cuts
+
+
+truth$nbr_isoforms_cat <- cut2(truth$nbr_isoforms, cuts = cuts)
 
 n <- table(truth$nbr_isoforms_cat)
 n
 nds <- table(truth$nbr_isoforms_cat[truth$ds_status == 1])
 nds
+
 
 truth$nbr_isoforms_catn <- truth$nbr_isoforms_cat
 levels(truth$nbr_isoforms_catn) <- paste0(levels(truth$nbr_isoforms_cat), " n = ", as.numeric(n), ", nds = ", as.numeric(nds))
@@ -162,7 +189,11 @@ levels(truth$nbr_isoforms_catn)
 
 table(truth$nbrexonbins)
 
-truth$nbrexonbins_cat <- cut2(truth$nbrexonbins, cuts = c(15, 30))
+cuts <- quantile(truth$nbrexonbins[truth$ds_status == 1], probs = c(1/3, 2/3), na.rm = TRUE)
+cuts
+
+
+truth$nbrexonbins_cat <- cut2(truth$nbrexonbins, cuts = cuts)
 
 n <- table(truth$nbrexonbins_cat)
 n
@@ -180,15 +211,6 @@ levels(truth$nbrexonbins_catn)
 #######################################################
 # plot with iCOBRA
 #######################################################
-
-
-
-### colors
-colors_tmp <- read.table(paste0(rwd, "/colors.txt"), header = TRUE, as.is = TRUE)
-colors <- colors_tmp$colors
-names(colors) <- colors_tmp$methods
-
-
 
 cobradata <- COBRAData(padj = results_padj, truth = truth)
 
@@ -221,9 +243,14 @@ for(i in 2:(length(basemethods(cobraperf)) -1)){
 
 cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", aspects = "fdrtpr")
 
-cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colors[basemethods(cobraperf)])
 
-ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, xaxisrange = c(0, 0.7), yaxisrange = c(0.3, 1))
+cobraplot <- prepare_data_for_plot(cobraperf, keepmethods = factor(colors_df$methods, levels = colors_df$methods), colorscheme = colors[basemethods(cobraperf)])
+
+
+cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
+
+
+ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
 ggp <- ggp + 
   theme(legend.position = "right")
 
@@ -246,6 +273,9 @@ for(i in 1:length(splv_list)){
   cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, aspects = "fdrtpr", onlyshared = FALSE, maxsplit = Inf)
   
   cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE, colorscheme = colors[basemethods(cobraperf)])
+  
+  cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
+  
   
   # levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
   levels(cobraplot@fdrtpr$splitval) <- gsub(paste0("_catn"), "", levels(cobraplot@fdrtpr$splitval))

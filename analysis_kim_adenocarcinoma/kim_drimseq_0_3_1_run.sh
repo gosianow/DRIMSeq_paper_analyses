@@ -6,52 +6,95 @@ ROUT=$RWD/Rout
 
 mkdir $ROUT
 
-## Run R scripts
 
-# full
-# kallisto
+### Run R scripts
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='kallisto' model='model_full' dispersion_common=TRUE results_common=TRUE disp_mode_list=c('grid') disp_moderation_list=c('none')" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_full_kallisto_grid_common.Rout
+# model full
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='kallisto' model='model_full' dispersion_common=FALSE results_common=TRUE disp_mode_list=c('optimize','optim','constrOptim') disp_moderation_list=c('none','none','none')" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_full_kallisto.Rout
+for model in 'model_full'
+do 
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  do
+    
+    echo "${model}_${count_method}"
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='kallisto' model='model_full' dispersion_common=FALSE results_common=TRUE disp_mode_list=c('grid') disp_moderation_list=c('common')" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_full_kallisto_grid_common.Rout
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=TRUE results_common=TRUE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_${model}_${count_method}_grid_none.Rout
+    
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_${model}_${count_method}_grid_common.Rout
+    
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list=c('optimize','optim','constrOptim') disp_moderation_list=c('none','none','none')" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_${model}_${count_method}_optim.Rout
 
-# htseq
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='htseq' model='model_full' dispersion_common=TRUE results_common=TRUE disp_mode_list=c('grid','optimize','optim','constrOptim') disp_moderation_list=c('none','none','none','none')" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_full_htseq.Rout
-
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='htseq' model='model_full' dispersion_common=FALSE results_common=TRUE disp_mode_list=c('grid') disp_moderation_list=c('common')" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_full_htseq_grid_common.Rout
-
-
-
-# null_normal1
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='kallisto' model='model_null_normal1' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_normal1_kallisto.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='htseq' model='model_null_normal1' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_normal1_htseq.Rout
+  done
+done
 
 
-# null_tumor1
+# other models
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='kallisto' model='model_null_tumor1' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_tumor1_kallisto.Rout
+for model in 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
+do 
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  do
+    
+    echo "${model}_${count_method}"
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='htseq' model='model_null_tumor1' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_tumor1_htseq.Rout
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_${model}_${count_method}_grid_none.Rout
+    
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_${model}_${count_method}_grid_none.Rout
+
+  done
+done
 
 
-# null_normal2
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='kallisto' model='model_null_normal2' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_normal1_kallisto.Rout
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='htseq' model='model_null_normal2' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_normal1_htseq.Rout
+###############################################################################
+### Individual runs
+###############################################################################
 
 
-# null_tumor2
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='kallisto' model='model_null_tumor2' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_tumor1_kallisto.Rout
+for model in 'model_full' 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
+do 
+  for count_method in 'htseqprefiltered5' 
+  do
+    
+    echo "${model}_${count_method}"
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=3 count_method='htseq' model='model_null_tumor2' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_null_tumor1_htseq.Rout
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${count_method}' model='${model}' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_${model}_${count_method}_grid_none.Rout
+    
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common'" $RCODE/kim_drimseq_0_3_1_run.R $ROUT/kim_drimseq_0_3_1_run_${model}_${count_method}_grid_common.Rout
+
+  done
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

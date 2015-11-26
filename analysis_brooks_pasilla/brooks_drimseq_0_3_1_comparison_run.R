@@ -13,9 +13,9 @@ library(iCOBRA)
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/brooks_pasilla/'
-count_method=c('htseq','kallisto')[1]
-model=c('model_full','model_full_glm','model_full_paired','model_null1','model_null2','model_null3')[2]
+rwd='/home/Shared/data/seq/brooks_pasilla'
+count_method=c('htseq','kallisto')[2]
+model=c('model_full','model_full_glm','model_full_paired','model_null1','model_null2','model_null3')[4]
 
 ##############################################################################
 # Read in the arguments
@@ -43,6 +43,13 @@ comparison_out <- "drimseq_0_3_1_comparison/"
 out_dir <- paste0(comparison_out,  model, "/", count_method, "/")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
+### colors
+
+load(paste0(rwd, "/", comparison_out, "colors.Rdata"))
+colors
+colors_df
+
+colors_df$methods <- as.character(colors_df$methods)
 
 
 #######################################################
@@ -88,8 +95,14 @@ if(length(files) > 0){
 
 results_padj <- Reduce(function(...) merge(..., by = "gene_id", all=TRUE, sort = FALSE), results_padj)
 rownames(results_padj) <- results_padj$gene_id
-results_padj <- results_padj[, -1, drop = FALSE]
 
+
+results_padj <- results_padj[, colnames(results_padj) %in% colors_df$methods, drop = FALSE]
+
+keep_methods <- colors_df$methods %in% colnames(results_padj)
+
+clolors <- colors[keep_methods]
+colors_df <- colors_df[keep_methods, , drop = FALSE]
 
 
 #######################################################

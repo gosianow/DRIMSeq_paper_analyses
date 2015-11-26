@@ -18,7 +18,7 @@ library(ggplot2)
 rwd='/home/gosia/multinomial_project/simulations_sim5'
 simulation='drosophila_node_nonull'
 workers=4
-count_method=c('htseq','kallisto','htseq_prefiltered15')[2]
+count_method=c('htseq','kallisto','htseqprefiltered15','htseqprefiltered5','kallistofiltered5','kallistoprefiltered5')[5]
 dispersion_common=TRUE
 results_common=TRUE
 disp_mode_list=c('grid','grid','optimize','optim','constrOptim')[1]
@@ -72,9 +72,16 @@ if(count_method == "htseq")
   count_dir <- "2_counts/dexseq_nomerge/dexseq"
 if(count_method == "kallisto")
   count_dir <- "2_counts/kallisto/kallisto"
-if(count_method == "htseq_prefiltered15")
+if(count_method == "htseqprefiltered15")
   count_dir <- "2_counts/INCOMPLETE_KALLISTOEST/dexseq_nomerge_kallistoest_atleast15/dexseq"
+if(count_method == "htseqprefiltered5")
+  count_dir <- "2_counts/INCOMPLETE_KALLISTOEST/dexseq_nomerge_kallistoest_atleast5/dexseq"
+if(count_method == "kallistofiltered5")
+  count_dir <- "2_counts/kallisto_txfilt_5/kallisto"
+if(count_method == "kallistoprefiltered5")
+  count_dir <- "2_counts/INCOMPLETE_KALLISTOEST/kallisto_kallistoest_atleast5/kallisto"
 
+count_dir
 
 ### load counts
 counts_list <- lapply(1:6, function(i){
@@ -99,10 +106,9 @@ counts <- counts[, -1]
 
 d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sample_id, group = metadata$group)
 
-
 ### Filtering
 table(samples(d)$group)
-d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_gene_expr = 1, min_feature_prop = 0.01)
 
 
 plotData(d, out_dir = out_dir)

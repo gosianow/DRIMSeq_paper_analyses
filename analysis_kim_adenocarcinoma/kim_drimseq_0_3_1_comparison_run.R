@@ -13,9 +13,9 @@ library(iCOBRA)
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
-count_method=c('htseq', 'kallisto')[1]
-model=c('model_full', 'model_null_normal1', 'model_null_tumor1')[1]
+rwd='/home/Shared/data/seq/kim_adenocarcinoma'
+count_method=c('htseq','kallisto')[2]
+model=c('model_full','model_null_normal1','model_null_tumor1')[1]
 
 ##############################################################################
 # Read in the arguments
@@ -43,7 +43,18 @@ comparison_out <- "drimseq_0_3_1_comparison/"
 out_dir <- paste0(comparison_out,  model, "/", count_method, "/")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
+### colors
 
+load(paste0(rwd, "/", comparison_out, "colors.Rdata"))
+colors
+colors_df
+
+colors_df$methods <- as.character(colors_df$methods)
+
+# keep_methods <- c("dexseq", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none")
+
+# colors <- colors[keep_methods]
+# colors_df <- colors_df[colors_df$methods %in% keep_methods, , drop = FALSE]
 
 #######################################################
 # merge results for iCOBRA
@@ -66,27 +77,38 @@ results_padj[["dexseq"]] <- rt
 
 ####################### results from DRIMSeq
 
+
+
 res_path <- paste0(method_out, "/",  model, "/", count_method, "/")
 files <- list.files(path = res_path, pattern = "_results.txt" )
+files
 
 for(i in 1:length(files)){
   # i = 1
   method_name <- gsub(pattern = "_results.txt", replacement = "", x = files[i])
-  
-  rt <- read.table(paste0(res_path, files[i]), header = TRUE, as.is = TRUE)
-  head(rt)
-  
-  rt <- rt[,c("gene_id","adj_pvalue")]
-  colnames(rt) <- c("gene_id", method_name)
+    rt <- read.table(paste0(res_path, files[i]), header = TRUE, as.is = TRUE)
+    head(rt)
+    
+    rt <- rt[,c("gene_id","adj_pvalue")]
+    colnames(rt) <- c("gene_id", method_name)
 
-  results_padj[[method_name]] <- rt 
- 
+    results_padj[[method_name]] <- rt 
+  
 }
 
 
 results_padj <- Reduce(function(...) merge(..., by = "gene_id", all=TRUE, sort = FALSE), results_padj)
 rownames(results_padj) <- results_padj$gene_id
-results_padj <- results_padj[, -1]
+
+
+
+results_padj <- results_padj[, colnames(results_padj) %in% colors_df$methods, drop = FALSE]
+
+keep_methods <- colors_df$methods %in% colnames(results_padj)
+
+clolors <- colors[keep_methods]
+colors_df <- colors_df[keep_methods, , drop = FALSE]
+
 
 ####################### use iCOBRA
 
@@ -98,7 +120,8 @@ cobradata <- COBRAData(padj = results_padj)
 
 cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 1.1)
 
-overlap <- !is.na(cobraperf@overlap)
+overlap <- cobraperf@overlap 
+overlap[is.na(overlap)] <- 0
 
 summary$counts_genes_all <- apply(overlap, 2, sum)
 

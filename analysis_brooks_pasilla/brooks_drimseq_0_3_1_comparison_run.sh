@@ -22,7 +22,6 @@ do
   done
 done
 
-cp /home/gosia/R/drimseq_paper/colors.txt $RWD/drimseq_0_3_1_comparison/
 
 R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/brooks_summary.R $ROUT/brooks_summary.Rout
 

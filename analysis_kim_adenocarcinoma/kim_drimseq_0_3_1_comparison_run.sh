@@ -4,7 +4,7 @@ RCODE=/home/gosia/R/drimseq_paper/analysis_kim_adenocarcinoma
 RWD=/home/Shared/data/seq/kim_adenocarcinoma
 ROUT=$RWD/Rout
 
-mkdir $ROUT
+# mkdir $ROUT
 
 ## Run R scripts
 

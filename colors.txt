@@ -1,9 +1,8 @@
 methods	colors
-dexseq	dodgerblue3
-drimseq_common	forestgreen
-drimseq_genewise_constrOptim	maroon2
-drimseq_genewise_grid_common	firebrick2
-drimseq_genewise_grid_none	darkorange1
-drimseq_genewise_optim	blueviolet
-drimseq_genewise_optimize	orchid2
-truth	grey
+dexseq	#4065B1
+drimseq_common	#7FB972
+drimseq_genewise_grid_common	#D92120
+drimseq_genewise_grid_none	#E68E34
+drimseq_genewise_constrOptim	#C71585
+drimseq_genewise_optim	#781C81
+drimseq_genewise_optimize	#B17BA6

@@ -6,7 +6,7 @@
 # Created 16 Nov 2015 
 
 ##############################################################################
-
+library(BiocParallel)
 library(pryr)
 library(dirmult)
 library(limma)
@@ -82,6 +82,11 @@ dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 out_dir <- paste0("fp_common/", sim_name, "n", n, "_nm", nm, "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
+if(workers > 1){
+  BPPARAM <- MulticoreParam(workers = workers)
+  }else{
+    BPPARAM <- SerialParam()
+  }
 
 ##############################################################################
 ### Simulations for genewise dispersion 
@@ -105,23 +110,23 @@ fp_list <- lapply(1:r, function(i){
   
   ### With CR adjustement
   
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
-  d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BiocParallel::MulticoreParam(workers = workers))
-  d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
+  d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
   res <- results(d)
   
   fp[[1]] <- data.frame(fp = mean(res$pvalue < 0.05), dispersion = "common", method = "CR")
   
-  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BiocParallel::MulticoreParam(workers = workers))
-  d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
   res <- results(d)
   
   fp[[2]] <- data.frame(fp = mean(res$pvalue < 0.05), dispersion = "genewise", method = "CR")
   
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = common_dispersion(d), disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = common_dispersion(d), disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
-  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BiocParallel::MulticoreParam(workers = workers))
-  d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
   res <- results(d)
   
   fp[[3]] <- data.frame(fp = mean(res$pvalue < 0.05), dispersion = "moderated", method = "CR")

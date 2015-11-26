@@ -89,13 +89,20 @@ dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 out_dir <- paste0("error_genewise/", sim_name, "n", n, "_nm", nm, "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
+out_dir
 
+if(workers > 1){
+  BPPARAM <- MulticoreParam(workers = workers)
+  }else{
+    BPPARAM <- SerialParam()
+  }
+
+verbose <- 0
+  
 ##############################################################################
 ### Simulations for genewise dispersion 
 ##############################################################################
 
-BPPARAM <- BiocParallel::MulticoreParam(workers = workers, log = TRUE, logdir = "logdir/")
-verbose <- TRUE
 
 est_list <- lapply(1:r, function(i){
   # i = 1
@@ -112,6 +119,8 @@ est_list <- lapply(1:r, function(i){
   group_split <- strsplit2(rownames(counts), ":")
   
   d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = paste0("s", 1:ncol(counts)), group = rep("c1", ncol(counts)))
+  
+  #save(d, file = paste0(out_dir, "d.Rdata"))
   
   ### No CR adjustement
   
