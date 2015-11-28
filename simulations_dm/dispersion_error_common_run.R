@@ -81,16 +81,16 @@ dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 out_dir <- paste0("error_common/", sim_name, "n", n, "_nm", nm, "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
-
-##############################################################################
-### Simulations for common dispersion 
-##############################################################################
-
 if(workers > 1){
   BPPARAM <- MulticoreParam(workers = workers)
   }else{
     BPPARAM <- SerialParam()
   }
+
+
+##############################################################################
+### Simulations for common dispersion 
+##############################################################################
 
 
 est_list <- lapply(1:r, function(i){

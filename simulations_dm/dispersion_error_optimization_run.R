@@ -6,6 +6,7 @@
 # Created 12 Nov 2015 
 
 ##############################################################################
+
 library(BiocParallel)
 library(pryr)
 library(limma)
@@ -22,13 +23,13 @@ source("/home/gosia/R/drimseq_paper/simulations_dm/dm_simulate.R")
 
 rwd='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/'
 workers=4
-sim_name='test_'
+sim_name=''
 r=1 # Number of simulations
-m=100 # Number of genes
+m=500 # Number of genes
 n=3 # Number of samples
 nm=100 # Mean gene expression
 nd=0 # Negative binomial dispersion of gene expression
-param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/prop_q3_uniform.txt'
+param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/prop_q10_kim_kallisto_overall.txt'
 param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/disp_common_kim_kallisto.txt' # Parameters for a distribution
 
 
@@ -84,9 +85,9 @@ out_dir <- paste0("error_optimization/", sim_name, "n", n, "_nm", nm, "_nd", nd,
 
 if(workers > 1){
   BPPARAM <- MulticoreParam(workers = workers)
-  }else{
-    BPPARAM <- SerialParam()
-  }
+}else{
+  BPPARAM <- SerialParam()
+}
 
 
 ##############################################################################
@@ -107,32 +108,36 @@ est_list <- lapply(1:r, function(i){
   group_split <- strsplit2(rownames(counts), ":")
   
   d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = paste0("s", 1:ncol(counts)), group = rep("c1", ncol(counts)))
-
   
   ### With CR adjustement
   
   ## grid
+  print("grid")
   d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
   est[[1]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "grid")
-    
-    
+  
+  
   ## optimize
+  print("optimize")
   d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "optimize", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
   est[[2]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "optimize")
-
-  ## optim
+  
+  ## optim 
+  print("optim")
   d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "optim", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
   est[[3]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "optim")
- 
   
-  ## constrOptim
+  ## constrOptim 
+  print("constrOptim")
   d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "constrOptim", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
+  
   est[[4]] <- data.frame(est = genewise_dispersion(d)$genewise_dispersion, true = g0, method = "constrOptim")
-
+  
+  
   est <- do.call(rbind, est)
   rownames(est) <- NULL
   
@@ -152,7 +157,6 @@ write.table(est, paste0(out_dir, "est_optimization.txt"), quote = FALSE, sep = "
 
 
 sessionInfo()
-
 
 
 

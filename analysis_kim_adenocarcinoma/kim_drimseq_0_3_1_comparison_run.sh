@@ -11,7 +11,7 @@ ROUT=$RWD/Rout
 
 for model in 'model_full' 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
 do 
-  for count_method in 'kallisto' 'htseq'
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
   do 
   
     echo "${model}_${count_method}"

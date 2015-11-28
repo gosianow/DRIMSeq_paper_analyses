@@ -11,6 +11,7 @@ library(ggplot2)
 library(reshape2)
 library(tools)
 library(limma)
+library(plyr)
 
 ##############################################################################
 # Arguments for testing the code
@@ -37,31 +38,91 @@ print(rwd)
 
 setwd(rwd)
 
-out_dir_main <- "error_combined/"
-dir.create(out_dir_main, recursive = TRUE, showWarnings = FALSE)
-
-
-out_dir_com <- "error_common/"
-out_dir_gen <- "error_genewise/"
-
-files_com <- list.files(out_dir_com, pattern = ".txt")
-files_com
-
-files_gen <- list.files(out_dir_gen, pattern = ".txt")
-files_gen
-
-
-pref_com <- strsplit2(gsub(pattern = "_est_common.txt", "", files_com), split = "_disp_")
-pref_com
-pref_gen <- strsplit2(gsub(pattern = "_est_genewise.txt", "", files_gen), split = "_disp_")
-pref_gen
-
-pref_sim <- intersect(pref_com[, 1], pref_gen[, 1])
-pref_sim
+out_dir_plots <- "error_combined/"
+dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
 
 
 ##############################################################################
-### Plots for common dispersion 
+### Merge all results into one data frame
+##############################################################################
+
+sim_name=''
+nd=0
+
+n=c(3,6)
+nm=c(100,1000)
+
+prop=c('prop_q3_uniform','prop_q3_kim_kallisto_overall','prop_q10_uniform','prop_q10_kim_kallisto_overall')
+
+param_pi_path=paste0('/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/',prop,'.txt')
+
+
+disp=c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')
+
+param_gamma_path=paste0('/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/',disp,'.txt')
+
+out_dir_res <- c("error_common/", "error_genewise/")
+
+files <- list.files(out_dir_res[1], pattern = ".txt")
+files
+files <- list.files(out_dir_res[2], pattern = ".txt")
+files
+
+
+name_res <- c("est_common", "est_genewise")
+simulation <- c("common", "genewise")
+
+
+
+
+res_list <- list()
+ix <- 1
+
+for(ix_n in 1:length(n)){
+  
+  for(ix_nm in 1:length(nm)){
+    
+    for(ix_prop in 1:length(param_pi_path)){
+      
+      for(ix_disp in 1:length(param_gamma_path)){
+        # ix_n=1; ix_nm=1; ix_prop=1; ix_disp=1
+        
+        out_dir <- paste0(out_dir_res[ix_disp], sim_name, "n", n[ix_n], "_nm", nm[ix_nm], "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path[ix_prop])), "_",  basename(file_path_sans_ext(param_gamma_path[ix_disp])), "_")
+        
+        out_name <- paste0(out_dir, name_res[ix_disp], ".txt")
+        
+        
+        if(file.exists(out_name)){
+          
+          res_tmp <- read.table(out_name, header = TRUE, sep = "\t", as.is = TRUE)
+          
+          res_tmp$simulation <- simulation[ix_disp]
+          res_tmp$proportions <- prop[ix_prop]
+          res_tmp$nm <- nm[ix_nm]
+          res_tmp$n <- n[ix_n]
+          
+          res_list[[ix]] <- res_tmp
+          
+          ix <- ix + 1
+          
+        }
+
+        
+      }
+    }
+  }
+}
+
+
+res <- rbind.fill(res_list)
+
+
+
+
+
+
+##############################################################################
+### Panel plots
 ##############################################################################
 
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
@@ -69,78 +130,76 @@ whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
 
 
-for(i in 1:length(pref_sim)){
-  # i = 1
+### Adjust the order of the variables for plotting
+
+res$simulation <- factor(res$simulation, levels = c("common", "genewise"))
+res$dispersion <- factor(res$dispersion, levels = c("genewise", "moderated", "common"))
+res$method <- factor(res$method, levels = c("ML-dirmult", "PL", "CR"))
+
+res$proportions <- factor(res$proportions, levels = prop)
+levels(res$proportions)
+
+res$n <- factor(res$n)
+res$n <- factor(res$n, labels = paste0("n", levels(res$n)))
+
+res$nm <- factor(res$nm)
+res$nm <- factor(res$nm, labels = paste0("nm", levels(res$nm)))
+
+
+res$n_nm <- interaction(res$n, res$nm, lex.order = TRUE)
+
+levels(res$n_nm)
+
+res$n_nm_simulation <- interaction(res$n_nm, res$simulation, lex.order = TRUE)
+
+levels(res$n_nm_simulation)
+
+
+res$all_interactions <- interaction(res$dispersion, res$method, res$proportions, drop = TRUE)
+
+
+### Absolute error
+
+error <- res
+error$error <- abs(res$est - res$true)
   
-  dir_com <- paste0(out_dir_com, pref_sim[i], "_disp_", pref_com[1, 2], "_est_common.txt") 
-  dir_gen <- paste0(out_dir_gen, pref_sim[i], "_disp_", pref_gen[1, 2], "_est_genewise.txt") 
-  
-  
-  if(file.exists(dir_com) && file.exists(dir_gen)){
-    
-    out_dir <- paste0(out_dir_main, pref_sim[i], "_disp_combined")
-    
-    est_com <- read.table(dir_com, header = TRUE)
-    est_gen <- read.table(dir_gen, header = TRUE)
-    
-    est_com$simulation <- "common"
-    est_gen$simulation <- "genewise"
-    
-    est <- rbind(est_com, est_gen)
-    est$simulation <- factor(est$simulation, levels = c("common", "genewise"))
-    
-    est$dispersion <- factor(est$dispersion, levels = c("genewise", "moderated", "common"))
-    est$method <- factor(est$method, levels = c("ML-dirmult", "PL", "CR"))
-    
-    est$dispersionmethod <- interaction(est$dispersion, est$method)
-    
-    
-    ### Absolute error
-    
-    error <- data.frame(error = est$est - est$true, simulation = est$simulation, dispersion = est$dispersion, method = est$method, dispersionmethod = est$dispersionmethod)
-    
-    error$error <- abs(error$error)
-    
-    ylim <- c(min(aggregate(. ~ dispersionmethod, error[, c("error", "dispersionmethod")], whisker_lower)[, 2]) - 1, max(aggregate(. ~ dispersionmethod, error[, c("error", "dispersionmethod")], whisker_upper)[, 2]) + 1)
-    
-    
-    ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) + 
-      theme_bw() +
-      ylab("Absolute error") +
-      geom_boxplot(outlier.size = 0) +
-      coord_cartesian(ylim = ylim) +
-      theme(axis.text = element_text(size = 16), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-      facet_wrap(~ simulation)
-    
-    pdf(paste0(out_dir, "_boxplot_absolute.pdf"), 8, 5)
-    print(ggp)
-    dev.off()
-    
-    
-    ### Error as a ratio
-    
-    error <- data.frame(error = est$est/est$true, simulation = est$simulation, dispersion = est$dispersion, method = est$method, dispersionmethod = est$dispersionmethod)
-    
-    
-    ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
-      theme_bw() +
-      ylab("Log10 of error ratio") +
-      geom_boxplot(outlier.size = 1) +
-      geom_hline(yintercept = 0, color="grey50", linetype = 2, size = 0.5) +
-      theme(axis.text = element_text(size = 16), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-      facet_wrap(~ simulation)
-    
-    pdf(paste0(out_dir, "_boxplot_ratio_log.pdf"), 8, 5)
-    print(ggp)
-    dev.off()
-    
-    
-  }
-  
-}
+
+ylim <- c(min(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_lower)[, "error"]) - 1, max(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_upper)[, "error"]) + 1)
+
+
+ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) + 
+  geom_boxplot(outlier.size = 0.3, outlier.colour = "red") +
+  theme_bw() +
+  ylab("Absolute error") +
+  coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(proportions ~ n_nm_simulation)
+
+pdf(paste0(out_dir_plots, "/error_absolute_boxplot.pdf"), 15, 10)
+print(ggp)
+dev.off()
 
 
 
+### Error as a ratio
+
+error <- res
+error$error <- res$est/res$true
+
+
+ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
+  geom_boxplot(outlier.size = 0.3, outlier.colour = "red") +
+  theme_bw() +
+  ylab("Log10 of error ratio") +
+  coord_cartesian(ylim = c(-2, 2.5)) +
+  geom_hline(yintercept = 0, color="grey70", linetype = 1, size = 0.3) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), panel.grid.major.x =element_blank()) +
+  geom_vline(xintercept = c(1.5, 2.5), color = "grey90", size = 0.05) +
+  facet_grid(proportions ~ n_nm_simulation)
+
+pdf(paste0(out_dir_plots, "error_ratio_log_boxplot.pdf"), 15, 10)
+print(ggp)
+dev.off()
 
 
 

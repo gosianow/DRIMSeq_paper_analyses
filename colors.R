@@ -45,12 +45,6 @@ save(colors, colors_df, file = paste0("/home/Shared/data/seq/brooks_pasilla/drim
 
 
 
-write.table(colors_df, paste0("/home/Shared/data/seq/geuvadis/drimseq_0_3_1_comparison/colors.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
-
-save(colors, colors_df, file = paste0("/home/Shared/data/seq/geuvadis/drimseq_0_3_1_comparison/colors.Rdata"))
-
-
-
 
 
 

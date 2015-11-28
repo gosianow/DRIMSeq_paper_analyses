@@ -58,7 +58,7 @@ results <- list()
 #####################################
 
 
-res_tmp <- lapply(1:22, function(chr){
+res_list <- lapply(1:22, function(chr){
   # chr = 1
   
   res <- read.table(paste0(method_out_dir, population, "_chr",chr, "_results.txt"), header = TRUE, sep = "\t", as.is = TRUE)
@@ -68,7 +68,7 @@ res_tmp <- lapply(1:22, function(chr){
 })
 
 
-res <- rbind.fill(res_tmp)
+res <- rbind.fill(res_list)
 
 res <- res[!is.na(res$pvalue), ]
 
@@ -91,21 +91,17 @@ results[["drimseq"]] <- res
 #####################################
 
 
-res_tmp <- read.table(paste0("sqtlseeker_2_0_analysis/Results/", population, "_results_all.txt"), header = TRUE, as.is = TRUE)
+res_tmp <- read.table(paste0("sqtlseeker_2_1_analysis/results/", population, "_results_all.txt"), header = TRUE, as.is = TRUE)
+head(res_tmp)
+
 colnames(res_tmp) <- c("gene_id", "snp_id", "F", "nb.groups", "md", "tr.first", "tr.second", "nb.perms", "pvalue")
 res_tmp <- unique(res_tmp)
 
 
 res_tmp$gene_snp <- paste0(res_tmp$gene_id, ":", res_tmp$snp_id)
 
-res_tmp$qvalue <- qvalue::qvalue(res_tmp$pvalue)$qvalues
+res_tmp$adj_pvalue <- qvalue::qvalue(res_tmp$pvalue)$qvalues
 
-res_tmp$adj_pvalue <- p.adjust(res_tmp$pvalue, method = "BH")
-
-table(res_tmp$qvalue < 0.05)
-# table(res_tmp$qvalue < 0.05 & res_tmp$md >= 0.01)
-
-table(res_tmp$adj_pvalue < 0.05)
 
 
 results[["sqtlseeker"]] <- res_tmp
@@ -117,13 +113,60 @@ table(duplicated(results[["sqtlseeker"]][, "gene_snp"]))
 
 ##########################################################################
 ### histograms of p-values
+### scatterplot of p-values
 ##########################################################################
 
 
+ggp <- DRIMSeq:::dm_plotPvalues(pvalues = results[["drimseq"]][, "pvalue"])
 
-DRIMSeq:::dm_plotTable(pvalues = results[["drimseq"]][, "pvalue"], name = "pvalue", out_dir = paste0(out_dir, "drimseq_"))
+pdf(paste0(out_dir, "drimseq_hist_pvalues.pdf"))
+print(ggp)
+dev.off()
 
-DRIMSeq:::dm_plotTable(pvalues = results[["sqtlseeker"]][, "pvalue"], name = "pvalue", out_dir = paste0(out_dir, "sqtlseeker_"))
+
+ggp <- DRIMSeq:::dm_plotPvalues(pvalues = results[["sqtlseeker"]][, "pvalue"])
+
+pdf(paste0(out_dir, "sqtlseeker_hist_pvalues.pdf"))
+print(ggp)
+dev.off()
+
+
+
+results_pval <- list()
+
+pval_tmp <- results[["drimseq"]][, c("gene_snp", "pvalue")]
+colnames(pval_tmp) <- c("gene_snp", "drimseq")
+results_pval[["drimseq"]] <- pval_tmp
+
+pval_tmp <- results[["sqtlseeker"]][, c("gene_snp", "pvalue")]
+colnames(pval_tmp) <- c("gene_snp", "sqtlseeker")
+results_pval[["sqtlseeker"]] <- pval_tmp
+
+
+results_pval <- Reduce(function(...) merge(..., by = "gene_snp", all=TRUE, sort = FALSE), results_pval)
+rownames(results_pval) <- results_pval$gene_snp
+results_pval <- results_pval[, -1]
+
+
+pdf(paste0(out_dir, "scatter_pvalues.pdf"))
+smoothScatter(results_pval[, "drimseq"], results_pval[, "sqtlseeker"])
+dev.off()
+
+
+pdf(paste0(out_dir, "scatter_pvalues_range.pdf"))
+smoothScatter(results_pval[, "drimseq"], results_pval[, "sqtlseeker"], xlim = c(0, 0.05))
+dev.off()
+
+
+
+# ggp <- ggplot(results_pval, aes(x = drimseq, y = sqtlseeker)) + 
+#   stat_binhex(bins = 100) +
+#   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1))
+# 
+# pdf(paste0(out_dir, "binhex_pvalues.pdf"))
+# print(ggp)
+# dev.off()
+
 
 
 

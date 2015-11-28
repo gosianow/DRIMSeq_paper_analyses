@@ -93,7 +93,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_ds, fill = 
 
 
 
-pdf(paste0(comparison_out, "summary_genes_ds.pdf"), 12, 5)
+pdf(paste0(comparison_out, "summary_genes_ds_all.pdf"), 14, 7)
 print(ggp)
 dev.off()
 
@@ -109,7 +109,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_ds_overlap,
 
 
 
-pdf(paste0(comparison_out, "summary_genes_ds_overlap.pdf"), 12, 5)
+pdf(paste0(comparison_out, "summary_genes_ds_overlap.pdf"), 14, 7)
 print(ggp)
 dev.off()
 
@@ -127,7 +127,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_all, fill =
 
 
 
-pdf(paste0(comparison_out, "summary_genes_all.pdf"), 12, 5)
+pdf(paste0(comparison_out, "summary_genes_all.pdf"), 14, 7)
 print(ggp)
 dev.off()
 
@@ -162,7 +162,7 @@ ggp <- ggplot(data = summary2, aes(x = count_method, y = counts_genes_ds, group 
 
 
 
-pdf(paste0(comparison_out, "summary_genes_ds_overlap2.pdf"), 12, 5)
+pdf(paste0(comparison_out, "summary_genes_ds_unique_and_overlap.pdf"), 14, 7)
 print(ggp)
 dev.off()
 

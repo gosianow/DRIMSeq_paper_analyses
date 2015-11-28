@@ -29,8 +29,6 @@ do
 done
 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_common_plots_run.R $ROUT/dispersion_error_common_plots_run.Rout
-
 
 #############################################################################
 ### Test
