@@ -18,7 +18,7 @@ dm_rdirichlet <- function(n = 1, alpha){
 dm_simulate <- function(m = 10, n = 5, pi = c(1/3, 1/3, 1/3), g0 = 100, nm = 100, nd = 0, mc.cores = 1){
   # m - number of genes
   # n - total number of samples/replicates
-  # pi - proportions of features 
+  # pi - proportions of features (can be a list of length m)
   # g0 - dispersion gamma0 (can be a vector of length m)
   # nm - total number of counts per gene (can be a vector of length m)
   # nd - dispersion of nm if simulated from nbinom (can be a vector of length m) BCV = sqrt(theta) = sqrt(nd) = sqrt(1/size)
@@ -29,9 +29,14 @@ dm_simulate <- function(m = 10, n = 5, pi = c(1/3, 1/3, 1/3), g0 = 100, nm = 100
     nm <- rep(nm, m)
   if(length(nd == 1))
     nd <- rep(nd, m)
+  if(class(pi) == "numeric")
+    pi <- split(rep(pi, m), ceiling(seq_len(m * length(pi))/length(pi)))
+  
   
   sim <- mclapply(1:m, function(i){
     # i=1
+    
+    pi <- pi[[i]]/sum(pi[[i]])
     
     g_dir_org <- pi * g0[i] # gamma
     
@@ -46,17 +51,17 @@ dm_simulate <- function(m = 10, n = 5, pi = c(1/3, 1/3, 1/3), g0 = 100, nm = 100
     
     # simulate multinomial
     dm <- sapply(1:n, function(j) rmultinom(1, prob = g_dir[j, ], size = t[j]))    
-   
+    
     rownames(dm) <- paste0("g", rep(i, length(g_dir_org)), ":f", 1:length(g_dir_org))
     
     return(dm)
     
   }, mc.cores = mc.cores)
   
-sim <- do.call(rbind, sim)
-
-sim
-
+  sim <- do.call(rbind, sim)
+  
+  sim
+  
 }
 
 

@@ -4,6 +4,8 @@
 
 # BioC 3.1
 # Created 12 Nov 2015 
+# Modified 28 Nov 2015
+# Add MSE (or mean absolute error) plots like in edgeR paper 
 
 ##############################################################################
 
@@ -54,7 +56,7 @@ nd=0
 n=c(3,6)
 nm=c(100,1000)
 
-prop=c('prop_q3_uniform','prop_q10_uniform','prop_q3_kim_kallisto_overall','prop_q10_kim_kallisto_overall')
+prop=c('prop_q3_uniform','prop_q3_kim_kallisto_overall','prop_q10_uniform','prop_q10_kim_kallisto_overall')
 
 param_pi_path=paste0('/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/',prop,'.txt')
 
@@ -75,6 +77,7 @@ simulation <- c("genewise")
 
 
 res_list <- list()
+mse_list <- list()
 ix <- 1
 
 for(ix_n in 1:length(n)){
@@ -103,6 +106,35 @@ for(ix_n in 1:length(n)){
           
           res_list[[ix]] <- res_tmp
           
+          ### Manual splitting of results. There were 10 sim of 500 genes and 13 different df 
+          res_split <- split.data.frame(res_tmp, ceiling(seq_len(nrow(res_tmp))/(13*500)))
+          
+          mse_tmp <- lapply(1:length(res_split), function(r){
+            # r = 1
+            rr <- res_split[[r]]
+            rr$error_abs <- abs(rr$est - rr$true)
+            rr$disp_prior_df <- factor(rr$disp_prior_df)
+            
+            out_mean <- aggregate(. ~ disp_prior_df, rr[, c("disp_prior_df", "error_abs")], mean)
+            colnames(out_mean) <- c("disp_prior_df", "mean_error_abs")
+            
+            out_median <- aggregate(. ~ disp_prior_df, rr[, c("disp_prior_df", "error_abs")], median)
+            colnames(out_median) <- c("disp_prior_df", "median_error_abs")
+            
+            out <- merge(out_mean, out_median, by = "disp_prior_df", sort = FALSE)
+            
+            out$simulation <- simulation[ix_disp]
+            out$proportions <- prop[ix_prop]
+            out$nm <- nm[ix_nm]
+            out$n <- n[ix_n]
+            
+            return(out)
+            
+          })
+          
+          mse_list[[ix]] <- rbind.fill(mse_tmp)
+          
+          
           ix <- ix + 1
           
         }
@@ -116,8 +148,7 @@ for(ix_n in 1:length(n)){
 
 res <- rbind.fill(res_list)
 
-
-
+mse <- rbind.fill(mse_list)
 
 
 ##############################################################################
@@ -143,21 +174,19 @@ res$n <- factor(res$n, labels = paste0("n", levels(res$n)))
 res$nm <- factor(res$nm)
 res$nm <- factor(res$nm, labels = paste0("nm", levels(res$nm)))
 
-
 res$n_nm <- interaction(res$n, res$nm, lex.order = TRUE)
 
 levels(res$n_nm)
 
 
+
 res$all_interactions <- interaction(res$n_nm, res$proportions, res$disp_prior_df , drop = TRUE)
-
-
 
 
 ### Absolute error
 
 error <- res[complete.cases(res), ]
-error$error <- abs(res$est - res$true)
+error$error <- abs(error$est - error$true)
 
 
 # min_median <- min(aggregate(. ~ all_interactions, error[, c("all_interactions", "error")], median)[, "error"])
@@ -208,7 +237,7 @@ dev.off()
 ### Error as a ratio
 
 error <- res[complete.cases(res), ]
-error$error <- res$est/res$true
+error$error <- error$est/error$true
 
 ylim <- c(-2, 2)
 
@@ -233,9 +262,62 @@ dev.off()
 
 
 
+###### Plots of MSE (or mean absolute error)
+
+### Adjust the order of the variables for plotting
+
+mse$disp_prior_df <- factor(mse$disp_prior_df)
+
+
+mse$proportions <- factor(mse$proportions, levels = prop)
+levels(mse$proportions)
+
+mse$n <- factor(mse$n)
+mse$n <- factor(mse$n, labels = paste0("n", levels(mse$n)))
+
+mse$nm <- factor(mse$nm)
+mse$nm <- factor(mse$nm, labels = paste0("nm", levels(mse$nm)))
+
+mse$n_nm <- interaction(mse$n, mse$nm, lex.order = TRUE)
+
+levels(mse$n_nm)
+
+
+### plot mean 
+
+ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df)) + 
+  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
+  # geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.5) +
+  theme_bw() +
+  ylab("Mean absolute error") +
+  xlab("Moderation") +
+  # coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(proportions ~ n_nm)
+
+pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"), 15, 10)
+print(ggp)
+dev.off()
 
 
 
+
+
+### plot median 
+
+ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df)) + 
+  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
+  # geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.5) +
+  theme_bw() +
+  ylab("Median absolute error") +
+  xlab("Moderation") +
+  # coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(proportions ~ n_nm)
+
+pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"), 15, 10)
+print(ggp)
+dev.off()
 
 
 

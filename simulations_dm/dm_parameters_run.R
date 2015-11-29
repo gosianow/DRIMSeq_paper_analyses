@@ -13,14 +13,19 @@ library(MASS)
 library(edgeR)
 library(reshape2)
 library(matrixStats)
+library(plyr)
+
+##############################################################################
+# Arguments for testing the code
+##############################################################################
+
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/'
+count_method=c('htseq','kallisto')[2]
 
 
 ##############################################################################
 # Read in the arguments
 ##############################################################################
-
-# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/'
-# count_method=c('htseq','kallisto')[2]
 
 
 ## Read input arguments
@@ -33,17 +38,18 @@ for (i in 1:length(args)) {
 print(rwd)
 print(count_method)
 
+##############################################################################
+
+setwd(rwd)
+
+out_dir <- "dm_parameters/"
+dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 
 ##############################################################################
 # Parameters based on Kim data
 ##############################################################################
 
-
-setwd(rwd)
-
-out_dir <- "dm_parameters/"
-dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 main_data_dir <- "/home/Shared/data/seq/kim_adenocarcinoma/"
 method_out <- "drimseq_0_3_1"
@@ -110,7 +116,7 @@ ggp <- ggplot(data = genewise_disp, aes(x = genewise_dispersion)) +
   geom_density() +
   xlim(-1, quant_up) +
   geom_line(data = data.frame(x = seq(1, round(quant_up)), y = dgamma(seq(1, round(quant_up)), shape = g0_shape, scale = g0_scale, log = FALSE)), aes(x = x, y = y), colour = "red") +
-  ggtitle("Gamma fit with shape = ", round(g0_shape, 2), " and scale = ", round(g0_scale, 2))
+  ggtitle(paste0("Gamma fit with shape = ", round(g0_shape, 2), " and scale = ", round(g0_scale, 2)))
 
 print(ggp)
 dev.off()
@@ -129,7 +135,7 @@ ggp <- ggplot(data = genewise_disp, aes(x = genewise_dispersion)) +
   geom_density() +
   xlim(-1, whisker_up) +
   geom_line(data = data.frame(x = seq(1, round(whisker_up)), y = dlnorm(seq(1, round(whisker_up)), meanlog = g0_meanlog, sdlog = g0_sdlog)), aes(x = x, y = y), colour = "red") +
-  ggtitle("Lognormal fit with meanlog = ", round(g0_meanlog, 2), " and sdlog = ", round(g0_sdlog, 2))
+  ggtitle(paste0("Lognormal fit with meanlog = ", round(g0_meanlog, 2), " and sdlog = ", round(g0_sdlog, 2)))
 
 print(ggp)
 dev.off()
@@ -150,7 +156,7 @@ pdf(paste0(out_dir, "disp_genewise_kim_", count_method, "_hist_normal.pdf"))
 ggp <- ggplot(data = genewise_disp, aes(x = log(genewise_dispersion))) + 
   geom_density() +
   geom_line(data = data.frame(x = seq(min(log(genewise_disp$genewise_dispersion)), max(log(genewise_disp$genewise_dispersion)), by = 0.01), y = dnorm(seq(min(log(genewise_disp$genewise_dispersion)), max(log(genewise_disp$genewise_dispersion)), by = 0.01), mean = g0_mean, sd = g0_sd)), aes(x = x, y = y), colour = "red") +
-  ggtitle("Normal fit with mean = ", round(g0_mean, 2), " and sd = ", round(g0_sd, 2))
+  ggtitle(paste0("Normal fit with mean = ", round(g0_mean, 2), " and sd = ", round(g0_sd, 2)))
 
 print(ggp)
 dev.off()
@@ -162,6 +168,33 @@ dev.off()
 #######################################
 
 
+metadata <- read.table(paste0(main_data_dir, "3_metadata/metadata.xls"), stringsAsFactors = FALSE, sep="\t", header=TRUE) 
+metadata_org <- metadata
+
+count_dir <- paste0(main_data_dir, "2_counts/", count_method, "/")
+
+### load counts
+counts_list <- lapply(1:length(metadata_org$sampleName), function(i){
+  # i = 1
+  cts <- read.table(paste0(count_dir, metadata_org$sampleName[i], ".counts"), header = FALSE, as.is = TRUE)
+  colnames(cts) <- c("group_id", metadata_org$sampleName[i])  
+  return(cts)
+})
+
+counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
+counts <- counts[!grepl(pattern = "_", counts$group_id),]
+
+
+### Prepare data
+group_split <- strsplit2(counts[,1], ":")
+counts <- counts[, -1]
+### order the samples like in metadata!!!
+counts <- counts[, metadata_org$sampleName]
+
+
+d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = metadata$condition)
+
+
 gene_counts <- lapply(1:length(d@counts), function(g){ colSums(d@counts[[g]]) })
 gene_counts <- do.call(rbind, gene_counts)
 rownames(gene_counts) <- names(d)
@@ -171,7 +204,14 @@ dge <- DGEList(gene_counts, group = samples(d)$group)
 
 dge <- calcNormFactors(dge)
 
-pdf(paste0(out_dir, "gene_expr_kim_", count_method, "_MDS.pdf"))
+
+cpm <- cpm(dge, normalized.lib.sizes=TRUE)
+
+keep <- rowSums(cpm > 1) >= 12
+dge <- dge[ keep, ]
+
+
+pdf(paste0(out_dir, "nm_kim_", count_method, "_MDS.pdf"))
 plotMDS(dge, col = c("darkgreen", "blue")[samples(d)$group], xlim = c(-2, 2), ylim = c(-2, 2))
 dev.off()
 
@@ -179,14 +219,14 @@ dev.off()
 dge <- estimateCommonDisp(dge)
 dge <- estimateTagwiseDisp(dge)
 
-pdf(paste0(out_dir, "gene_expr_kim_", count_method, "_BCV.pdf"))
+pdf(paste0(out_dir, "nm_kim_", count_method, "_BCV.pdf"))
 plotBCV(dge)
 dev.off()
 
 dge$common.dispersion
 
 
-write.table(round(dge$common.dispersion, 2), file = paste0(out_dir, "gene_expr_disp_common_kim_", count_method, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+write.table(round(dge$common.dispersion, 2), file = paste0(out_dir, "nd_common_kim_", count_method, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
 
 bcv <- sqrt(dge$common.dispersion)
@@ -194,7 +234,7 @@ bcv
 
 
 
-pdf(paste0(out_dir, "gene_expr_disp_tagwise_kim_", count_method, "_hist.pdf"))
+pdf(paste0(out_dir, "nd_tagwise_kim_", count_method, "_hist.pdf"))
 ggp <- ggplot(data = data.frame(tagwise_dispersion = dge$tagwise.dispersion), aes(x = tagwise_dispersion)) + 
   geom_density() 
 print(ggp)
@@ -203,22 +243,131 @@ dev.off()
 
 
 
-#######################################
-### proportions
-#######################################
+##############################################################################
+### gene expression
+##############################################################################
 
-write.table(rep(1, 3)/3, file = paste0(out_dir, "prop_q3_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
-
-write.table(rep(1, 10)/10, file = paste0(out_dir, "prop_q10_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+gene_expr <- dge$counts[, "GSM927308"]
 
 
+whisker_up <- ceiling(boxplot.stats(gene_expr)$stats[5])
+quant_up <- quantile(gene_expr, 0.95, na.rm = TRUE)
+
+
+
+pdf(paste0(out_dir, "nm_kim_", count_method, "_hist.pdf"))
+ggp <- ggplot(data.frame(gene_expr = gene_expr), aes(x = gene_expr)) +
+  geom_density() +
+  xlim(0, whisker_up)
+print(ggp)
+dev.off()
+
+
+pdf(paste0(out_dir, "nm_kim_", count_method, "_hist_log.pdf"))
+ggp <- ggplot(data.frame(gene_expr = gene_expr), aes(x = log(gene_expr))) +
+  geom_density()
+print(ggp)
+dev.off()
+
+
+### Fit negative binomial distribution to gene expression
+
+params <- fitdistr(x = gene_expr[gene_expr <= whisker_up], "negative binomial")
+params[[1]]
+
+nm_size <- params[[1]][1]
+nm_mu <- params[[1]][2]
+
+ggp <- ggplot(data = data.frame(gene_expr = gene_expr), aes(x = gene_expr)) + 
+  geom_density() +
+  geom_line(data = data.frame(x = seq(1, round(whisker_up)), y = dnbinom(seq(1, round(whisker_up)), size = nm_size, mu = nm_mu)), aes(x = x, y = y), colour = "red") +
+  ggtitle(paste0("Negative binomial fit with mu = ", round(nm_mu, 2), " and size = ", round(nm_size, 2))) +
+  xlim(0, whisker_up)
+
+pdf(paste0(out_dir, "nm_kim_", count_method, "_hist_negative_binomial.pdf"))
+print(ggp)
+dev.off()
+
+
+write.table(round(params[[1]], 2), file = paste0(out_dir, "nm_kim_", count_method, "_negative_binomial.txt"), quote = FALSE, sep = "\t", row.names = TRUE, col.names = FALSE)
+
+
+### Fit lognormal distribution to gene expression
+
+params <- fitdistr(x = gene_expr, "lognormal")
+params[[1]]
+
+nm_meanlog <- params[[1]][1]
+nm_sdlog <- params[[1]][2]
+
+ggp <- ggplot(data = data.frame(gene_expr = gene_expr), aes(x = gene_expr)) + 
+  geom_density() +
+  geom_line(data = data.frame(x = seq(1, round(whisker_up)), y = dlnorm(seq(1, round(whisker_up)), meanlog = nm_meanlog, sdlog = nm_sdlog)), aes(x = x, y = y), colour = "red") +
+  ggtitle(paste0("Lognormal fit with meanlog = ", round(nm_meanlog, 2), " and sdlog = ", round(nm_sdlog, 2))) +
+  xlim(0, whisker_up)
+
+pdf(paste0(out_dir, "nm_kim_", count_method, "_hist_lognormal.pdf"))
+print(ggp)
+dev.off()
+
+
+write.table(round(params[[1]], 2), file = paste0(out_dir, "nm_kim_", count_method, "_lognormal.txt"), quote = FALSE, sep = "\t", row.names = TRUE, col.names = FALSE)
+
+
+### Fit normal distribution to log of gene expression
+
+params <- fitdistr(x = log(gene_expr), "normal")
+params[[1]]
+nm_mean <- params[[1]][1]
+nm_sd <- params[[1]][2]
+
+
+ggp <- ggplot(data = data.frame(gene_expr = gene_expr), aes(x = log(gene_expr))) + 
+  geom_density() +
+  geom_line(data = data.frame(x = seq(min(log(gene_expr)), max(log(gene_expr)), by = 0.01), y = dnorm(seq(min(log(gene_expr)), max(log(gene_expr)), by = 0.01), mean = nm_mean, sd = nm_sd)), aes(x = x, y = y), colour = "red") +
+  ggtitle(paste0("Normal fit with mean = ", round(nm_mean, 2), " and sd = ", round(nm_sd, 2)))
+
+pdf(paste0(out_dir, "nm_kim_", count_method, "_hist_normal.pdf"))
+print(ggp)
+dev.off()
+
+
+write.table(round(params[[1]], 2), file = paste0(out_dir, "nm_kim_", count_method, "_normal.txt"), quote = FALSE, sep = "\t", row.names = TRUE, col.names = FALSE)
+
+
+
+
+
+##############################################################################
+### proportions exact as in real data
+##############################################################################
 
 ### calculate the distribution of proportions from one sample
 
+
+metadata <- read.table(paste0(main_data_dir, "3_metadata/metadata.xls"), stringsAsFactors = FALSE, sep="\t", header=TRUE) 
+
+metadata_org <- metadata
+
+
+count_dir <- paste0(main_data_dir, "2_counts/", count_method, "/")
+
+
+### load counts
+counts_list <- lapply(1:length(metadata_org$sampleName), function(i){
+  # i = 1
+  cts <- read.table(paste0(count_dir, metadata_org$sampleName[i], ".counts"), header = FALSE, as.is = TRUE)
+  colnames(cts) <- c("group_id", metadata_org$sampleName[i])  
+  return(cts)
+})
+
+counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
+counts <- counts[!grepl(pattern = "_", counts$group_id),]
+
+
+
 # ### Approach with filtering features based on their CPM
-# counts <- read.table(paste0(main_data_dir, "2_counts/", count_method, "/", count_method, "_counts.txt"), header = TRUE, as.is = TRUE)
-# counts <- counts[!grepl(pattern = "_", counts$group_id),]
-# 
+
 # lib_size <- sum(counts[, "GSM927308"])*1e-6
 # 
 # counts <- counts[counts[, "GSM927308"] > 10, , drop = FALSE] # round(lib_size/2)
@@ -234,25 +383,11 @@ write.table(rep(1, 10)/10, file = paste0(out_dir, "prop_q10_uniform.txt"), quote
 # 
 # d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0, min_gene_expr = 100/lib_size)
 # # d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0.01, min_gene_expr = 100/lib_size)
-# 
-# plotData(d, out_dir = paste0(out_dir, "prop_kim_", count_method, "_gene_expression_"))
-# 
-# cts <- d@counts[, 1]
-# 
-# gene_expr <- sapply(1:length(cts), function(g){ sum(cts[[g]]) })
-# 
-# pdf(paste0(out_dir, "prop_kim_", count_method, "_gene_expression.pdf"))
-# ggp <- ggplot(data.frame(gene_expr = gene_expr), aes(x = log10(gene_expr))) +
-#   geom_density()
-# print(ggp)
-# dev.off()
-
 
 
 
 ### Approach with using raw counts for one sample and filtering on it with dmFilter
-counts <- read.table(paste0(main_data_dir, "2_counts/", count_method, "/", count_method, "_counts.txt"), header = TRUE, as.is = TRUE)
-counts <- counts[!grepl(pattern = "_", counts$group_id),]
+
 group_split <- strsplit2(counts[,1], ":")
 counts <- counts[, -1]
 
@@ -260,37 +395,51 @@ d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_sp
 
 d <- d[, "GSM927308"]
 
-lib_size <- sum(counts[, "GSM927308"])*1e-6
+lib_size <- sum(counts[, "GSM927308"])*1e-6 ### for cpm calculations
 
 d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0.01, min_gene_expr = 100/lib_size)
-plotData(d, out_dir = paste0(out_dir, "prop_kim_", count_method, "_gene_expression_"))
+
+
+plotData(d, out_dir = paste0(out_dir, "prop_kim_", count_method, "_"))
+
 
 cts <- d@counts[, 1]
-gene_expr <- sapply(1:length(cts), function(g){ sum(cts[[g]]) })
-
-pdf(paste0(out_dir, "prop_kim_", count_method, "_gene_expression.pdf"))
-ggp <- ggplot(data.frame(gene_expr = gene_expr), aes(x = log10(gene_expr))) +
-  geom_density()
-print(ggp)
-dev.off()
 
 
+prop_list <- lapply(1:length(cts), function(g){
+  # g = 1
+  
+  if(sum(cts[[g]]) == 0)
+    return(NULL)
+  
+  pi <- sort(cts[[g]]/sum(cts[[g]]), decreasing = TRUE)
+  
+  out <- data.frame(gene_id = paste0("g", g), feature_id = paste0("f", 1:length(pi)), proportions = pi)
+  
+  return(out)
+  
+})
+
+
+prop <- rbind.fill(prop_list)
+
+write.table(prop, file = paste0(out_dir, "prop_kim_", count_method, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
-### Approach with using d from the analysis
-# d <- d[, "GSM927308"]
-# plotData(d, out_dir = paste0(out_dir, "prop_kim_", count_method, "_gene_expression_"))
-# cts <- d@counts[, 1]
-# gene_expr <- sapply(1:length(cts), function(g){ sum(cts[[g]]) })
-# pdf(paste0(out_dir, "prop_kim_", count_method, "_gene_expression.pdf"))
-# ggp <- ggplot(data.frame(gene_expr = gene_expr), aes(x = log10(gene_expr))) +
-#   geom_density()
-# print(ggp)
-# dev.off()
-# cts <- cts[gene_expr > 500, ]
+##############################################################################
+### proportions per number of features 
+##############################################################################
+
+### Uniform 
+
+write.table(rep(1, 3)/3, file = paste0(out_dir, "prop_q3_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+write.table(rep(1, 10)/10, file = paste0(out_dir, "prop_q10_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
 
 
+
+### Decay from real data 
 
 max_features <- max(width(cts))
 max_features
