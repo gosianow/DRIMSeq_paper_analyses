@@ -1,6 +1,6 @@
 ######################################################
-## ----- dispersion_error_moderation_real_run
-## <<dispersion_error_moderation_real_run.R>>
+## ----- dispersion_error_filtering_run
+## <<dispersion_error_filtering_run.R>>
 
 # BioC 3.1
 # Created 28 Nov 2015 

@@ -8,8 +8,17 @@ ROUT=$RWD/Rout
 
 ## Run R scripts
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='kallisto'" $RCODE/dm_parameters_run.R $ROUT/dm_parameters_run_kallisto.Rout
+### Kim 
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' main_data_dir='/home/Shared/data/seq/kim_adenocarcinoma' data_name='kim' count_method='kallisto'" $RCODE/dm_parameters_run.R $ROUT/dm_parameters_run_kim_kallisto.Rout
 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='htseq'" $RCODE/dm_parameters_run.R $ROUT/dm_parameters_run_htseq.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' main_data_dir='/home/Shared/data/seq/kim_adenocarcinoma' data_name='kim' count_method='htseq'" $RCODE/dm_parameters_run.R $ROUT/dm_parameters_run_kim_htseq.Rout
+
+### Brooks
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' main_data_dir='/home/Shared/data/seq/brooks_pasilla' data_name='brooks' count_method='kallisto'" $RCODE/dm_parameters_run.R $ROUT/dm_parameters_run_brooks_kallisto.Rout
+
+
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' main_data_dir='/home/Shared/data/seq/brooks_pasilla' data_name='brooks' count_method='htseq'" $RCODE/dm_parameters_run.R $ROUT/dm_parameters_run_brooks_htseq.Rout
+
+
 

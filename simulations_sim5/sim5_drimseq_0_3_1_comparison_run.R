@@ -9,6 +9,7 @@
 
 library(iCOBRA)
 library(Hmisc)
+library(DEXSeq)
 
 ##############################################################################
 # Test arguments
@@ -16,7 +17,7 @@ library(Hmisc)
 
 rwd='/home/gosia/multinomial_project/simulations_sim5'
 simulation='hsapiens_node_nonull'
-count_method=c('htseq','kallisto','htseq_prefiltered15')[1]
+count_method=c('htseq','kallisto','htseq_prefiltered15')[2]
 
 
 ##############################################################################
@@ -76,6 +77,14 @@ if(count_method == "kallistoprefiltered5")
 
 results_dir
 
+
+# load(paste0(results_dir, ".Rdata"))
+# 
+# pdf("test_dexseq_plot.pdf")
+# 
+# try(plotDEXSeq(res, geneID = "ENSG00000000003", FDR = 0.1, fitExpToVar = "condition", norCounts=FALSE, expression=TRUE, splicing = TRUE,  displayTranscripts=FALSE, names=FALSE, legend=TRUE, color=NULL, color.samples=NULL, las = 3), silent = TRUE)
+# 
+# dev.off()
 
 
 
