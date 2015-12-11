@@ -173,11 +173,9 @@ write.table(out_summary, file = paste0(comparison_out, model, "_", count_method,
 
 
 ############################################################################
-# DRIMSeq plots of proportions
+# DRIMSeq plots of proportions - counts from DRIMSeq
 ############################################################################
 
-
-####################### counts from DRIMSeq
 
 res_path <- paste0(method_out, "/",  model, "/", count_method, "/")
 files <- list.files(path = res_path, pattern = "_d.Rdata" )
@@ -212,9 +210,46 @@ if(length(files) > 0){
 }
 
 
+############################################################################
+# DRIMSeq plots of proportions - no filtering
+############################################################################
 
 
 
+res_path <- paste0(method_out, "/",  model, "/", count_method, "/")
+files <- paste0(res_path, "d.Rdata")
+
+
+
+if(file.exists(files)){
+  
+  out_dir <- paste0(comparison_out, model, "_", count_method)
+  dir.create(out_dir, showWarnings = FALSE)
+  
+  load(files)
+  
+  for(j in 1:nrow(valid)){
+    # j = 1
+    
+    if(!valid$gene_id[j] %in% names(d@counts))
+      next
+    
+    counts <- d@counts[[valid$gene_id[j]]]
+    group <- d@samples$group
+    
+    ggp <- DRIMSeq:::dm_plotProportions(counts, group, pi_full = NULL, pi_null = NULL, main = NULL, plot_type = "barplot", order = FALSE) 
+    
+    ggp <- ggp +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5), axis.text=element_text(size=16), axis.title=element_text(size=14, face="bold"), plot.title = element_text(size=14)) 
+    
+    
+    pdf(paste0(out_dir, "/", "raw_proportions","_", valid$brooks_gene_id[j], ".pdf"), 10, 5)
+    print(ggp)
+    dev.off()
+    
+  }
+  
+}
 
 
 

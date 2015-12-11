@@ -62,10 +62,11 @@ dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
 out_dir_res <- c("error_moderation_real/run/")
 
 suffix_res <- c("est_moderation")
-
+suffix_fp <- c("fp_moderation")
 
 res_list <- list()
 mse_list <- list()
+fp_list <- list()
 ix <- 1
 
 for(ix_n in 1:length(n)){
@@ -109,18 +110,39 @@ for(ix_n in 1:length(n)){
     mse_tmp <- rbind.fill(mse_tmp_list)
     mse_tmp$n <- n[ix_n]
     mse_list[[ix]] <- mse_tmp
+
+  }
+  
+  files <- list.files(out_dir_res, pattern = paste0(out_name, suffix_fp, ".txt"))
+  print(files)
+  
+  if(length(files) > 0){
     
-    ix <- ix + 1
+    fp_tmp_list <- list()
+    
+    for(i in 1:length(files)){
+      
+      rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+      fp_tmp_list[[i]] <- rr
+      
+      
+    }
+    
+    fp_tmp <- rbind.fill(fp_tmp_list)
+    fp_tmp$n <- n[ix_n]
+    fp_list[[ix]] <- fp_tmp
+    
     
   }
   
+  
+  ix <- ix + 1
 }
 
 
 res <- rbind.fill(res_list)
-
 mse <- rbind.fill(mse_list)
-
+fp <- rbind.fill(fp_list)
 
 ##############################################################################
 ### Panel plots
@@ -251,6 +273,29 @@ pdf(paste0(out_dir_plots, out_name, "error_median_absolute_boxplot.pdf"))
 print(ggp)
 dev.off()
 
+
+
+
+
+### False positives
+
+fp$disp_prior_df <- factor(sprintf("%g", fp$disp_prior_df), levels = disp_prior_df_levels)
+
+ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
+
+
+ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey60") +
+  geom_hline(yintercept = 0.05, color="black", linetype = 2, size = 0.3) +
+  theme_bw() +
+  ylab("FP rate") +
+  xlab("Moderation") +
+  coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) 
+
+pdf(paste0(out_dir_plots, out_name, "fp_boxplot.pdf"))
+print(ggp)
+dev.off()
 
 
 

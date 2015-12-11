@@ -1,3 +1,4 @@
+#!/bin/bash
 ## Define paths to software and reference files
 
 RCODE=/home/gosia/R/drimseq_paper/simulations_dm

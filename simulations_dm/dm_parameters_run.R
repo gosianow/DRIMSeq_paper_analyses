@@ -382,32 +382,238 @@ counts_list <- lapply(1:length(metadata_org$sampleName), function(i){
 counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
 counts <- counts[!grepl(pattern = "_", counts$group_id),]
 
-
-
-# ### Approach with filtering features based on their CPM
-
-# lib_size <- sum(counts[, use_sample])*1e-6
-# 
-# counts <- counts[counts[, use_sample] > 10, , drop = FALSE] # round(lib_size/2)
-# 
-# lib_size <- sum(counts[, use_sample])*1e-6
-# 
-# group_split <- strsplit2(counts[,1], ":")
-# counts <- counts[, -1]
-# 
-# d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = colnames(counts), group = rep("C1", ncol(counts)))
-# 
-# d <- d[, use_sample]
-# 
-# d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0, min_gene_expr = 100/lib_size)
-# # d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0.01, min_gene_expr = 100/lib_size)
-
-
-
-### Approach with using raw counts for one sample and filtering on it with dmFilter
-
 group_split <- strsplit2(counts[,1], ":")
 counts <- counts[, -1]
+
+
+
+d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = colnames(counts), group = rep("C1", ncol(counts)))
+
+d <- d[, use_sample]
+lib_size <- sum(counts[ , use_sample])*1e-6 ### for cpm calculations
+
+d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 0, min_feature_prop = 0, min_gene_expr = 100/lib_size)
+
+plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_orig_"))
+
+
+
+
+
+calculate_proportions <- function(d, name_approach = "", out_dir, data_name, count_method, nr_features = seq(2, 15, 1)){
+  
+  
+  cts <- d@counts[, 1]
+  
+  
+  prop_list <- lapply(1:length(cts), function(g){
+    # g = 1
+    
+    if(sum(cts[[g]]) == 0)
+      return(NULL)
+    
+    pi <- sort(cts[[g]]/sum(cts[[g]]), decreasing = TRUE)
+    
+    out <- data.frame(gene_id = paste0("g", g), feature_id = paste0("f", 1:length(pi)), proportions = pi)
+    
+    return(out)
+    
+  })
+  
+  
+  prop <- rbind.fill(prop_list)
+  
+  write.table(prop, file = paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+  
+  
+  
+  ##############################################################################
+  ### proportions per number of features 
+  ##############################################################################
+  
+  ### Uniform 
+  
+  write.table(rep(1, 3)/3, file = paste0(out_dir, "prop_q3_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+  
+  write.table(rep(1, 10)/10, file = paste0(out_dir, "prop_q10_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+  
+  
+  
+  ### Decay from real data 
+  
+  max_features <- max(width(cts))
+  max_features
+  max_features_plot <- min(15, max_features)
+  nr_features <- nr_features[nr_features <= max_features]
+  
+  
+  prop_list <- lapply(1:length(cts), function(g){
+    # g = 1
+    if(sum(cts[[g]]) == 0)
+      return(NULL)
+    
+    pi <- c(sort(cts[[g]]/sum(cts[[g]]), decreasing = TRUE), rep(NA, max_features + 1 - nrow(cts[[g]])))
+    pi[max_features + 1] <- nrow(cts[[g]])
+    
+    return(pi)
+  })
+  
+  
+  prop <- do.call(rbind, prop_list)
+  prop <- data.frame(prop)
+  colnames(prop) <- c(paste0("F", 1:max_features), "Nr_features")
+  
+  
+  propm <- melt(prop, id.vars = "Nr_features", variable.name = "Features", value.name = "Proportions") 
+  propm <- propm[complete.cases(propm), ]
+  propm$Nr_features <- factor(propm$Nr_features)
+  
+  
+  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_boxplots_overall.pdf"), 15, 5)
+  ggp <- ggplot(propm, aes(x = Features, y = Proportions)) +
+    geom_boxplot(outlier.size = 0.5, outlier.colour = "brown") +
+    xlab("Sorted features")
+  print(ggp)
+  dev.off()
+  
+  
+  propm_sub <- propm[as.numeric(as.character(propm$Nr_features)) <= max_features_plot, ]
+  propm_sub$Nr_features <- factor(propm_sub$Nr_features)
+  propm_sub$Features <- factor(propm_sub$Features)
+  levels(propm_sub$Nr_features) <- paste0(levels(propm_sub$Nr_features), " (", as.numeric(table(propm_sub$Nr_features)), ")")
+  levels(propm_sub$Features)
+  
+  
+  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_boxplots.pdf"), width = 15)
+  ggp <- ggplot(propm_sub, aes(x = Features, y = Proportions, fill = Nr_features)) +
+    geom_boxplot() +
+    xlab("Sorted features") +
+    scale_fill_discrete(name = "Total number \nof features") +
+    coord_cartesian(ylim = c(-0.1, 1.1)) 
+  print(ggp)
+  dev.off()
+  
+  
+  
+  ### generate proportions from proportions per Nr_features
+  
+  gen_prop_list <- lapply(nr_features, function(i){
+    # i = 19
+    # print(i)
+    prop_tmp <- prop[prop$Nr_features == i, 1:i]
+    
+    if(nrow(prop_tmp) == 0)
+      return(NULL)
+    
+    prop_dir <- colMedians(as.matrix(prop_tmp))
+    prop_dir <- sort(prop_dir/sum(prop_dir), decreasing = TRUE)
+    # print(sum(colMedians(as.matrix(prop_tmp))))
+    
+    write.table(prop_dir, file = paste0(out_dir, "prop_q", i, "_",data_name,"_", count_method, name_approach, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+    
+    out <- c(prop_dir, rep(NA, max_features + 1 - i))
+    out[max_features + 1] <- i
+    
+    return(out)
+    
+  })
+  
+  
+  gen_prop <- do.call(rbind, gen_prop_list)
+  gen_prop <- data.frame(gen_prop)
+  colnames(gen_prop) <- c(paste0("F", 1:max_features), "Nr_features")
+  
+  gen_propm <- melt(gen_prop, id.vars = "Nr_features", variable.name = "Features", value.name = "Proportions") 
+  gen_propm <- gen_propm[complete.cases(gen_propm), ]
+  gen_propm$Nr_features <- factor(gen_propm$Nr_features)
+  
+  gen_propm_sub <- gen_propm[as.numeric(as.character(gen_propm$Nr_features)) <= max_features_plot, ]
+  gen_propm_sub$Nr_features <- factor(gen_propm_sub$Nr_features)
+  gen_propm_sub$Features <- factor(gen_propm_sub$Features)
+  levels(gen_propm_sub$Nr_features)
+  levels(gen_propm_sub$Features)
+  
+  
+  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_parameters.pdf"), width = 15)
+  ggp <- ggplot(gen_propm_sub, aes(x = Features, y = Proportions, group = Nr_features, colour = Nr_features)) +
+    geom_line() +
+    xlab("Sorted features") +
+    scale_colour_discrete(name = "Total number \nof features") +
+    coord_cartesian(ylim = c(-0.1, 1.1))
+  
+  print(ggp)
+  dev.off()
+  
+  
+  
+  ### generate proportions from overall proportions
+  
+  gen_prop_list <- lapply(nr_features, function(i){
+    # i = 19
+    # print(i)
+    
+    prop_dir <- colMedians(as.matrix(prop[, 1:max_features]), na.rm = TRUE)[1:i]
+    prop_dir <- sort(prop_dir/sum(prop_dir), decreasing = TRUE)
+    # print(sum(colMedians(as.matrix(prop_tmp))))
+    
+    write.table(prop_dir, file = paste0(out_dir, "prop_q", i, "_",data_name,"_", count_method, name_approach, "_overall.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+    
+    out <- c(prop_dir, rep(NA, max_features + 1 - i))
+    out[max_features + 1] <- i
+    
+    return(out)
+    
+  })
+  
+  
+  gen_prop <- do.call(rbind, gen_prop_list)
+  gen_prop <- data.frame(gen_prop)
+  colnames(gen_prop) <- c(paste0("F", 1:max_features), "Nr_features")
+  
+  gen_propm <- melt(gen_prop, id.vars = "Nr_features", variable.name = "Features", value.name = "Proportions") 
+  gen_propm <- gen_propm[complete.cases(gen_propm), ]
+  gen_propm$Nr_features <- factor(gen_propm$Nr_features)
+  
+  gen_propm_sub <- gen_propm[as.numeric(as.character(gen_propm$Nr_features)) <= max_features_plot, ]
+  gen_propm_sub$Nr_features <- factor(gen_propm_sub$Nr_features)
+  gen_propm_sub$Features <- factor(gen_propm_sub$Features)
+  levels(gen_propm_sub$Nr_features)
+  levels(gen_propm_sub$Features)
+  
+  
+  
+  gen_prop_overall <- colMedians(as.matrix(prop[, 1:max_features]), na.rm = TRUE)
+  gen_prop_overall <- data.frame(Nr_features = 2, Features = paste0("F", 1:max_features), Proportions = gen_prop_overall/sum(gen_prop_overall))
+  
+  gen_prop_overall_sub <- gen_prop_overall[1:max_features_plot, ]
+  gen_prop_overall_sub$Nr_features <- factor(gen_prop_overall_sub$Nr_features, levels = levels(gen_propm_sub$Nr_features))
+  gen_prop_overall_sub$Features <- factor(gen_prop_overall_sub$Features, levels = levels(gen_propm_sub$Features)
+  )
+  levels(gen_prop_overall_sub$Nr_features)
+  levels(gen_prop_overall_sub$Features)
+  
+  
+  
+  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_parameters_overall.pdf"), width = 15)
+  ggp <- ggplot(gen_propm_sub, aes(x = Features, y = Proportions, group = Nr_features, colour = Nr_features)) +
+    geom_line() +
+    xlab("Sorted features") +
+    scale_colour_discrete(name = "Total number \nof features") +
+    geom_line(data = gen_prop_overall_sub, aes(x = Features, y = Proportions), colour = "black") +
+    coord_cartesian(ylim = c(-0.1, 1.1))
+  
+  print(ggp)
+  dev.off()
+  
+  
+  
+}
+
+
+
+
+### Approach with using raw counts for one sample and filtering on it with dmFilter - keep features with min_feature_prop = 0.01
+
 
 d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = colnames(counts), group = rep("C1", ncol(counts)))
 
@@ -418,221 +624,39 @@ lib_size <- sum(counts[ , use_sample])*1e-6 ### for cpm calculations
 d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0.01, min_gene_expr = 100/lib_size)
 
 
-plotData(d, out_dir = paste0(out_dir, "prop_",data_name,"_", count_method, "_"))
+plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_"))
 
 
-cts <- d@counts[, 1]
+calculate_proportions(d, name_approach = "", out_dir, data_name, count_method, nr_features = seq(2, 15, 1))
 
 
-prop_list <- lapply(1:length(cts), function(g){
-  # g = 1
-  
-  if(sum(cts[[g]]) == 0)
-    return(NULL)
-  
-  pi <- sort(cts[[g]]/sum(cts[[g]]), decreasing = TRUE)
-  
-  out <- data.frame(gene_id = paste0("g", g), feature_id = paste0("f", 1:length(pi)), proportions = pi)
-  
-  return(out)
-  
-})
 
 
-prop <- rbind.fill(prop_list)
+### Approach with filtering features based on their expression (in CPM)
 
-write.table(prop, file = paste0(out_dir, "prop_",data_name,"_", count_method, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+lib_size <- sum(counts[, use_sample])*1e-6
+feature_cutoff <- round(lib_size/2)
+feature_cutoff
 
+keep_counts <- counts[, use_sample] > feature_cutoff
 
+counts_filt <- counts[keep_counts, , drop = FALSE] 
+group_split_filt <- group_split[keep_counts, , drop = FALSE]
 
-##############################################################################
-### proportions per number of features 
-##############################################################################
+lib_size <- sum(counts_filt)*1e-6
 
-### Uniform 
 
-write.table(rep(1, 3)/3, file = paste0(out_dir, "prop_q3_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+d <- dmDSdata(counts = counts_filt, gene_id = group_split_filt[, 1], feature_id = group_split_filt[, 2], sample_id = colnames(counts_filt), group = rep("C1", ncol(counts_filt)))
 
-write.table(rep(1, 10)/10, file = paste0(out_dir, "prop_q10_uniform.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+d <- d[, use_sample]
 
+d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0, min_gene_expr = 100/lib_size)
 
 
-### Decay from real data 
+plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_fcutoff_"))
 
-max_features <- max(width(cts))
-max_features
 
-
-prop_list <- lapply(1:length(cts), function(g){
-  # g = 1
-  if(sum(cts[[g]]) == 0)
-    return(NULL)
-  
-  pi <- c(sort(cts[[g]]/sum(cts[[g]]), decreasing = TRUE), rep(NA, max_features + 1 - nrow(cts[[g]])))
-  pi[max_features + 1] <- nrow(cts[[g]])
-  
-  return(pi)
-})
-
-
-prop <- do.call(rbind, prop_list)
-prop <- data.frame(prop)
-colnames(prop) <- c(paste0("F", 1:max_features), "Nr_features")
-
-
-propm <- melt(prop, id.vars = "Nr_features", variable.name = "Features", value.name = "Proportions") 
-propm <- propm[complete.cases(propm), ]
-propm$Nr_features <- factor(propm$Nr_features)
-
-
-pdf(paste0(out_dir, "prop_",data_name,"_", count_method, "_boxplots_overall.pdf"))
-ggp <- ggplot(propm, aes(x = Features, y = Proportions)) +
-  geom_boxplot() +
-  xlab("Sorted features")
-print(ggp)
-dev.off()
-
-
-propm_sub <- propm[as.numeric(as.character(propm$Nr_features)) <= 15, ]
-propm_sub$Nr_features <- factor(propm_sub$Nr_features)
-propm_sub$Features <- factor(propm_sub$Features)
-levels(propm_sub$Nr_features) <- paste0(levels(propm_sub$Nr_features), " (", as.numeric(table(propm_sub$Nr_features)), ")")
-levels(propm_sub$Features)
-
-
-pdf(paste0(out_dir, "prop_",data_name,"_", count_method, "_boxplots.pdf"), width = 15)
-ggp <- ggplot(propm_sub, aes(x = Features, y = Proportions, fill = Nr_features)) +
-  geom_boxplot() +
-  xlab("Sorted features") +
-  scale_fill_discrete(name = "Total number \nof features") +
-  coord_cartesian(ylim = c(-0.1, 1.1)) 
-print(ggp)
-dev.off()
-
-
-
-### generate proportions from proportions per Nr_features
-
-nr_features <- seq(2, 15, 1)
-
-gen_prop_list <- lapply(nr_features, function(i){
-  # i = 19
-  # print(i)
-  prop_tmp <- prop[prop$Nr_features == i, 1:i]
-  
-  prop_dir <- colMedians(as.matrix(prop_tmp))
-  prop_dir <- prop_dir/sum(prop_dir)
-  # print(sum(colMedians(as.matrix(prop_tmp))))
-
-  write.table(prop_dir, file = paste0(out_dir, "prop_q", i, "_",data_name,"_", count_method, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
-  
-  out <- c(prop_dir, rep(NA, max_features + 1 - i))
-  out[max_features + 1] <- i
-
-  return(out)
-  
-})
-
-
-gen_prop <- do.call(rbind, gen_prop_list)
-gen_prop <- data.frame(gen_prop)
-colnames(gen_prop) <- c(paste0("F", 1:max_features), "Nr_features")
-
-gen_propm <- melt(gen_prop, id.vars = "Nr_features", variable.name = "Features", value.name = "Proportions") 
-gen_propm <- gen_propm[complete.cases(gen_propm), ]
-gen_propm$Nr_features <- factor(gen_propm$Nr_features)
-
-gen_propm_sub <- gen_propm[as.numeric(as.character(gen_propm$Nr_features)) <= 15, ]
-gen_propm_sub$Nr_features <- factor(gen_propm_sub$Nr_features)
-gen_propm_sub$Features <- factor(gen_propm_sub$Features)
-levels(gen_propm_sub$Nr_features)
-levels(gen_propm_sub$Features)
-
-
-pdf(paste0(out_dir, "prop_",data_name,"_", count_method, "_parameters.pdf"), width = 15)
-ggp <- ggplot(gen_propm_sub, aes(x = Features, y = Proportions, group = Nr_features, colour = Nr_features)) +
-  geom_line() +
-  xlab("Sorted features") +
-  scale_colour_discrete(name = "Total number \nof features") +
-  coord_cartesian(ylim = c(-0.1, 1.1))
-
-print(ggp)
-dev.off()
-
-
-
-
-
-
-
-### generate proportions from overall proportions
-
-nr_features <- seq(2, 15, 1)
-
-gen_prop_list <- lapply(nr_features, function(i){
-  # i = 19
-  # print(i)
-
-  prop_dir <- colMedians(as.matrix(prop[, 1:max_features]), na.rm = TRUE)[1:i]
-  prop_dir <- prop_dir/sum(prop_dir)
-  # print(sum(colMedians(as.matrix(prop_tmp))))
-  
-  write.table(prop_dir, file = paste0(out_dir, "prop_q", i, "_kim_", count_method, "_overall.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
-  
-  out <- c(prop_dir, rep(NA, max_features + 1 - i))
-  out[max_features + 1] <- i
-  
-  return(out)
-  
-})
-
-
-gen_prop <- do.call(rbind, gen_prop_list)
-gen_prop <- data.frame(gen_prop)
-colnames(gen_prop) <- c(paste0("F", 1:max_features), "Nr_features")
-
-gen_propm <- melt(gen_prop, id.vars = "Nr_features", variable.name = "Features", value.name = "Proportions") 
-gen_propm <- gen_propm[complete.cases(gen_propm), ]
-gen_propm$Nr_features <- factor(gen_propm$Nr_features)
-
-gen_propm_sub <- gen_propm[as.numeric(as.character(gen_propm$Nr_features)) <= 15, ]
-gen_propm_sub$Nr_features <- factor(gen_propm_sub$Nr_features)
-gen_propm_sub$Features <- factor(gen_propm_sub$Features)
-levels(gen_propm_sub$Nr_features)
-levels(gen_propm_sub$Features)
-
-
-
-gen_prop_overall <- colMedians(as.matrix(prop[, 1:max_features]), na.rm = TRUE)
-gen_prop_overall <- data.frame(Nr_features = 2, Features = paste0("F", 1:max_features), Proportions = gen_prop_overall/sum(gen_prop_overall))
-
-gen_prop_overall_sub <- gen_prop_overall[1:15, ]
-gen_prop_overall_sub$Nr_features <- factor(gen_prop_overall_sub$Nr_features, levels = levels(gen_propm_sub$Nr_features))
-gen_prop_overall_sub$Features <- factor(gen_prop_overall_sub$Features, levels = levels(gen_propm_sub$Features)
-)
-levels(gen_prop_overall_sub$Nr_features)
-levels(gen_prop_overall_sub$Features)
-
-
-
-pdf(paste0(out_dir, "prop_",data_name,"_", count_method, "_parameters_overall.pdf"), width = 15)
-ggp <- ggplot(gen_propm_sub, aes(x = Features, y = Proportions, group = Nr_features, colour = Nr_features)) +
-  geom_line() +
-  xlab("Sorted features") +
-  scale_colour_discrete(name = "Total number \nof features") +
-  geom_line(data = gen_prop_overall_sub, aes(x = Features, y = Proportions), colour = "black") +
-  coord_cartesian(ylim = c(-0.1, 1.1))
-
-print(ggp)
-dev.off()
-
-
-
-
-
-
-
-
+calculate_proportions(d, name_approach = paste0("_fcutoff"), out_dir, data_name, count_method, nr_features = c(seq(2, 15, 1), 20, 25, 30, 35, 40, 45, 50))
 
 
 

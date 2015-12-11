@@ -13,6 +13,8 @@ library(rtracklayer)
 library(reshape2)
 library(Gviz)
 library(GenomicFeatures)
+library(tools)
+library(limma)
 
 ##############################################################################
 # Test arguments
@@ -43,7 +45,12 @@ comparison_out <- "drimseq_0_3_1_positive_controls/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
 
-gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
+path_gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
+path_gtf_filtered = '/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf'
+
+path_gtf_dexseq <- paste0(file_path_sans_ext(path_gtf), ".DEXSeq.flattened.rNO.gff")
+path_gtf_filtered_dexseq <- paste0(file_path_sans_ext(path_gtf_filtered), ".DEXSeq.flattened.rNO.gff")
+
 
 keep_methods <- c("dexseq", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none")
 
@@ -68,7 +75,7 @@ valid <- read.table("5_validation/brooks_validated_genes.txt", header = TRUE, se
 # get gene names 
 ##############################################################################
 
-gtf <- import(gtf_path)
+gtf <- import(path_gtf)
 
 
 all(valid$brooks_gene_id %in% mcols(gtf)$gene_name)
@@ -189,53 +196,101 @@ for(i in 1:nlevels(summary$model)){
 
 
 ##############################################################################
-# Plot coverage and annotation for the validated genes
+# Plot coverage and annotations for the validated genes
 ##############################################################################
+
+dir.create(paste0(comparison_out, "gviz/"))
+
 
 options(ucscChromosomeNames=FALSE)
 
 bam_dir <- "1_reads/tophat_2.0.9/"
 
 metadata <- metadata[order(metadata$condition), ]
-metadata$colors <- c("orange", "blueviolet")[ifelse(metadata$condition == "CTL", 1, 2)]
+metadata$colors <- c("dodgerblue3", "maroon2")[ifelse(metadata$condition == "CTL", 1, 2)]
 
 
-gat <- GenomeAxisTrack()
 
-txdb <- makeTxDbFromGFF(gtf_path, format="gtf")
+
+txdb <- makeTxDbFromGFF(path_gtf, format="gtf")
 genes <- genes(txdb)
 
+gtf <- import(path_gtf)
 
-gene <- valid$gene_id[2]
+gtf_dexseq <- import(path_gtf_dexseq)
+gtf_dexseq <- gtf_dexseq[mcols(gtf_dexseq)$type == "exonic_part"]
 
-chromosome <- as.character(seqnames(genes[gene, ]))
-astart <- start(genes[gene, ])
-aend <- end(genes[gene, ])
+group <- as.character(mcols(gtf_dexseq)[, "group"])
+
+group_tmp <- strsplit2(group, "gene_id ")
+
+groupg <- group_tmp[, 2]
+groupg <- gsub("\"", "", groupg)
+
+group_tmp <- strsplit2(group_tmp[,1], "exonic_part_number")
+
+groupb <- group_tmp[, 2]
+groupb <- gsub("\"| |; ", "", groupb)
+
+mcols(gtf_dexseq)$gene <- mcols(gtf_dexseq)$transcript <- groupg
+mcols(gtf_dexseq)$id <- mcols(gtf_dexseq)$exon<- as.numeric(groupb)
 
 
-txTr <- GeneRegionTrack(txdb, name = "original")
 
 
 
-alTrack <- list()
-
-for(i in 1:nrow(metadata)){
+for(j in 1:nrow(valid)){
+  # j = 1
+  print(j)
   
-  alTrack[[i]] <- AlignmentsTrack(paste0(bam_dir, metadata$sampleName[i], "/accepted_hits.bam"), isPaired = ifelse(metadata$LibraryLayout[i] == "PAIRED", TRUE, FALSE), name = metadata$shortname[i], col = metadata$colors[i], fill = metadata$colors[i])
+  g <- valid$gene_id[j]
+  chromosome <- as.character(seqnames(genes[g, ]))
+  astart <- start(genes[g, ]) - 100
+  aend <- end(genes[g, ]) + 100
+  
+  alTrack <- list()
+  sizes <- list()
+  
+  for(i in 1:nrow(metadata)){
+    
+    alTrack[[i]] <- AlignmentsTrack(paste0(bam_dir, metadata$sampleName[i], "/accepted_hits.bam"), isPaired = ifelse(metadata$LibraryLayout[i] == "PAIRED", TRUE, FALSE), name = metadata$shortname[i], col = metadata$colors[i], fill = metadata$colors[i], type = c("coverage"))
+    sizes[[i]] <- 1
+  }
+  
+  gat <- GenomeAxisTrack()
+  alTrack[["gat"]] <- gat
+  sizes[["gat"]] <- 1
+  
+  gtf_sub <- gtf[mcols(gtf)$gene_id == g,]
+  
+  nr_transcripts <- length(unique(mcols(gtf_sub)$transcript_id))
+  
+  txTr <- GeneRegionTrack(txdb, name = "transcripts",  transcriptAnnotation = "transcript", just.group = "above", cex.group = 0.7)
+  alTrack[["txTr"]] <- txTr
+  sizes[["txTr"]] <- ceiling(nr_transcripts/3)
+  
+  # txTr_dexseq <- GeneRegionTrack(gtf_dexseq[mcols(gtf_dexseq)$gene_id == g,], name = "htseq bins", exonAnnotation = "exon", collapse = FALSE, fontcolor.exon = 1, cex.exon = 0.7)
+  
+  gtf_dexseq_sub <- gtf_dexseq[mcols(gtf_dexseq)$gene_id == g,]
+  strand(gtf_dexseq_sub) <- "*"
+  annTr_dexseq <- AnnotationTrack(gtf_dexseq_sub, name = "htseq bins", showFeatureId = TRUE, fontcolor.feature = "darkblue", stacking = "dense", cex.feature = 0.5)
+  
+  alTrack[["annTr_dexseq"]] <- annTr_dexseq
+  sizes[["annTr_dexseq"]] <- 1
+  
+  sizes <- unlist(sizes)
+  
+  pdf(paste0(comparison_out, "gviz/expression_", valid$brooks_gene_id[j], ".pdf"), 12, 8)
+  
+  plotTracks(alTrack, from = astart, to = aend, chromosome = chromosome, sizes = sizes)
+  
+  dev.off()
+  
+  
   
 }
 
 
-alTrack[["gat"]] <- gat
-alTrack[["txTr"]] <- txTr
-
-
-
-pdf("gviz_test.pdf", 10, 10)
-
-plotTracks(alTrack, from = astart, to = aend, chromosome = chromosome, transcriptAnnotation = "transcript", type = c("coverage"), sizes = rep(1/length(alTrack), length(alTrack)))
-
-dev.off()
 
 
 

@@ -97,7 +97,7 @@ switch(
     all(colnames(counts) == metadata$sampleName)
     
     d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = metadata$condition)
-    
+    save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
     d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
@@ -111,7 +111,7 @@ switch(
     all(colnames(counts) == metadata$sampleName)
     
     d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = metadata$condition)
-    
+    save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
     d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
@@ -125,7 +125,7 @@ switch(
     all(colnames(counts) == metadata$sampleName)
     
     d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), 2))
-    
+    save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
     d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
@@ -139,7 +139,7 @@ switch(
     all(colnames(counts) == metadata$sampleName)
     
     d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = rep(c("C1", "C2"), each = 2))
-    
+    save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
     d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
@@ -153,7 +153,7 @@ switch(
     all(colnames(counts) == metadata$sampleName)
     
     d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = metadata$sampleName, group = c("C1", "C2", "C2", "C1"))
-    
+    save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
     d <- dmFilter(d, min_samps_gene_expr = 2, min_samps_feature_prop = 2, min_feature_prop = 0.01)
@@ -162,7 +162,6 @@ switch(
 )
 
 plotData(d, out_dir = out_dir)
-save(d, file = paste0(out_dir, "d.Rdata"))
 
 
 

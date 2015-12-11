@@ -17,8 +17,8 @@ library(plyr)
 
 rwd='/home/gosia/multinomial_project/simulations_sim5'
 
-simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull')
-count_method_list=c('kallisto','kallistofiltered5','kallistoprefiltered5','htseq','htseqprefiltered5','htseqprefiltered15')
+simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull')
+count_method_list=c('kallisto','htseq','kallistofiltered5','htseqprefiltered5')
 name=''
 legend_nrow=1
 pdf_width=15
@@ -56,6 +56,10 @@ colors_df
 
 colors_df$methods <- as.character(colors_df$methods)
 
+### Plot
+
+out_dir_plots <- paste0("drimseq_0_3_1_comparison/")
+dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
 
 ##############################################################################
 
@@ -120,18 +124,16 @@ truth$count_method <- factor(truth$count_method, levels = count_method_list)
 levels(truth$count_method)
 
 
+
+##############################################################################
+### Different order for split
+##############################################################################
+
+
 truth$split <- factor(interaction(truth$simulation, truth$count_method), levels = paste(rep(levels(truth$simulation), each = nlevels(truth$count_method)), levels(truth$count_method), sep = ".")
 )
 levels(truth$split)
 table(truth$split)
-
-
-
-
-### Plot
-
-out_dir <- paste0("drimseq_0_3_1_comparison/")
-dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 
 
@@ -166,7 +168,7 @@ ggp <- ggp +
   facet_wrap(~splitval, nrow = facet_nrow)
 
 
-pdf(paste0(out_dir, "fdrtpr_simulation_count_method", name, ".pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, "fdrtpr_simulation_count_method", name, ".pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -177,11 +179,64 @@ dev.off()
 
 
 
-
-
-
-
-
+# ##############################################################################
+# ### Different order for split
+# ##############################################################################
+# 
+# 
+# 
+# truth$split <- factor(interaction(truth$simulation, truth$count_method), levels = paste(rep(levels(truth$simulation), each = nlevels(truth$count_method)), levels(truth$count_method), sep = ".")
+# )
+# 
+# 
+# truth$split <- interaction(truth$simulation, truth$count_method, lex.order = TRUE)
+# 
+# truth$split <- factor(truth$split, levels = levels(truth$split)[c(1, 2, 5, 6, 3 , 4, 7, 8)])
+# 
+# levels(truth$split)
+# 
+# table(truth$split)
+# 
+# 
+# ### Plot
+# 
+# 
+# cobradata <- COBRAData(padj = results_padj[, c("dexseq", "drimseq_genewise_grid_none")], truth = truth)
+# 
+# cobradata <- COBRAData(padj = results_padj, truth = truth)
+# 
+# 
+# ### FDR TPR stratified
+# 
+# splv <- "split"
+# 
+# cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, aspects = "fdrtpr", onlyshared = TRUE, maxsplit = Inf)
+# 
+# cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE, colorscheme = colors[basemethods(cobraperf)])
+# 
+# 
+# colors_df <- colors_df[colors_df$methods %in% basemethods(cobraperf), , drop = FALSE]
+# 
+# cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
+# 
+# 
+# levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
+# 
+# facet_nrow <- 2
+# 
+# 
+# ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
+# ggp <- ggp + 
+#   theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+#   guides(colour = guide_legend(nrow = legend_nrow)) + 
+#   facet_wrap(~splitval, nrow = facet_nrow)
+# 
+# 
+# pdf(paste0(out_dir_plots, "fdrtpr_simulation_count_method_order2", name, ".pdf"), width = 14, height = 9)
+# print(ggp)
+# dev.off()
+# 
+# 
 
 
 

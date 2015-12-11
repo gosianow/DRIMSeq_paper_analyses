@@ -9,6 +9,7 @@
 
 library(BiocParallel)
 library(pryr)
+library(plyr)
 library(dirmult)
 library(limma)
 library(DRIMSeq)
@@ -154,29 +155,41 @@ d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_sp
 
 ### With CR adjustement
 
-d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
+d_org <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
 
-common_disp <- common_dispersion(d)
+common_disp <- common_dispersion(d_org)
 
 ### Dispersion with different degree of moderation 
 
 est <- list()
+fp <- list()
 
 for(j in 1:length(disp_prior_df)){
   # j = 1
+  print(disp_prior_df[j])
   
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = common_disp, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = disp_prior_df[j], disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
+  d <- dmDispersion(d_org, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = common_disp, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = disp_prior_df[j], disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   common_dispersion(d) <- common_disp
   
   est[[j]] <- data.frame(est = round(genewise_dispersion(d)$genewise_dispersion, 2), true = round(g0, 2), disp_prior_df = disp_prior_df[j], q = sapply(pi, length), nm = nm)
   
+  
+  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
+  res <- results(d)
+  
+  fp[[j]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), disp_prior_df = disp_prior_df[j])
+  
+  
 }
 
-est <- do.call(rbind, est)
+est <- rbind.fill(est)
+fp <- rbind.fill(fp)
+
 
 
 write.table(est, paste0(out_dir, out_name, "est_moderation.txt"), quote = FALSE, sep = "\t", row.names = FALSE)
-
+write.table(fp, paste0(out_dir, out_name, "fp_moderation.txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 sessionInfo()
