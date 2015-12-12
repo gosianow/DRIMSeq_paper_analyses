@@ -2,7 +2,7 @@
 ## ----- dm_parameters_run
 ## <<dm_parameters_run.R>>
 
-# BioC 3.1
+# BioC 3.2
 # Created 6 Nov 2015 
 
 ##############################################################################
@@ -19,15 +19,15 @@ library(plyr)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1'
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
 
 count_method=c('htseq','kallisto')[2]
 
-# main_data_dir='/home/Shared/data/seq/kim_adenocarcinoma'
-# data_name='kim'
+main_data_dir='/home/Shared/data/seq/kim_adenocarcinoma'
+data_name='kim'
 
-main_data_dir='/home/Shared/data/seq/brooks_pasilla'
-data_name='brooks'
+# main_data_dir='/home/Shared/data/seq/brooks_pasilla'
+# data_name='brooks'
 
 
 ##############################################################################
@@ -51,7 +51,7 @@ print(data_name)
 
 setwd(rwd)
 
-out_dir <- paste0("dm_parameters/", data_name, "_", count_method, "/")
+out_dir <- paste0("dm_parameters_drimseq_0_3_3/", data_name, "_", count_method, "/")
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 
@@ -387,14 +387,11 @@ counts <- counts[, -1]
 
 
 
-d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = colnames(counts), group = rep("C1", ncol(counts)))
+d_org <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = colnames(counts), group = rep("C1", ncol(counts)))
 
-d <- d[, use_sample]
-lib_size <- sum(counts[ , use_sample])*1e-6 ### for cpm calculations
+d_org <- d_org[, use_sample]
 
-d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 0, min_feature_prop = 0, min_gene_expr = 100/lib_size)
 
-plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_orig_"))
 
 
 
@@ -443,7 +440,7 @@ calculate_proportions <- function(d, name_approach = "", out_dir, data_name, cou
   
   max_features <- max(width(cts))
   max_features
-  max_features_plot <- min(15, max_features)
+  max_features_plot <- min(20, max_features)
   nr_features <- nr_features[nr_features <= max_features]
   
   
@@ -480,11 +477,11 @@ calculate_proportions <- function(d, name_approach = "", out_dir, data_name, cou
   propm_sub <- propm[as.numeric(as.character(propm$Nr_features)) <= max_features_plot, ]
   propm_sub$Nr_features <- factor(propm_sub$Nr_features)
   propm_sub$Features <- factor(propm_sub$Features)
-  levels(propm_sub$Nr_features) <- paste0(levels(propm_sub$Nr_features), " (", as.numeric(table(propm_sub$Nr_features)), ")")
+  levels(propm_sub$Nr_features) <- paste0(levels(propm_sub$Nr_features), " (", as.numeric(table(propm_sub$Nr_features))/as.numeric(levels(propm_sub$Nr_features)), ")")
   levels(propm_sub$Features)
   
   
-  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_boxplots.pdf"), width = 15)
+  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_boxplots.pdf"), 15, 5)
   ggp <- ggplot(propm_sub, aes(x = Features, y = Proportions, fill = Nr_features)) +
     geom_boxplot() +
     xlab("Sorted features") +
@@ -534,7 +531,7 @@ calculate_proportions <- function(d, name_approach = "", out_dir, data_name, cou
   levels(gen_propm_sub$Features)
   
   
-  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_parameters.pdf"), width = 15)
+  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_parameters.pdf"), 15, 5)
   ggp <- ggplot(gen_propm_sub, aes(x = Features, y = Proportions, group = Nr_features, colour = Nr_features)) +
     geom_line() +
     xlab("Sorted features") +
@@ -594,7 +591,7 @@ calculate_proportions <- function(d, name_approach = "", out_dir, data_name, cou
   
   
   
-  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_parameters_overall.pdf"), width = 15)
+  pdf(paste0(out_dir, "prop_",data_name,"_", count_method, name_approach, "_parameters_overall.pdf"), 15, 5 )
   ggp <- ggplot(gen_propm_sub, aes(x = Features, y = Proportions, group = Nr_features, colour = Nr_features)) +
     geom_line() +
     xlab("Sorted features") +
@@ -611,52 +608,50 @@ calculate_proportions <- function(d, name_approach = "", out_dir, data_name, cou
 
 
 
+### Approach with keeping everything 
+
+name_approach <- "ncutoff"
+
+
+d <- dmFilter(d_org, min_samps_gene_expr = 1, min_samps_feature_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0, min_gene_expr = 100, min_feature_expr = 1)
+
+
+plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_", name_approach, "_"))
+
+
+calculate_proportions(d, name_approach = paste0("_", name_approach), out_dir, data_name, count_method, nr_features = seq(2, 30, 1))
+
+
+
 
 ### Approach with using raw counts for one sample and filtering on it with dmFilter - keep features with min_feature_prop = 0.01
 
-
-d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = colnames(counts), group = rep("C1", ncol(counts)))
-
-d <- d[, use_sample]
-
-lib_size <- sum(counts[ , use_sample])*1e-6 ### for cpm calculations
-
-d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0.01, min_gene_expr = 100/lib_size)
+name_approach <- "pcutoff"
 
 
-plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_"))
+d <- dmFilter(d_org, min_samps_gene_expr = 1, min_samps_feature_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0.01, min_gene_expr = 100, min_feature_expr = 1)
 
 
-calculate_proportions(d, name_approach = "", out_dir, data_name, count_method, nr_features = seq(2, 15, 1))
+plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_", name_approach, "_"))
+
+
+calculate_proportions(d, name_approach = paste0("_", name_approach), out_dir, data_name, count_method, nr_features = seq(2, 15, 1))
 
 
 
 
-### Approach with filtering features based on their expression (in CPM)
+### Approach with filtering features based on their expression
 
-lib_size <- sum(counts[, use_sample])*1e-6
-feature_cutoff <- round(lib_size/2)
-feature_cutoff
-
-keep_counts <- counts[, use_sample] > feature_cutoff
-
-counts_filt <- counts[keep_counts, , drop = FALSE] 
-group_split_filt <- group_split[keep_counts, , drop = FALSE]
-
-lib_size <- sum(counts_filt)*1e-6
+name_approach <- "fcutoff"
 
 
-d <- dmDSdata(counts = counts_filt, gene_id = group_split_filt[, 1], feature_id = group_split_filt[, 2], sample_id = colnames(counts_filt), group = rep("C1", ncol(counts_filt)))
-
-d <- d[, use_sample]
-
-d <- dmFilter(d, min_samps_gene_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0, min_gene_expr = 100/lib_size)
+d <- dmFilter(d_org, min_samps_gene_expr = 1, min_samps_feature_expr = 1, min_samps_feature_prop = 1, min_feature_prop = 0, min_gene_expr = 100, min_feature_expr = 10)
 
 
-plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_fcutoff_"))
+plotData(d, out_dir = paste0(out_dir, "prop_", data_name, "_", count_method, "_", name_approach, "_"))
 
 
-calculate_proportions(d, name_approach = paste0("_fcutoff"), out_dir, data_name, count_method, nr_features = c(seq(2, 15, 1), 20, 25, 30, 35, 40, 45, 50))
+calculate_proportions(d, name_approach = paste0("_", name_approach), out_dir, data_name, count_method, nr_features = c(seq(2, 30, 1)))
 
 
 
