@@ -1,9 +1,10 @@
 ######################################################
-## ----- sim5_drimseq_0_3_1_comparison_combined
-## <<sim5_drimseq_0_3_1_comparison_combined.R>>
+## ----- sim5_drimseq_comparison_combined
+## <<sim5_drimseq_comparison_combined.R>>
 
-# BioC 3.1
+# BioC 3.2
 # Created 16 Nov 2015 
+# Modified 14 Dec 2015
 
 ##############################################################################
 
@@ -18,7 +19,8 @@ library(plyr)
 rwd='/home/gosia/multinomial_project/simulations_sim5'
 
 simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull')
-count_method_list=c('kallisto','htseq','kallistofiltered5','htseqprefiltered5')
+count_method_list=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5')
+filter_method=c("filter1")
 name=''
 legend_nrow=1
 pdf_width=15
@@ -45,7 +47,7 @@ print(pdf_height)
 ##############################################################################
 
 setwd(rwd)
-method_out <- "drimseq_0_3_1"
+method_out <- "drimseq_0_3_3"
 
 
 ### colors
@@ -58,7 +60,7 @@ colors_df$methods <- as.character(colors_df$methods)
 
 ### Plot
 
-out_dir_plots <- paste0("drimseq_0_3_1_comparison/")
+out_dir_plots <- paste0("drimseq_0_3_3_comparison/", filter_method, "/")
 dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
 
 ##############################################################################
@@ -77,8 +79,8 @@ for(i in 1:length(simulation_list)){
     simulation <- simulation_list[i]
     count_method <- count_method_list[j]
     
-    comparison_out <- paste0(simulation, "/drimseq_0_3_1_comparison")
-    out_dir <- paste0(comparison_out, "/", count_method, "_")
+    comparison_out <- paste0(simulation, "/drimseq_0_3_3_comparison")
+    out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
     
     if(!file.exists(paste0(out_dir, "cobradata.Rdata")))
       next
@@ -126,7 +128,7 @@ levels(truth$count_method)
 
 
 ##############################################################################
-### Different order for split
+### Order for split - simulations per row
 ##############################################################################
 
 
@@ -137,7 +139,7 @@ table(truth$split)
 
 
 
-cobradata <- COBRAData(padj = results_padj[, c("dexseq", "drimseq_genewise_grid_none")], truth = truth)
+# cobradata <- COBRAData(padj = results_padj[, c("dexseq", "drimseq_genewise_grid_none")], truth = truth)
 
 cobradata <- COBRAData(padj = results_padj, truth = truth)
 
@@ -146,24 +148,24 @@ cobradata <- COBRAData(padj = results_padj, truth = truth)
 
 splv <- "split"
 
-cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, aspects = "fdrtpr", onlyshared = TRUE, maxsplit = Inf)
+cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, aspects = c("fdrtpr", "fdrtprcurve"), onlyshared = FALSE, maxsplit = Inf)
 
 cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE, colorscheme = colors[basemethods(cobraperf)])
 
 
 colors_df <- colors_df[colors_df$methods %in% basemethods(cobraperf), , drop = FALSE]
 
-cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
+cobraplot <- iCOBRA:::reorder_levels(cobraplot, colors_df$methods)
 
 
 levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
 
+
 facet_nrow <- length(simulation_list)
 
-
-ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
+ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.8), yaxisrange = c(0.4, 1))
 ggp <- ggp + 
-  theme(legend.position = "bottom") + 
+  theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
   guides(colour = guide_legend(nrow = legend_nrow)) + 
   facet_wrap(~splitval, nrow = facet_nrow)
 
@@ -174,69 +176,104 @@ dev.off()
 
 
 
+levels(cobraplot@fdrnbrcurve$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrnbrcurve$splitval))
+levels(cobraplot@fdrtprcurve$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtprcurve$splitval))
+
+
+ggp <- plot_fdrtprcurve(cobraplot, pointsize = 3, stripsize = 9, xaxisrange = c(0, 1), yaxisrange = c(0, 1))
+ggp <- ggp + 
+  theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+  guides(colour = guide_legend(nrow = legend_nrow)) + 
+  facet_wrap(~splitval, nrow = facet_nrow)
+
+
+pdf(paste0(out_dir_plots, "fdrtprcurve_simulation_count_method", name, ".pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
 
 
 
 
 
-# ##############################################################################
-# ### Different order for split
-# ##############################################################################
-# 
-# 
-# 
-# truth$split <- factor(interaction(truth$simulation, truth$count_method), levels = paste(rep(levels(truth$simulation), each = nlevels(truth$count_method)), levels(truth$count_method), sep = ".")
-# )
-# 
-# 
-# truth$split <- interaction(truth$simulation, truth$count_method, lex.order = TRUE)
-# 
-# truth$split <- factor(truth$split, levels = levels(truth$split)[c(1, 2, 5, 6, 3 , 4, 7, 8)])
-# 
-# levels(truth$split)
-# 
-# table(truth$split)
-# 
-# 
-# ### Plot
-# 
-# 
-# cobradata <- COBRAData(padj = results_padj[, c("dexseq", "drimseq_genewise_grid_none")], truth = truth)
-# 
-# cobradata <- COBRAData(padj = results_padj, truth = truth)
-# 
-# 
-# ### FDR TPR stratified
-# 
-# splv <- "split"
-# 
-# cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, aspects = "fdrtpr", onlyshared = TRUE, maxsplit = Inf)
-# 
-# cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE, colorscheme = colors[basemethods(cobraperf)])
-# 
-# 
-# colors_df <- colors_df[colors_df$methods %in% basemethods(cobraperf), , drop = FALSE]
-# 
-# cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
-# 
-# 
-# levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
-# 
-# facet_nrow <- 2
-# 
-# 
-# ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
-# ggp <- ggp + 
-#   theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
-#   guides(colour = guide_legend(nrow = legend_nrow)) + 
-#   facet_wrap(~splitval, nrow = facet_nrow)
-# 
-# 
-# pdf(paste0(out_dir_plots, "fdrtpr_simulation_count_method_order2", name, ".pdf"), width = 14, height = 9)
-# print(ggp)
-# dev.off()
-# 
-# 
+
+##############################################################################
+### Order for split - simulations per column
+##############################################################################
+
+if(all(simulation_list == c('drosophila_node_nonull','hsapiens_node_nonull')) && all(count_method_list == c('kallisto','kallistofiltered5','htseq','htseqprefiltered5'))){
+  
+  
+  truth$split <- factor(interaction(truth$simulation, truth$count_method), levels = paste(rep(levels(simulation_list), each = nlevels(count_method_list)), levels(count_method_list), sep = ".")
+  )
+  
+  
+  truth$split <- interaction(truth$simulation, truth$count_method, lex.order = TRUE)
+  
+  levels(truth$split)
+  
+  truth$split <- factor(truth$split, levels = levels(truth$split)[c(1, 3, 5, 7, 2, 4, 6, 8)])
+  
+  levels(truth$split)
+  
+  table(truth$split)
+  
+  
+  ### Plot
+  
+  
+  cobradata <- COBRAData(padj = results_padj[, c("dexseq", "drimseq_genewise_grid_none")], truth = truth)
+  
+  cobradata <- COBRAData(padj = results_padj, truth = truth)
+  
+  
+  ### FDR TPR stratified
+  
+  splv <- "split"
+  
+  cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, aspects = c("fdrtpr", "fdrtprcurve"), onlyshared = FALSE, maxsplit = Inf)
+  
+  cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE, colorscheme = colors[basemethods(cobraperf)])
+  
+  
+  colors_df <- colors_df[colors_df$methods %in% basemethods(cobraperf), , drop = FALSE]
+  
+  cobraplot <- iCOBRA:::reorder_levels(cobraplot, colors_df$methods)
+  
+  
+  levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
+  
+  facet_nrow <- length(simulation_list)
+  
+  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.8), yaxisrange = c(0.4, 1))
+  ggp <- ggp + 
+    theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+    guides(colour = guide_legend(nrow = legend_nrow)) + 
+    facet_wrap(~splitval, nrow = facet_nrow)
+  
+  
+  pdf(paste0(out_dir_plots, "fdrtpr_simulation_count_method_order2", name, ".pdf"), width = pdf_width, height = pdf_height)
+  print(ggp)
+  dev.off()
+  
+  
+  levels(cobraplot@fdrtprcurve$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtprcurve$splitval))
+  
+  
+  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("curve", "points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 1), yaxisrange = c(0, 1))
+  ggp <- ggp + 
+    theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+    guides(colour = guide_legend(nrow = legend_nrow)) + 
+    facet_wrap(~splitval, nrow = facet_nrow)
+  
+  
+  pdf(paste0(out_dir_plots, "fdrtprcurve_simulation_count_method_order2", name, ".pdf"), width = pdf_width, height = pdf_height)
+  print(ggp)
+  dev.off()
+  
+}
+
+
+
 
 
 

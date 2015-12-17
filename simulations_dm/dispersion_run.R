@@ -109,6 +109,9 @@ setwd(rwd)
 out_dir <- "dispersion/run/"
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
+out_suffix <- "dispersion"
+
+
 out_name <- paste0(sim_name, "n", n, "_nm", nm, "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
 out_name
@@ -209,8 +212,8 @@ fp <- rbind.fill(fp)
 
 
 
-write.table(est, paste0(out_dir, out_name, "est_dispersion_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
-write.table(fp, paste0(out_dir, out_name, "fp_dispersion_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(est, paste0(out_dir, out_name, "est_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(fp, paste0(out_dir, out_name, "fp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 sessionInfo()

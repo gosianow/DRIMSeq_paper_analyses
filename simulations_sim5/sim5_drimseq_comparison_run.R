@@ -1,9 +1,10 @@
 ######################################################
-## ----- sim5_drimseq_0_3_1_comparison_run
-## <<sim5_drimseq_0_3_1_comparison_run.R>>
+## ----- sim5_drimseq_comparison_run
+## <<sim5_drimseq_comparison_run.R>>
 
-# BioC 3.1
+# BioC 3.2
 # Created 16 Nov 2015 
+# Modified 13 Dec 2015
 
 ##############################################################################
 
@@ -18,7 +19,7 @@ library(DEXSeq)
 rwd='/home/gosia/multinomial_project/simulations_sim5'
 simulation='hsapiens_node_nonull'
 count_method=c('htseq','kallisto','htseq_prefiltered15')[2]
-
+filter_method=c("filter1")
 
 ##############################################################################
 # Read in the arguments
@@ -33,18 +34,17 @@ for (i in 1:length(args)) {
 print(rwd)
 print(simulation)
 print(count_method)
-
+print(filter_method)
 
 
 ##############################################################################
 
-
 setwd(paste0(rwd, "/", simulation))
-method_out <- "drimseq_0_3_1"
 
-comparison_out <- "drimseq_0_3_1_comparison"
+method_out <- "drimseq_0_3_3"
+comparison_out <- "drimseq_0_3_3_comparison"
 
-out_dir <- paste0(comparison_out, "/", count_method, "_")
+out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
 
 dir.create(dirname(out_dir), recursive = TRUE, showWarnings = FALSE)
 
@@ -102,7 +102,7 @@ results_padj[["dexseq"]] <- rt
 
 ####################### results from DRIMSeq
 
-results_dir <- paste0(method_out, "/", count_method, "/")
+results_dir <- paste0(method_out, "/", count_method, "/", filter_method, "/")
 files <- list.files(path = results_dir, pattern = "_results.txt" )
 files
 
@@ -179,6 +179,10 @@ table(truth$nbr_isoforms)
 cuts <- quantile(truth$nbr_isoforms[truth$ds_status == 1], probs = c(1/3, 2/3), na.rm = TRUE)
 cuts
 
+# cuts <- quantile(truth$nbr_isoforms[truth$ds_status == 1 & truth$nbr_isoforms > 3], probs = c(1/2), na.rm = TRUE)
+# cuts <- c(4, cuts)
+# cuts
+
 
 truth$nbr_isoforms_cat <- cut2(truth$nbr_isoforms, cuts = cuts)
 
@@ -194,7 +198,7 @@ levels(truth$nbr_isoforms_catn)
 
 
 
-### nbr_isoforms
+### nbrexonbins
 
 table(truth$nbrexonbins)
 
@@ -250,23 +254,38 @@ for(i in 2:(length(basemethods(cobraperf)) -1)){
 
 ### FDR TPR overall
 
-cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", aspects = "fdrtpr")
+cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", aspects = c("fdrtpr", "fdrtprcurve"), onlyshared = FALSE, maxsplit = Inf)
 
 
 cobraplot <- prepare_data_for_plot(cobraperf, keepmethods = factor(colors_df$methods, levels = colors_df$methods), colorscheme = colors[basemethods(cobraperf)])
 
+cobraplot <- iCOBRA:::reorder_levels(cobraplot, colors_df$methods)
 
-cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
+xaxisrange <- range(cobraplot@fdrtpr$FDR, na.rm = TRUE)
+yaxisrange <- range(cobraplot@fdrtpr$TPR, na.rm = TRUE)
 
-
-ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
+ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
 ggp <- ggp + 
-  theme(legend.position = "right")
+  theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+  guides(colour = guide_legend(nrow = 2))
 
-pdf(paste0(out_dir, "fdrtpr.pdf"), 7, 5)
+pdf(paste0(out_dir, "fdrtpr.pdf"), 6, 7)
 print(ggp)
 dev.off()
 
+
+xaxisrange <- range(cobraplot@fdrtprcurve$FDR, na.rm = TRUE)
+yaxisrange <- range(cobraplot@fdrtprcurve$TPR[cobraplot@fdrtprcurve$TPR > 0], na.rm = TRUE)
+
+
+ggp <- plot_fdrtprcurve(cobraplot, plottype = c("curve", "points"), pointsize = 3, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
+ggp <- ggp + 
+  theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+pdf(paste0(out_dir, "fdrtprcurve.pdf"), 6, 7)
+print(ggp)
+dev.off()
 
 
 
@@ -279,35 +298,55 @@ for(i in 1:length(splv_list)){
   
   splv <- splv_list[i]
   
-  cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, aspects = "fdrtpr", onlyshared = FALSE, maxsplit = Inf)
+  cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", splv = splv, c("fdrtpr", "fdrtprcurve"), onlyshared = FALSE, maxsplit = Inf)
   
-  cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE, colorscheme = colors[basemethods(cobraperf)])
+  cobraplot <- prepare_data_for_plot(cobraperf, incloverall = TRUE, colorscheme = colors[basemethods(cobraperf)])
   
-  cobraplot@fdrtpr$method <- factor(cobraplot@fdrtpr$method, levels = colors_df$methods)
+  cobraplot <- iCOBRA:::reorder_levels(cobraplot, colors_df$methods)
   
-  
+
   # levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
   levels(cobraplot@fdrtpr$splitval) <- gsub(paste0("_catn"), "", levels(cobraplot@fdrtpr$splitval))
   
-  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 8, xaxisrange = c(0, 0.7), yaxisrange = c(0.3, 1))
+  xaxisrange <- range(cobraplot@fdrtpr$FDR, na.rm = TRUE)
+  yaxisrange <- range(cobraplot@fdrtpr$TPR, na.rm = TRUE)
+  
+  
+  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 8, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
   ggp <- ggp + 
     theme(legend.position = "bottom") + 
-    guides(colour = guide_legend(nrow = 2)) + 
+    guides(colour = guide_legend(nrow = 1)) + 
     facet_wrap(~splitval, nrow = 1)
   
-  pdf(paste0(out_dir, "fdrtpr_", splv ,".pdf"), 10, 5)
+  pdf(paste0(out_dir, "fdrtpr_", splv ,".pdf"), 13, 5)
   print(ggp)
   dev.off()
   
+  
+  
+  # levels(cobraplot@fdrnbrcurve$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrnbrcurve$splitval))
+  levels(cobraplot@fdrnbrcurve$splitval) <- gsub(paste0("_catn"), "", levels(cobraplot@fdrnbrcurve$splitval))
+  # levels(cobraplot@fdrtprcurve$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtprcurve$splitval))
+  levels(cobraplot@fdrtprcurve$splitval) <- gsub(paste0("_catn"), "", levels(cobraplot@fdrtprcurve$splitval))
+  
+  xaxisrange <- range(cobraplot@fdrtprcurve$FDR, na.rm = TRUE)
+  yaxisrange <- range(cobraplot@fdrtprcurve$TPR[cobraplot@fdrtprcurve$TPR > 0], na.rm = TRUE)
+  
+  
+  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("curve", "points"), pointsize = 3, stripsize = 8, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
+  ggp <- ggp + 
+    theme(legend.position = "bottom") + 
+    guides(colour = guide_legend(nrow = 1)) + 
+    facet_wrap(~splitval, nrow = 1)
+  
+  pdf(paste0(out_dir, "fdrtprcurve_", splv ,".pdf"), 13, 5)
+  print(ggp)
+  dev.off()
+  
+  
+  
 }
 
-
-
-# save(cobradata, colors, file = "/home/gosia/case_for_Charlotte.Rdata")
-# 
-# levels(truth$diff_IsoPct_catn)
-# 
-# levels(cobradata@truth$diff_IsoPct_catn)
 
 
 

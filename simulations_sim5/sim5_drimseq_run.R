@@ -52,7 +52,7 @@ print(disp_moderation)
 ##############################################################################
 
 setwd(paste0(rwd, "/", simulation))
-method_out <- "drimseq_0_3_2"
+method_out <- "drimseq_0_3_3"
 
 ########################################################
 # create metadata file
@@ -120,7 +120,7 @@ switch(filter_method,
        
        filter0 = {
          
-         d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 3, min_gene_expr = 0, min_feature_expr = 10, min_feature_prop = 0)
+         d <- dmFilter(d, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 0, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0)
          
        },
        
@@ -131,6 +131,12 @@ switch(filter_method,
        },
        
        filter2 = {
+         
+         d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 3, min_gene_expr = 10, min_feature_expr = 100, min_feature_prop = 0)
+         
+       },
+       
+       filter3 = {
          
          d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 3, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0.005)
          

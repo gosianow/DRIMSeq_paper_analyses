@@ -110,16 +110,39 @@ done
 ##############################################################################
 
 
+n="c(3,6)"
+nm="c(100,1000)"
+nd=0
+prop="c('prop_q3_uniform','prop_q10_uniform','prop_q3_kim_kallisto_overall','prop_q10_kim_kallisto_overall')"
+disp="c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')"
 
 
-### Combined plots of error
-
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_error_combined_plots_run.R $ROUT/dispersion_error_combined_plots_run.Rout
-
-### Combined plots of FP
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 prop=${prop} disp=${disp}" $RCODE/dispersion_plots_run.R $ROUT/dispersion_plots_run.Rout
 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/dispersion_fp_combined_plots_run.R $ROUT/dispersion_fp_combined_plots_run.Rout
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

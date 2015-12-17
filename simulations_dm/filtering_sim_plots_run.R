@@ -1,9 +1,10 @@
 ######################################################
-## ----- dispersion_error_filtering_plots_run
-## <<dispersion_error_filtering_plots_run.R>>
+## ----- filtering_sim_plots_run
+## <<filtering_sim_plots_run.R>>
 
-# BioC 3.1
+# BioC 3.2
 # Created 1 Dec 2015 
+# Modified 16 Dec 2015
 
 ##############################################################################
 
@@ -18,14 +19,14 @@ library(DRIMSeq)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/'
-sim_name='run'
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
+sim_name=''
 n=c(3)
-nm=c(10000)
+nm=c(10000,1000,500)
 nd=0
-param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/kim_kallisto/prop_q15_kim_kallisto_overall.txt'
-param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/kim_kallisto/disp_common_kim_kallisto.txt'
-out_name_plots=''
+prop='prop_q20_kim_kallisto_fcutoff'
+disp='disp_common_kim_kallisto'
+
 
 ##############################################################################
 # Read in the arguments
@@ -38,30 +39,29 @@ for (i in 1:length(args)) {
 }
 
 
+print(args)
+
 print(rwd)
+print(sim_name)
+print(n)
+print(nm)
+print(nd)
+print(prop)
+print(disp)
 
 
 ##############################################################################
 
 setwd(rwd)
 
-out_dir_plots <- "error_filtering/"
-dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
+out_dir_res <- "filtering/run/"
+out_dir_plots <- "filtering/"
+out_suffix <- "filtering"
 
 
 ##############################################################################
 ### Merge all results into one data frame
 ##############################################################################
-
-out_dir_res <- c("error_filtering/run/")
-
-suffix_res_est <- c("est_filtering")
-suffix_res_fp <- c("fp_filtering")
-
-
-prop <- basename(file_path_sans_ext(param_pi_path))
-disp <- basename(file_path_sans_ext(param_gamma_path))
-
 
 
 res_list <- list()
@@ -69,97 +69,100 @@ mse_list <- list()
 fp_list <- list()
 ix <- 1
 
-
 for(ix_n in 1:length(n)){
   
   for(ix_nm in 1:length(nm)){
     
     for(ix_prop in 1:length(prop)){
       
-      # ix_n=1; ix_nm=1; ix_prop=1;
-      
-      out_name <- paste0("n", n[ix_n], "_nm", nm[ix_nm], "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path[ix_prop])), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
-      
-      ### est
-      
-      files <- list.files(out_dir_res, pattern = paste0(out_name, suffix_res_est, ".txt"))
-      print(files)
-      
-      if(length(files) > 0){
+      for(ix_disp in 1:length(disp)){
+        # ix_n=1; ix_nm=1; ix_prop=1; ix_disp=1
         
-        res_tmp_list <- list()
-        mse_tmp_list <- list()
+        out_name <- paste0(sim_name, "n", n[ix_n], "_nm", nm[ix_nm], "_nd", nd, "_", prop[ix_prop], "_", disp[ix_disp], "_")
         
-        for(i in 1:length(files)){
-          # i = 1
+        files <- list.files(out_dir_res, pattern = paste0(out_name, "est"))
+        files
+        
+        if(length(files) > 0){
           
-          rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
-          rr$run <- i
-          res_tmp_list[[i]] <- rr
+          res_tmp_list <- list()
+          mse_tmp_list <- list()
           
-          rr$error_abs <- abs(rr$est - rr$true)
-          rr$max_features <- factor(rr$max_features)
+          for(i in 1:length(files)){
+            # i = 1
+            rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+            head(rr)
+            
+            rr$run <- i
+            res_tmp_list[[i]] <- rr
+            
+            # calculate mse
+            rr$error_abs <- abs(rr$est - rr$true)
+            rr$max_features <- factor(rr$max_features)
+            
+            out_mean <- aggregate(. ~ max_features, rr[, c("max_features", "error_abs")], mean)
+            colnames(out_mean) <- c( "max_features", "mean_error_abs")
+            
+            out_median <- aggregate(. ~ max_features, rr[, c("max_features", "error_abs")], median)
+            colnames(out_median) <- c("max_features", "median_error_abs")
+            
+            out <- merge(out_mean, out_median, by = c("max_features"), sort = FALSE)
+            
+            mse_tmp_list[[i]] <- out
+            
+          }
           
-          out_mean <- aggregate(. ~ max_features, rr[, c("max_features", "error_abs")], mean)
-          colnames(out_mean) <- c("max_features", "mean_error_abs")
+          res_tmp <- rbind.fill(res_tmp_list)
+          res_tmp$n <- n[ix_n]
+          res_tmp$nm <- nm[ix_nm]
+          res_tmp$prop <- prop[ix_prop]
+          res_tmp$disp <- disp[ix_disp]
+          res_list[[ix]] <- res_tmp
           
-          out_median <- aggregate(. ~ max_features, rr[, c("max_features", "error_abs")], median)
-          colnames(out_median) <- c("max_features", "median_error_abs")
-          
-          out <- merge(out_mean, out_median, by = "max_features", sort = FALSE)
-          
-          mse_tmp_list[[i]] <- out
+          mse_tmp <- rbind.fill(mse_tmp_list)
+          mse_tmp$n <- n[ix_n]
+          mse_tmp$nm <- nm[ix_nm]
+          mse_tmp$prop <- prop[ix_prop]
+          mse_tmp$disp <- disp[ix_disp]
+          mse_list[[ix]] <- mse_tmp
           
         }
         
-        res_tmp <- rbind.fill(res_tmp_list)
-        res_tmp$n <- n[ix_n]
-        res_tmp$nm <- nm[ix_nm]
-        res_tmp$prop <- prop[ix_prop]
-        res_list[[ix]] <- res_tmp
+        files <- list.files(out_dir_res, pattern = paste0(out_name, "fp"))
+        files
         
-        mse_tmp <- rbind.fill(mse_tmp_list)
-        mse_tmp$n <- n[ix_n]
-        mse_tmp$nm <- nm[ix_nm]
-        mse_tmp$prop <- prop[ix_prop]
-        mse_list[[ix]] <- mse_tmp
-      }
-      ### fp
-      
-      files <- list.files(out_dir_res, pattern = paste0(out_name, suffix_res_fp, ".txt"))
-      print(files)
-      
-      if(length(files) > 0){
-        
-        fp_tmp_list <- list()
-        
-        for(i in 1:length(files)){
-          # i = 1
+        if(length(files) > 0){
           
-          rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
-          fp_tmp_list[[i]] <- rr
+          fp_tmp_list <- list()
           
+          for(i in 1:length(files)){
+            
+            rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+            fp_tmp_list[[i]] <- rr
+            
+            
+          }
+          
+          fp_tmp <- rbind.fill(fp_tmp_list)
+          fp_tmp$n <- n[ix_n]
+          fp_tmp$nm <- nm[ix_nm]
+          fp_tmp$prop <- prop[ix_prop]
+          fp_tmp$disp <- disp[ix_disp]
+          fp_list[[ix]] <- fp_tmp
           
         }
         
-        fp_tmp <- rbind.fill(fp_tmp_list)
-        fp_tmp$n <- n[ix_n]
-        fp_tmp$nm <- nm[ix_nm]
-        fp_tmp$prop <- prop[ix_prop]
-        fp_list[[ix]] <- fp_tmp
         
+        ix <- ix + 1
       }
-      
-      ix <- ix + 1
-      
     }
   }
 }
 
-
 res <- rbind.fill(res_list)
 mse <- rbind.fill(mse_list)
 fp <- rbind.fill(fp_list)
+
 
 ##############################################################################
 ### Panel plots
@@ -192,21 +195,17 @@ error <- res[complete.cases(res), ]
 error$error <- abs(error$est - error$true)
 
 
-ylim <- c(-2.5, 5)
-
-
 ggp <- ggplot(data = error, aes(y = log10(error), x = max_features)) + 
   geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
   geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Log10 of absolute error") +
   xlab("Max features") +
-  # coord_cartesian(ylim = ylim) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm)
 
 
-pdf(paste0(out_dir_plots, out_name_plots, "error_absolute_log_violin.pdf"))
+pdf(paste0(out_dir_plots, "error_absolute_log_violin.pdf"), 15, 5)
 print(ggp)
 dev.off()
 
@@ -226,7 +225,7 @@ ggp <- ggplot(data = res, aes(y = log10(est), x = max_features)) +
   facet_grid(prop ~ n_nm)
 
 
-pdf(paste0(out_dir_plots, out_name_plots, "est_log_violin.pdf"))
+pdf(paste0(out_dir_plots, "est_log_violin.pdf"), 15, 5)
 print(ggp)
 dev.off()
 
@@ -257,7 +256,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = max_features)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm)
 
-pdf(paste0(out_dir_plots, out_name_plots, "error_mean_absolute_boxplot.pdf"))
+pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"), 15, 5)
 print(ggp)
 dev.off()
 
@@ -275,7 +274,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = max_features)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm)
 
-pdf(paste0(out_dir_plots, out_name_plots, "error_median_absolute_boxplot.pdf"))
+pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"), 15, 5)
 print(ggp)
 dev.off()
 
@@ -313,7 +312,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = max_features)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm)
 
-pdf(paste0(out_dir_plots, out_name_plots, "fp_boxplot.pdf"))
+pdf(paste0(out_dir_plots, "fp_boxplot.pdf"), 15, 5)
 print(ggp)
 dev.off()
 

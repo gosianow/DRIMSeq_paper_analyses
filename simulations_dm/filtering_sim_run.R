@@ -1,6 +1,6 @@
 ######################################################
-## ----- filtering_run
-## <<filtering_run.R>>
+## ----- filtering_sim_run
+## <<filtering_sim_run.R>>
 
 # BioC 3.2
 # Created 1 Dec 2015 
