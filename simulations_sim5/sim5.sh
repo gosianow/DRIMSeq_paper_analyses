@@ -10,7 +10,7 @@ mkdir $ROUT
 # Run
 ##############################################################################
 
-filter_method='filter1'
+filter_method='filter0'
 workers=5
 
 for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull' 'hsapiens_withde_nonull'
@@ -35,12 +35,12 @@ done
 
 
 
-filter_method='filter3'
-workers=20
+filter_method='filter2'
+workers=10
 
 for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull' 'hsapiens_withde_nonull'
 do 
-  for count_method in 'kallisto' 'htseq' 'kallistoprefiltered5' 'htseqprefiltered5' 'kallistofiltered5'
+  for count_method in 'kallisto' 'htseq'
   do
     
     echo "${simulation}_${count_method}"
@@ -64,11 +64,26 @@ done
 ### Histograms of features
 ##############################################################################
 
-filter_method='filter0'
+filter_method='filter1'
 
 for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull' 'hsapiens_withde_nonull'
 do 
   for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5' 'kallistoprefiltered5'
+  do
+    
+    echo "${simulation}_${count_method}"
+
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}'" $RCODE/sim5_histograms_of_features.R $ROUT/sim5_histograms_of_features.Rout
+
+  done
+done
+
+
+filter_method='filter3'
+
+for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull' 'hsapiens_withde_nonull'
+do 
+  for count_method in 'kallisto' 'htseq'
   do
     
     echo "${simulation}_${count_method}"
@@ -98,6 +113,20 @@ do
 done
 
 
+filter_method='filter3'
+
+for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull' 'hsapiens_withde_nonull'
+do 
+  for count_method in 'kallisto' 'htseq'
+  do
+    
+    echo "${simulation}_${count_method}"
+
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}'" $RCODE/sim5_drimseq_comparison_run.R $ROUT/sim5_drimseq_comparison_run.Rout
+
+  done
+done
+
 
 ##############################################################################
 # Combined plots
@@ -114,9 +143,13 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('droso
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull') count_method_list=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') filter_method='${filter_method}' name='' legend_nrow=1 pdf_width=14 pdf_height=8" $RCODE/sim5_drimseq_comparison_combined.R $ROUT/sim5_drimseq_comparison_combined.Rout
 
 
+##############################################################################
+# Plots with different filtering
+##############################################################################
 
 
 
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull') count_method_list=c('kallisto','htseq') filter_method_list=c('filter0','filter1','filter2','filter3') name='' legend_nrow=2 pdf_width=10 pdf_height=7" $RCODE/sim5_drimseq_comparison_filtering.R $ROUT/sim5_drimseq_comparison_filtering.Rout
 
 
 

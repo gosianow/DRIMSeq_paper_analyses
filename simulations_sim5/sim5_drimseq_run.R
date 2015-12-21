@@ -131,8 +131,8 @@ switch(filter_method,
        },
        
        filter2 = {
-         
-         d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 3, min_gene_expr = 10, min_feature_expr = 100, min_feature_prop = 0)
+         ### Like the one from Charlotte
+         d <- dmFilter(d, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 1, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0.05)
          
        },
        

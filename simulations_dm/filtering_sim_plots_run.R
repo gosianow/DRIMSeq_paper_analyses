@@ -4,7 +4,7 @@
 
 # BioC 3.2
 # Created 1 Dec 2015 
-# Modified 16 Dec 2015
+# Modified 18 Dec 2015
 
 ##############################################################################
 
@@ -26,7 +26,7 @@ nm=c(10000,1000,500)
 nd=0
 prop='prop_q20_kim_kallisto_fcutoff'
 disp='disp_common_kim_kallisto'
-
+out_suffix='filtering'
 
 ##############################################################################
 # Read in the arguments
@@ -48,7 +48,7 @@ print(nm)
 print(nd)
 print(prop)
 print(disp)
-
+print(out_suffix)
 
 ##############################################################################
 
@@ -56,7 +56,8 @@ setwd(rwd)
 
 out_dir_res <- "filtering/run/"
 out_dir_plots <- "filtering/"
-out_suffix <- "filtering"
+
+
 
 
 ##############################################################################
@@ -80,7 +81,7 @@ for(ix_n in 1:length(n)){
         
         out_name <- paste0(sim_name, "n", n[ix_n], "_nm", nm[ix_nm], "_nd", nd, "_", prop[ix_prop], "_", disp[ix_disp], "_")
         
-        files <- list.files(out_dir_res, pattern = paste0(out_name, "est"))
+        files <- list.files(out_dir_res, pattern = paste0(out_name, "est_", out_suffix))
         files
         
         if(length(files) > 0){
@@ -128,7 +129,7 @@ for(ix_n in 1:length(n)){
           
         }
         
-        files <- list.files(out_dir_res, pattern = paste0(out_name, "fp"))
+        files <- list.files(out_dir_res, pattern = paste0(out_name, "fp_", out_suffix))
         files
         
         if(length(files) > 0){
@@ -136,11 +137,27 @@ for(ix_n in 1:length(n)){
           fp_tmp_list <- list()
           
           for(i in 1:length(files)){
-            
+            # i = 1
             rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
-            fp_tmp_list[[i]] <- rr
             
+            rr$disp_estimator <- "disp_est"
+            fp_tmp_list[[paste0("disp_est", i)]] <- rr
             
+          }
+          
+          files <- list.files(out_dir_res, pattern = paste0(out_name, "fptruedisp_", out_suffix))
+          files
+          
+          if(length(files) > 0){
+            
+            for(i in 1:length(files)){
+              # i = 1
+              rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+              
+              rr$disp_estimator <- "disp_true"
+              fp_tmp_list[[paste0("disp_true", i)]] <- rr
+              
+            }
           }
           
           fp_tmp <- rbind.fill(fp_tmp_list)
@@ -205,7 +222,7 @@ ggp <- ggplot(data = error, aes(y = log10(error), x = max_features)) +
   facet_grid(prop ~ n_nm)
 
 
-pdf(paste0(out_dir_plots, "error_absolute_log_violin.pdf"), 15, 5)
+pdf(paste0(out_dir_plots, out_suffix, "_error_absolute_log_violin.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -225,7 +242,7 @@ ggp <- ggplot(data = res, aes(y = log10(est), x = max_features)) +
   facet_grid(prop ~ n_nm)
 
 
-pdf(paste0(out_dir_plots, "est_log_violin.pdf"), 15, 5)
+pdf(paste0(out_dir_plots, out_suffix, "_est_log_violin.pdf"),width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -256,7 +273,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = max_features)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm)
 
-pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"), 15, 5)
+pdf(paste0(out_dir_plots, out_suffix, "_error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -274,7 +291,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = max_features)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm)
 
-pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"), 15, 5)
+pdf(paste0(out_dir_plots, out_suffix, "_error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -302,8 +319,8 @@ levels(fp$n_nm)
 ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
 
 
-ggp <- ggplot(data = fp, aes(y = fp, x = max_features)) + 
-  geom_boxplot(outlier.size = 1, fill = "grey60") +
+ggp <- ggplot(data = fp, aes(y = fp, x = max_features, fill = disp_estimator)) + 
+  geom_boxplot(outlier.size = 1) +
   geom_hline(yintercept = 0.05, color="black", linetype = 2, size = 0.3) +
   theme_bw() +
   ylab("FP rate") +
@@ -312,7 +329,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = max_features)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm)
 
-pdf(paste0(out_dir_plots, "fp_boxplot.pdf"), 15, 5)
+pdf(paste0(out_dir_plots, out_suffix, "_fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 

@@ -23,18 +23,18 @@ library(tools)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
-simulation_script='/home/gosia/R/drimseq_paper/simulations_dm/dm_simulate.R'
-workers=4
-sim_name='test_'
-run='run1'
-m=100
-n=3 # Number of samples
-nm=1000
-nd=0
-param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/prop_q15_kim_kallisto_overall.txt'
-param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/disp_common_kim_kallisto.txt'
-max_features=c(Inf,13,12,10,8)
+# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
+# simulation_script='/home/gosia/R/drimseq_paper/simulations_dm/dm_simulate.R'
+# workers=4
+# sim_name='test_'
+# run='run1'
+# m=100
+# n=3 # Number of samples
+# nm=10000
+# nd=0
+# param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/prop_q20_kim_kallisto_fcutoff.txt'
+# param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/disp_common_kim_kallisto.txt'
+# max_features=c(Inf,18,15)
 
 
 ##############################################################################
@@ -105,6 +105,9 @@ setwd(rwd)
 out_dir <- "filtering/run/"
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
+out_suffix <- "filtering"
+
+
 out_name <- paste0(sim_name, "n", n, "_nm", nm, "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
 out_name
@@ -132,12 +135,15 @@ d_org <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = grou
 
 est <- list()
 fp <- list()
+fptruedisp <- list()
+
 
 for(j in 1:length(max_features)){
-  # j = 1
+  # j = 3
   print(max_features[j])
   
   d <- dmFilter(d_org, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 0, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0, max_features = max_features[j])
+  
   
   d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
@@ -151,6 +157,15 @@ for(j in 1:length(max_features)){
   
   fp[[j]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), max_features = max_features[j])
   
+  common_dispersion(d) <- g0
+  
+  d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
+  res <- results(d)
+  
+  fptruedisp[[j]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), max_features = max_features[j])
+  
+  
   rm("d")
   
 }
@@ -158,12 +173,79 @@ for(j in 1:length(max_features)){
 
 est <- rbind.fill(est)
 fp <- rbind.fill(fp)
+fptruedisp <- rbind.fill(fptruedisp)
 
 
 
-write.table(est, paste0(out_dir, out_name, "est_filtering_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
-write.table(fp, paste0(out_dir, out_name, "fp_filtering_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
+write.table(est, paste0(out_dir, out_name, "est_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(fp, paste0(out_dir, out_name, "fp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(fptruedisp, paste0(out_dir, out_name, "fptruedisp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+
+
+
+
+##############################################################################
+### Simulations from reduced proportions
+##############################################################################
+
+out_suffix <- "reducing"
+
+
+max_features <- max_features[max_features != Inf]
+
+est <- list()
+fp <- list()
+fptruedisp <- list()
+
+
+for(j in 1:length(max_features)){
+  # j = 3
+  print(max_features[j])
+
+  counts <- dm_simulate(m = m, n = 2*n, pi = pi[1:max_features[j]], g0 = g0, nm = round(nm * sum(pi[1:max_features[j]])), nd = nd, mc.cores = workers)
+  print(head(counts))
+  
+  group_split <- strsplit2(rownames(counts), ":")
+  
+  d <- dmDSdata(counts = counts, gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = paste0("s", 1:ncol(counts)), group = rep(c("c1", "c2"), each = n))
+  
+  
+  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
+  
+  
+  est[[j]] <- data.frame(est = round(genewise_dispersion(d)$genewise_dispersion, 2), true = round(g0, 2), max_features = max_features[j])
+  
+  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
+  res <- results(d)
+  
+  fp[[j]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), max_features = max_features[j])
+  
+  common_dispersion(d) <- g0
+  
+  d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
+  res <- results(d)
+  
+  fptruedisp[[j]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), max_features = max_features[j])
+  
+  
+  rm("d")
+  
+}
+
+
+est <- rbind.fill(est)
+fp <- rbind.fill(fp)
+fptruedisp <- rbind.fill(fptruedisp)
+
+
+
+
+write.table(est, paste0(out_dir, out_name, "est_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(fp, paste0(out_dir, out_name, "fp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(fptruedisp, paste0(out_dir, out_name, "fptruedisp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 sessionInfo()
