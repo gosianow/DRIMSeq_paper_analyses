@@ -16,8 +16,8 @@ library("tools")
 # Test arguments
 ##############################################################################
 
-gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf'
-count_method='htseqprefiltered5'
+# gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf'
+# count_method='htseqprefiltered5'
 
 ##############################################################################
 # Read in the arguments
@@ -78,7 +78,7 @@ system(python_cmd1)
 ### exon counts # by name
 # system(paste0("python ", pythDir, "/dexseq_count.py --help "))
 
-python_cmd2 <- with(metadata, paste0("python ", pythDir, "/dexseq_count.py -p ", ifelse(LibraryLayout == "PAIRED", "yes", "no"), " -s no -f bam -r pos ", DEXSeq_gff, " 1_reads/tophat_2.0.9/", sampleName, "/accepted_hits.bam ", counts_out, sampleName , ".counts"))
+python_cmd2 <- with(metadata, paste0("python ", pythDir, "/dexseq_count.py -p ", ifelse(LibraryLayout == "PAIRED", "yes", "no"), " -s no -f bam -r pos ", DEXSeq_gff, " 1_reads/tophat_2.0.14/", sampleName, "/accepted_hits.bam ", counts_out, sampleName , ".txt"))
 
 cat(python_cmd2, fill = TRUE)
 

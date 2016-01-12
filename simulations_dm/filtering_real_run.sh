@@ -15,7 +15,7 @@ DMPARAMS=$RWD/dm_parameters_drimseq_0_3_3
 
 workers=1
 
-for n in 3 6
+for n in 3
 do
   
 for data_name in 'kim' 'brooks'
@@ -31,6 +31,34 @@ do
       
     
     R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=5000 n=${n} min_feature_expr=c(0,5,10,20,50,100) min_feature_prop=rep(0,6) param_pi_path='$DMPARAMS/${data_name}_${count_method}/prop_${data_name}_${count_method}_fcutoff.txt' param_gamma_path='$DMPARAMS/${data_name}_${count_method}/disp_genewise_${data_name}_${count_method}_lognormal.txt' param_nm_path='$DMPARAMS/${data_name}_${count_method}/nm_${data_name}_${count_method}_lognormal.txt' param_nd_path='$DMPARAMS/${data_name}_${count_method}/nd_common_${data_name}_${count_method}.txt'" $RCODE/filtering_real_run.R $ROUT/filtering_real_run_${data_name}_${count_method}_n${n}.Rout
+    
+  done
+
+done
+done
+done
+
+
+
+
+workers=1
+
+for n in 3
+do
+  
+for data_name in 'kim' 'brooks'
+do 
+  
+for count_method in 'kallisto' 'htseq'
+do
+    
+    for run in {101..150}
+    do
+      
+      echo "${data_name}_${count_method}_n${n}_${run}"
+      
+    
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=5000 n=${n} min_feature_expr=rep(0,5) min_feature_prop=c(0,0.001,0.005,0.01,0.05) param_pi_path='$DMPARAMS/${data_name}_${count_method}/prop_${data_name}_${count_method}_fcutoff.txt' param_gamma_path='$DMPARAMS/${data_name}_${count_method}/disp_genewise_${data_name}_${count_method}_lognormal.txt' param_nm_path='$DMPARAMS/${data_name}_${count_method}/nm_${data_name}_${count_method}_lognormal.txt' param_nd_path='$DMPARAMS/${data_name}_${count_method}/nd_common_${data_name}_${count_method}.txt'" $RCODE/filtering_real_run.R $ROUT/filtering_real_run_${data_name}_${count_method}_n${n}_prop.Rout
     
   done
 
@@ -92,7 +120,7 @@ do
 for count_method in 'htseq'
 do
     
-    for run in {1..25}
+    for run in {26..50}
     do
       
       echo "${data_name}_${count_method}_n${n}_${run}"
@@ -106,6 +134,38 @@ done
 done
 done
 
+
+
+
+RCODE=/home/gosia/R/drimseq_paper/simulations_dm
+RWD=/home/gosia/multinomial_project/simulations_dm/drimseq
+ROUT=$RWD/Rout
+DMPARAMS=$RWD/dm_parameters_drimseq_0_3_3
+
+workers=1
+
+for n in 3
+do
+  
+for data_name in 'kim'
+do 
+  
+for count_method in 'kallisto'
+do
+    
+    for run in {101..150}
+    do
+      
+      echo "${data_name}_${count_method}_n${n}_${run}"
+      
+    
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=5000 n=${n} min_feature_expr=rep(0,5) min_feature_prop=c(0,0.001,0.005,0.01,0.05) param_pi_path='$DMPARAMS/${data_name}_${count_method}/prop_${data_name}_${count_method}_fcutoff.txt' param_gamma_path='$DMPARAMS/${data_name}_${count_method}/disp_genewise_${data_name}_${count_method}_lognormal.txt' param_nm_path='$DMPARAMS/${data_name}_${count_method}/nm_${data_name}_${count_method}_lognormal.txt' param_nd_path='$DMPARAMS/${data_name}_${count_method}/nd_common_${data_name}_${count_method}.txt'" $RCODE/filtering_real_run.R $ROUT/filtering_real_run_${data_name}_${count_method}_n${n}_prop.Rout
+    
+  done
+
+done
+done
+done
 
 
 

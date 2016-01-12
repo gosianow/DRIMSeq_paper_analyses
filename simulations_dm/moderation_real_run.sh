@@ -88,10 +88,10 @@ DMPARAMS=$RWD/dm_parameters_drimseq_0_3_3
 
 workers=1
 
-for n in 3
+for n in 6
 do
   
-for data_name in 'kim'
+for data_name in 'brooks'
 do 
   
 for count_method in 'htseq'
@@ -116,27 +116,9 @@ done
 ### Plots
 ##############################################################################
 
-
-
-for n in 3
-do
-  
-for data_name in 'kim' 'brooks'
-do 
-  
-for count_method in 'kallisto' 'htseq'
-do
     
-
-      echo "${data_name}_${count_method}_n${n}"
-      
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/' sim_name='' n=c(3,6) nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal','nm_kim_kallisto_lognormal','nm_kim_htseq_lognormal') nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq','nd_common_kim_kallisto','nd_common_kim_htseq') prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kallisto_fcutoff','prop_kim_htseq_fcutoff') disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal') data_name=c('brooks','kim') count_method=c('kallisto','htseq') out_suffix='moderation_real'" $RCODE/moderation_real_plots_run.R $ROUT/moderation_real_plots_run_n${n}.Rout
     
-    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' param_pi_path='$DMPARAMS/${data_name}_${count_method}/prop_${data_name}_${count_method}.txt' param_gamma_path='$DMPARAMS/${data_name}_${count_method}/disp_genewise_${data_name}_${count_method}_lognormal.txt' param_nm_path='$DMPARAMS/${data_name}_${count_method}/nm_${data_name}_${count_method}_lognormal.txt' param_nd_path='$DMPARAMS/${data_name}_${count_method}/nd_common_${data_name}_${count_method}.txt'" $RCODE/dispersion_error_moderation_real_plots_run.R $ROUT/dispersion_error_moderation_real_plots_run_${data_name}_${count_method}_n${n}.Rout
-    
-
-done
-done
-done
 
 
 

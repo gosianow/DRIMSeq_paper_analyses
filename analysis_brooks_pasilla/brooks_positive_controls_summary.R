@@ -114,7 +114,9 @@ write.table(summary, file = paste0(comparison_out, "validation_summary.txt"), qu
 
 
 
-summarym <- melt(summary, id.vars = c("model", "count_method"), variable.name = "ds_method", value.name = "counts")
+summarym <- melt(summary, id.vars = c("model", "count_method"))
+# summarym <- melt(summary, id.vars = c("model", "count_method"), variable.name = "ds_method", value.name = "counts")
+
 summarym$variable <- factor(summarym$variable, levels = rev(keep_methods))
 
 
@@ -166,7 +168,8 @@ models <- levels(summary$model)
 for(i in 1:nlevels(summary$model)){
   # i = 1
   
-  summarym <- melt(summary[summary$model == models[i], ], id.vars = c("brooks_gene_id", "gene_id", "model", "count_method"), variable.name = "ds_method", value.name = "counts")
+  # summarym <- melt(summary[summary$model == models[i], ], id.vars = c("brooks_gene_id", "gene_id", "model", "count_method"), variable.name = "ds_method", value.name = "counts")
+  summarym <- melt(summary[summary$model == models[i], ], id.vars = c("brooks_gene_id", "gene_id", "model", "count_method"))
   
   summarym$variable <- factor(summarym$variable, levels = keep_methods)
   
@@ -204,7 +207,7 @@ dir.create(paste0(comparison_out, "gviz/"))
 
 options(ucscChromosomeNames=FALSE)
 
-bam_dir <- "1_reads/tophat_2.0.9/"
+bam_dir <- "1_reads/tophat_2.0.14/"
 
 metadata <- metadata[order(metadata$condition), ]
 metadata$colors <- c("dodgerblue3", "maroon2")[ifelse(metadata$condition == "CTL", 1, 2)]
@@ -236,11 +239,11 @@ mcols(gtf_dexseq)$gene <- mcols(gtf_dexseq)$transcript <- groupg
 mcols(gtf_dexseq)$id <- mcols(gtf_dexseq)$exon<- as.numeric(groupb)
 
 
-
+gtf_dexseq
 
 
 for(j in 1:nrow(valid)){
-  # j = 1
+  # j = 17
   print(j)
   
   g <- valid$gene_id[j]
@@ -269,9 +272,10 @@ for(j in 1:nrow(valid)){
   alTrack[["txTr"]] <- txTr
   sizes[["txTr"]] <- ceiling(nr_transcripts/3)
   
-  # txTr_dexseq <- GeneRegionTrack(gtf_dexseq[mcols(gtf_dexseq)$gene_id == g,], name = "htseq bins", exonAnnotation = "exon", collapse = FALSE, fontcolor.exon = 1, cex.exon = 0.7)
+  # txTr_dexseq <- GeneRegionTrack(gtf_dexseq[mcols(gtf_dexseq)$gene == g,], name = "htseq bins", exonAnnotation = "exon", collapse = FALSE, fontcolor.exon = 1, cex.exon = 0.7)
   
-  gtf_dexseq_sub <- gtf_dexseq[mcols(gtf_dexseq)$gene_id == g,]
+  gtf_dexseq_sub <- gtf_dexseq[mcols(gtf_dexseq)$gene == g,]
+  
   strand(gtf_dexseq_sub) <- "*"
   annTr_dexseq <- AnnotationTrack(gtf_dexseq_sub, name = "htseq bins", showFeatureId = TRUE, fontcolor.feature = "darkblue", stacking = "dense", cex.feature = 0.5)
   

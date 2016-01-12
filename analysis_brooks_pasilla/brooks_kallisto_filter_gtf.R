@@ -1,4 +1,4 @@
-# BioC 3.1
+# BioC 3.2
 
 # Crated 24 Nov 2015
 
@@ -18,7 +18,35 @@ gtf_new_path = "/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila
 ##########################################################################
 
 
-metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors = FALSE, sep="\t", header=TRUE) 
+fastq_dir <- paste0("1_reads/fastq/")
+
+sri.org <- read.table("3_metadata/SraRunInfo.csv", stringsAsFactors=F, sep=",", header=T)
+keep <- grep(paste("GSM4611", 76:82, sep="", collapse="|"), sri.org$SampleName)
+sri <- sri.org[keep,]
+
+sri$LibraryName = gsub("S2_DRSC_","",sri$LibraryName)
+metadata = unique(sri[,c("LibraryName","LibraryLayout", "SampleName", "avgLength")])
+
+for(i in seq_len(nrow(metadata))) {
+  rw = (sri$LibraryName==metadata$LibraryName[i])
+  if(metadata$LibraryLayout[i]=="PAIRED") {
+    metadata$fastq1[i] = paste0(fastq_dir, sri$Run[rw],"_1.fastq.gz",collapse=",")
+    metadata$fastq2[i] = paste0(fastq_dir, sri$Run[rw],"_2.fastq.gz",collapse=",")
+    # metadata$ReadLength[i] <- metadata$avgLength[i] / 2
+    # metadata$SRR[i] <- paste0(sri$Run[rw], collapse=",")
+  } else {
+    metadata$fastq1[i] = paste0(fastq_dir, sri$Run[rw],".fastq.gz",collapse=",")
+    metadata$fastq2[i] = ""
+    # metadata$ReadLength[i] <- metadata$avgLength[i]
+    # metadata$SRR[i] <- paste0(sri$Run[rw], collapse=",")
+  }
+}
+
+metadata$condition = "CTL"
+metadata$condition[grep("CG8144_RNAi",metadata$LibraryName)] = "KD"
+metadata$shortname = paste( seq_len(nrow(metadata)), substr(metadata$condition,1,2),  substr(metadata$LibraryLayout,1,2), metadata$ReadLength, sep=".")
+metadata$sampleName <- metadata$SampleName
+metadata$UniqueName <- paste0(1:nrow(metadata), "_", metadata$SampleName)
 
 
 #########################################################################################
@@ -30,35 +58,62 @@ metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors = FALSE, sep=
 
 gtf <- import(gtf_path)
 
-gene_trans <- unique(mcols(gtf)[, c("gene_id", "transcript_id")])
-rownames(gene_trans) <- gene_trans$transcript_id
+gt <- unique(mcols(gtf)[, c("gene_id", "transcript_id")])
+rownames(gt) <- gt$transcript_id
 
 
 ### load TPMs
 
-samples <- metadata[, "sampleName"]
 
-tpm_list <- lapply(1:length(samples), function(i){
-  # i = 1
+out_dir <- paste0(rwd, "/2_counts/kallisto/")
+samples <- unique(metadata$SampleName)
+
+
+counts_list <- lapply(1:length(samples), function(i){
+  # i = 4
   print(i)
   
-  abundance <- read.table(paste0(rwd, "2_counts/kallisto/", samples[i], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+  indx <- which(metadata$SampleName == samples[i])
   
-  tpm <- data.frame(paste0(gene_trans[abundance[, "target_id"], "gene_id"], ":", abundance[, "target_id"]), tpm = abundance[, "tpm"], stringsAsFactors = FALSE)
-  colnames(tpm) <- c("group_id", samples[i])
+  if(length(indx) == 1){
+    
+    abundance <- read.table(paste0(out_dir, metadata$UniqueName[indx], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+    
+  }else{
+    
+    abundance <- lapply(indx, function(j){
+      # j = indx[1]
+      
+      abundance_tmp <- read.table(paste0(out_dir, metadata$UniqueName[j], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+      abundance_tmp <- abundance_tmp[, c("target_id", "tpm")]
+      abundance_tmp
+      
+    })
+    
+    abundance <- Reduce(function(...) merge(..., by = "target_id", all = TRUE, sort = FALSE), abundance)
+    tpm <- rowSums(abundance[, -1])
+    
+    abundance <- data.frame(target_id = abundance$target_id, tpm = tpm, stringsAsFactors = FALSE)
+    
+  }
   
-  return(tpm)
+  counts <- data.frame(paste0(gt[abundance$target_id, "gene_id"], ":", abundance$target_id), counts = abundance$tpm, stringsAsFactors = FALSE)
+  
+  colnames(counts) <- c("group_id", samples[i])
+  
+  return(counts)
   
 })
 
 
-tpm <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), tpm_list)
+tpm <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
 
 group_split <- strsplit2(tpm[, "group_id"], ":")
 
 d_org <- dmDSdata(counts = tpm[, -1], gene_id = group_split[, 1], feature_id = group_split[, 2], sample_id = colnames(tpm[, -1]), group = rep("C1", ncol(tpm[, -1])))
 
-d_filt <- dmFilter(d_org, min_samps_gene_expr = 0, min_samps_feature_prop = 1, min_gene_expr = 0, min_feature_prop = 0.05)
+
+d_filt <- dmFilter(d_org, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 1, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0.05)
 
 trans_keep <- counts(d_filt)$feature_id
 
@@ -83,15 +138,13 @@ counts_list <- lapply(1:length(samples), function(i){
   # i = 1
   print(i)
   
-  abundance <- read.table(paste0(rwd, "2_counts/kallisto/", samples[i], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+  abundance <- read.table(paste0(rwd, "2_counts/kallisto/", samples[i], ".txt"), header = FALSE, sep = "\t", as.is = TRUE)
   
-  abundance <- abundance[abundance$target_id %in% trans_keep, ]
+  trans <- strsplit2(abundance[, 1], ":")[, 2]
   
-  counts <- data.frame(paste0(gene_trans[abundance[, "target_id"], "gene_id"], ":", abundance[, "target_id"]), counts = round(abundance[, "est_counts"]), stringsAsFactors = FALSE)
-
-  colnames(counts) <- c("group_id", samples[i])
+  abundance <- abundance[trans %in% trans_keep, ]
   
-  write.table(counts, paste0(out_dir, samples[i], ".counts"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+  write.table(abundance, paste0(out_dir, samples[i], ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
   
   return(NULL)
   

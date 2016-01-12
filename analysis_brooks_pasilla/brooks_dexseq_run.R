@@ -15,10 +15,10 @@ library("DEXSeq")
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/brooks_pasilla/'
-workers=4
-count_method=c('htseq','kallisto')[2]
-model=c('model_full','model_full_glm','model_full_paired','model_null1','model_null2','model_null3')[1]
+# rwd='/home/Shared/data/seq/brooks_pasilla/'
+# workers=4
+# count_method=c('htseq','kallisto')[2]
+# model=c('model_full','model_full_glm','model_full_paired','model_null1','model_null2','model_null3')[1]
 
 
 ##############################################################################
@@ -73,7 +73,7 @@ switch(model,
        model_full = {
          
          metadata <- metadata_org
-         countFiles <- paste0(counts_out, metadata$SampleName, ".counts")
+         countFiles <- paste0(counts_out, metadata$SampleName, ".txt")
          sampleTable = data.frame(row.names = metadata$SampleName, condition = metadata$condition)
          formulaFullModel = ~ sample + exon + condition:exon
          formulaReducedModel =  ~ sample + exon 
@@ -83,7 +83,7 @@ switch(model,
        model_full_glm = {
          
          metadata <- metadata_org
-         countFiles <- paste0(counts_out, metadata$SampleName, ".counts")
+         countFiles <- paste0(counts_out, metadata$SampleName, ".txt")
          sampleTable = data.frame(row.names = metadata$SampleName, condition = metadata$condition, LibraryLayout = metadata$LibraryLayout)
          formulaFullModel = ~ sample + exon + LibraryLayout:exon + condition:exon
          formulaReducedModel =  ~ sample + exon + LibraryLayout:exon
@@ -93,7 +93,7 @@ switch(model,
        model_full_paired = {
          
          metadata <-  metadata_org[metadata_org$LibraryLayout == "PAIRED", ]
-         countFiles <- paste0(counts_out, metadata$SampleName, ".counts")
+         countFiles <- paste0(counts_out, metadata$SampleName, ".txt")
          sampleTable = data.frame(row.names = metadata$SampleName, condition = metadata$condition)
          formulaFullModel = ~ sample + exon + condition:exon
          formulaReducedModel =  ~ sample + exon
@@ -103,7 +103,7 @@ switch(model,
        model_null1 = {
          
          metadata <-  metadata_org[metadata_org$condition == "CTL", ]
-         countFiles <- paste0(counts_out, metadata$SampleName, ".counts")
+         countFiles <- paste0(counts_out, metadata$SampleName, ".txt")
          sampleTable = data.frame(row.names = metadata$SampleName, condition = rep(c("C1", "C2"), 2))
          formulaFullModel = ~ sample + exon + condition:exon
          formulaReducedModel =  ~ sample + exon
@@ -113,7 +113,7 @@ switch(model,
        model_null2 = {
          
          metadata <-  metadata_org[metadata_org$condition == "CTL", ]
-         countFiles <- paste0(counts_out, metadata$SampleName, ".counts")
+         countFiles <- paste0(counts_out, metadata$SampleName, ".txt")
          sampleTable = data.frame(row.names = metadata$SampleName, condition = rep(c("C1", "C2"), each = 2))
          formulaFullModel = ~ sample + exon + condition:exon
          formulaReducedModel =  ~ sample + exon
@@ -123,7 +123,7 @@ switch(model,
        model_null3 = {
          
          metadata <-  metadata_org[metadata_org$condition == "CTL", ]
-         countFiles <- paste0(counts_out, metadata$SampleName, ".counts")
+         countFiles <- paste0(counts_out, metadata$SampleName, ".txt")
          sampleTable = data.frame(row.names = metadata$SampleName, condition = c("C1", "C2", "C2", "C1"))
          formulaFullModel = ~ sample + exon + condition:exon
          formulaReducedModel =  ~ sample + exon

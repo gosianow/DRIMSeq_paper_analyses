@@ -1,13 +1,14 @@
-# History files
-.Rhistory
-.Rapp.history
-
-# Example code in package build process
-*-Ex.R
-
-# RStudio files
+._*
+*.DS_Store
 .Rproj.user
-
-
-*._*
-
+*.Rhistory
+*.Rproj
+data-raw/*
+!data-raw/*.R
+vignettes/*
+!vignettes/*.Rnw
+!vignettes/*.Rmd
+!vignettes/*.pdf
+!vignettes/figure
+!vignettes/*.bib
+*/._*

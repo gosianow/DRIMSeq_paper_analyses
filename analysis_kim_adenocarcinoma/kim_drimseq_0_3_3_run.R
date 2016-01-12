@@ -1,9 +1,9 @@
 ######################################################
-## ----- kim_drimseq_0_3_1_run
-## <<kim_drimseq_0_3_1_run.R>>
+## ----- kim_drimseq_0_3_3_run
+## <<kim_drimseq_0_3_3_run.R>>
 
-# BioC 3.1
-# Created 5 Nov 2015 
+# BioC 3.2
+# Created 29 Dec 2015 
 
 ##############################################################################
 
@@ -48,7 +48,7 @@ print(disp_moderation_list)
 ##############################################################################
 
 setwd(rwd)
-method_out <- "drimseq_0_3_1"
+method_out <- "drimseq_0_3_3"
 
 ##########################################################################
 # load metadata
@@ -101,8 +101,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_prop = 6, min_feature_prop = 0.01)
-
+    d <- dmFilter(d, min_samps_gene_expr = 12, min_samps_feature_expr = 6, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
   },
   
   model_null_normal1 = {
@@ -115,8 +114,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
-
+    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
   },
   
   model_null_normal2 = {
@@ -129,7 +127,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
 
   },
   
@@ -159,7 +157,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
     
   }
 )
@@ -175,7 +173,7 @@ if(dispersion_common){
   disp <- "common"
   out_name <- paste0(out_dir, "/drimseq_", disp, "_")
   
-  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
   
   common_disp <- common_dispersion(d)
   common_disp
@@ -223,7 +221,7 @@ for(i in 1:length(disp_mode_list)){
     out_name <- paste0(out_dir, "/drimseq_", disp, "_", disp_mode, "_")
   
   # genewise dispersion
-  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, verbose = TRUE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, disp_prior_df = 0.1, verbose = TRUE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
   common_dispersion(d) <- common_disp
   
   plotDispersion(d, out_dir = out_name)

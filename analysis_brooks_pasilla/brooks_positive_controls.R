@@ -17,8 +17,8 @@ library(DRIMSeq)
 ##############################################################################
 
 rwd='/home/Shared/data/seq/brooks_pasilla'
-count_method=c('htseq','kallisto','kallistofiltered5','htseqprefiltered5')[2]
-model=c('model_full','model_full_glm','model_full_paired')[1]
+count_method=c('htseq','kallisto','kallistofiltered5','htseqprefiltered5')[3]
+model=c('model_full','model_full_glm','model_full_paired')[2]
 
 
 ##############################################################################
@@ -155,13 +155,14 @@ results_padj_valid <- results_padj[valid$gene_id, , drop = FALSE]
 
 rownames(results_padj_valid) <- valid$gene_id
 
+results_padj_valid
 
 out <-  data.frame(valid, model = model , count_method = count_method, results_padj_valid, stringsAsFactors = FALSE)
 
 write.table(out, file = paste0(comparison_out, model, "_", count_method, "_validation.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
-number_sign_valid <- matrix(colSums(results_padj_valid[-which(valid$brooks_gene_id == "Ant2"), ] < 0.05, na.rm = TRUE), nrow = 1)
+number_sign_valid <- matrix(colSums(results_padj_valid[-which(valid$brooks_gene_id == "Ant2"), , drop = FALSE] < 0.05, na.rm = TRUE), nrow = 1)
 colnames(number_sign_valid) <- colnames(results_padj_valid)
 
 
@@ -219,7 +220,7 @@ if(length(files) > 0){
 res_path <- paste0(method_out, "/",  model, "/", count_method, "/")
 files <- paste0(res_path, "d.Rdata")
 
-
+files
 
 if(file.exists(files)){
   

@@ -25,7 +25,7 @@ do
     for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_overall' 'prop_q10_kim_kallisto_overall'
     do 
     
-    for run in {1..25}
+    for run in {26..50}
     do
       
     echo "n${n}_nm${nm}_${prop}_${run}"
@@ -53,7 +53,7 @@ do
     for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_overall' 'prop_q10_kim_kallisto_overall'
     do 
     
-    for run in {1..25}
+    for run in {26..50}
     do
       
     echo "n${n}_nm${nm}_${prop}_${run}"

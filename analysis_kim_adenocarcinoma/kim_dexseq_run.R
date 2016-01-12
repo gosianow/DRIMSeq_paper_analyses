@@ -15,10 +15,10 @@ library("DEXSeq")
 # Test arguments
 ##############################################################################
 
-# rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
-# workers=4
-# count_method=c('htseq','kallisto')[1]
-# model=c('model_full','model_null_normal1','model_null_tumor1')[2]
+rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
+workers=5
+count_method=c('htseq','kallisto')[1]
+model='model_full_glm'
 
 ##############################################################################
 # Read in the arguments
@@ -59,6 +59,7 @@ metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors = FALSE, sep=
 
 metadata_org <- metadata
 
+metadata_org
 
 ###############################################################################
 # DEXSeq models
@@ -75,6 +76,17 @@ switch(model,
          metadata <- metadata_org
          countFiles <- paste0(counts_out, metadata$sampleName, ".counts")
          sampleTable = data.frame(row.names = metadata$sampleName, condition = metadata$condition)
+         formulaFullModel = ~ sample + exon + condition:exon
+         formulaReducedModel =  ~ sample + exon 
+       },
+       
+       model_full_glm = {
+         
+         metadata <- metadata_org
+         countFiles <- paste0(counts_out, metadata$sampleName, ".counts")
+         sampleTable = data.frame(row.names = metadata$sampleName, condition = metadata$condition, Patient.ID = metadata$Patient.ID)
+         formulaFullModel = ~ sample + exon + Patient.ID:exon + condition:exon
+         formulaReducedModel =  ~ sample + exon + Patient.ID:exon
          
        },
        
@@ -83,7 +95,8 @@ switch(model,
          metadata <-  metadata_org[metadata_org$condition == "normal", ]
          countFiles <- paste0(counts_out, metadata$sampleName, ".counts")
          sampleTable = data.frame(row.names = metadata$sampleName, condition = rep(c("C1", "C2"), each = 3))
-         
+         formulaFullModel = ~ sample + exon + condition:exon
+         formulaReducedModel =  ~ sample + exon 
        }, 
        
        model_null_tumor1 = {
@@ -91,7 +104,8 @@ switch(model,
          metadata <-  metadata_org[metadata_org$condition == "tumor", ]
          countFiles <- paste0(counts_out, metadata$sampleName, ".counts")
          sampleTable = data.frame(row.names = metadata$sampleName, condition = rep(c("C1", "C2"), each = 3))
-         
+         formulaFullModel = ~ sample + exon + condition:exon
+         formulaReducedModel =  ~ sample + exon 
        },
        
        model_null_normal2 = {
@@ -99,7 +113,8 @@ switch(model,
          metadata <-  metadata_org[metadata_org$condition == "normal", ]
          countFiles <- paste0(counts_out, metadata$sampleName, ".counts")
          sampleTable = data.frame(row.names = metadata$sampleName, condition = rep(c("C1", "C2"), 3))
-         
+         formulaFullModel = ~ sample + exon + condition:exon
+         formulaReducedModel =  ~ sample + exon 
        }, 
        
        model_null_tumor2 = {
@@ -107,16 +122,14 @@ switch(model,
          metadata <-  metadata_org[metadata_org$condition == "tumor", ]
          countFiles <- paste0(counts_out, metadata$sampleName, ".counts")
          sampleTable = data.frame(row.names = metadata$sampleName, condition = rep(c("C1", "C2"), 3))
-         
+         formulaFullModel = ~ sample + exon + condition:exon
+         formulaReducedModel =  ~ sample + exon 
        }
        
 )
 
 
 dxd <- DEXSeqDataSetFromHTSeq(countFiles, sampleData = sampleTable, design = ~ sample + exon + condition:exon , flattenedfile = NULL ) 
-
-formulaFullModel = ~ sample + exon + condition:exon
-formulaReducedModel =  ~ sample + exon 
 
 dxr <- DEXSeq(dxd, fullModel = formulaFullModel, reducedModel = formulaReducedModel, BPPARAM = BPPARAM, fitExpToVar="condition")
 

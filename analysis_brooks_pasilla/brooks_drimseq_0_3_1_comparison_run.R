@@ -101,7 +101,7 @@ results_padj <- results_padj[, colnames(results_padj) %in% colors_df$methods, dr
 
 keep_methods <- colors_df$methods %in% colnames(results_padj)
 
-clolors <- colors[keep_methods]
+colors <- colors[keep_methods]
 colors_df <- colors_df[keep_methods, , drop = FALSE]
 
 

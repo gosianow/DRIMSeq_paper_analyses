@@ -1,9 +1,10 @@
 ######################################################
-## ----- dispersion_error_moderation_real_plots_run
-## <<dispersion_error_moderation_real_plots_run.R>>
+## ----- moderation_real_plots_run
+## <<moderation_real_plots_run.R>>
 
-# BioC 3.1
+# BioC 3.2
 # Created 28 Nov 2015 
+# Updated 27 Dec 2015
 
 ##############################################################################
 
@@ -19,14 +20,17 @@ library(DRIMSeq)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/'
-n=3 # Number of samples
-param_nm_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/kim_kallisto/nm_kim_kallisto_lognormal.txt'
-### Common dispersion of gene expression
-param_nd_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/kim_kallisto/nd_common_kim_kallisto.txt'
-param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/kim_kallisto/prop_kim_kallisto.txt'
-### Genewise dispersion of feature proportions
-param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq_0_3_1/dm_parameters/kim_kallisto/disp_genewise_kim_kallisto_lognormal.txt'
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
+sim_name=''
+n=c(3,6) # Number of samples
+nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal','nm_kim_kallisto_lognormal','nm_kim_htseq_lognormal')
+nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq','nd_common_kim_kallisto','nd_common_kim_htseq')
+prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kallisto_fcutoff','prop_kim_htseq_fcutoff')
+disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')
+data_name=c('brooks','kim')
+count_method=c('kallisto','htseq')
+out_suffix='moderation_real'
+
 
 ##############################################################################
 # Read in the arguments
@@ -40,29 +44,30 @@ for (i in 1:length(args)) {
 
 
 print(rwd)
+print(sim_name)
 print(n)
-print(param_nm_path)
-print(param_nd_path)
-print(param_pi_path)
-print(param_gamma_path)
-
+print(nm)
+print(nd)
+print(prop)
+print(disp)
+print(data_name)
+print(count_method)
+print(out_suffix)
 
 ##############################################################################
 
 setwd(rwd)
 
-out_dir_plots <- "error_moderation_real/"
-dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
+out_dir_plots <- "moderation_real/"
+out_dir_res <- "moderation_real/run/"
+
 
 
 ##############################################################################
 ### Merge all results into one data frame
 ##############################################################################
 
-out_dir_res <- c("error_moderation_real/run/")
 
-suffix_res <- c("est_moderation")
-suffix_fp <- c("fp_moderation")
 
 res_list <- list()
 mse_list <- list()
@@ -70,79 +75,103 @@ fp_list <- list()
 ix <- 1
 
 for(ix_n in 1:length(n)){
-  # ix_n=1
   
-  out_name <- paste0("n", n[ix_n], "_", basename(file_path_sans_ext(param_nm_path)), "_", basename(file_path_sans_ext(param_nd_path)), "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
-  
-  files <- list.files(out_dir_res, pattern = paste0(out_name, suffix_res, ".txt"))
-  print(files)
-  
-  if(length(files) > 0){
+  for(ix_nm in 1:length(nm)){
     
-    res_tmp_list <- list()
-    mse_tmp_list <- list()
-    
-    for(i in 1:length(files)){
+    for(ix_nd in 1:length(nd)){
       
-      rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
-      rr$run <- i
-      res_tmp_list[[i]] <- rr
-      
-      rr$error_abs <- abs(rr$est - rr$true)
-      rr$disp_prior_df <- factor(sprintf("%g", rr$disp_prior_df))
-      
-      out_mean <- aggregate(. ~ disp_prior_df, rr[, c("disp_prior_df", "error_abs")], mean)
-      colnames(out_mean) <- c("disp_prior_df", "mean_error_abs")
-      
-      out_median <- aggregate(. ~ disp_prior_df, rr[, c("disp_prior_df", "error_abs")], median)
-      colnames(out_median) <- c("disp_prior_df", "median_error_abs")
-      
-      out <- merge(out_mean, out_median, by = "disp_prior_df", sort = FALSE)
-      
-      mse_tmp_list[[i]] <- out
-      
+      for(ix_prop in 1:length(prop)){
+        
+        for(ix_disp in 1:length(disp)){
+          # ix_n=1; ix_nm=2; ix_nd=2; ix_prop=2; ix_disp=2
+          
+          out_name <- paste0(sim_name, "n",  n[ix_n], "_", nm[ix_nm], "_", nd[ix_nd], "_", prop[ix_prop], "_", disp[ix_disp], "_")
+          
+          files <- list.files(out_dir_res, pattern = paste0(out_name, "est"))
+          files
+          
+          if(length(files) > 0){
+            
+            res_tmp_list <- list()
+            mse_tmp_list <- list()
+            
+            for(i in 1:length(files)){
+              # i = 1
+              rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+              head(rr)
+              
+              rr$run <- i
+              rr$mean_expression <- rr$nm
+              res_tmp_list[[i]] <- rr
+              
+              # calculate mse
+              rr$error_abs <- abs(rr$est - rr$true)
+              rr$disp_prior_df <- factor(rr$disp_prior_df)
+              
+              out_mean <- aggregate(. ~ disp_prior_df, rr[, c("disp_prior_df", "error_abs")], mean)
+              colnames(out_mean) <- c( "disp_prior_df", "mean_error_abs")
+              
+              out_median <- aggregate(. ~ disp_prior_df, rr[, c("disp_prior_df", "error_abs")], median)
+              colnames(out_median) <- c("disp_prior_df", "median_error_abs")
+              
+              out <- merge(out_mean, out_median, by = c("disp_prior_df"), sort = FALSE)
+              
+              mse_tmp_list[[i]] <- out
+              
+            }
+            
+            res_tmp <- rbind.fill(res_tmp_list)
+            res_tmp$n <- n[ix_n]
+            res_tmp$nm <- nm[ix_nm]
+            res_tmp$prop <- prop[ix_prop]
+            res_tmp$disp <- disp[ix_disp]
+            res_list[[ix]] <- res_tmp
+            
+            mse_tmp <- rbind.fill(mse_tmp_list)
+            mse_tmp$n <- n[ix_n]
+            mse_tmp$nm <- nm[ix_nm]
+            mse_tmp$prop <- prop[ix_prop]
+            mse_tmp$disp <- disp[ix_disp]
+            mse_list[[ix]] <- mse_tmp
+            
+          }
+          
+          files <- list.files(out_dir_res, pattern = paste0(out_name, "fp"))
+          files
+          
+          if(length(files) > 0){
+            
+            fp_tmp_list <- list()
+            
+            for(i in 1:length(files)){
+              
+              rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+              fp_tmp_list[[i]] <- rr
+              
+              
+            }
+            
+            fp_tmp <- rbind.fill(fp_tmp_list)
+            fp_tmp$n <- n[ix_n]
+            fp_tmp$nm <- nm[ix_nm]
+            fp_tmp$prop <- prop[ix_prop]
+            fp_tmp$disp <- disp[ix_disp]
+            fp_list[[ix]] <- fp_tmp
+            
+          }
+          
+          
+          ix <- ix + 1
+        }
+      }
     }
-    
-    res_tmp <- rbind.fill(res_tmp_list)
-    res_tmp$n <- n[ix_n]
-    res_list[[ix]] <- res_tmp
-    
-    mse_tmp <- rbind.fill(mse_tmp_list)
-    mse_tmp$n <- n[ix_n]
-    mse_list[[ix]] <- mse_tmp
-
   }
-  
-  files <- list.files(out_dir_res, pattern = paste0(out_name, suffix_fp, ".txt"))
-  print(files)
-  
-  if(length(files) > 0){
-    
-    fp_tmp_list <- list()
-    
-    for(i in 1:length(files)){
-      
-      rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
-      fp_tmp_list[[i]] <- rr
-      
-      
-    }
-    
-    fp_tmp <- rbind.fill(fp_tmp_list)
-    fp_tmp$n <- n[ix_n]
-    fp_list[[ix]] <- fp_tmp
-    
-    
-  }
-  
-  
-  ix <- ix + 1
 }
-
 
 res <- rbind.fill(res_list)
 mse <- rbind.fill(mse_list)
 fp <- rbind.fill(fp_list)
+
 
 ##############################################################################
 ### Panel plots
@@ -151,40 +180,37 @@ fp <- rbind.fill(fp_list)
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
 whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
+disp_prior_df_levels <- sprintf("%g", sort(unique(res$disp_prior_df)))
+disp_prior_df_levels
 
-out_name <- paste0(basename(file_path_sans_ext(param_nm_path)), "_", basename(file_path_sans_ext(param_nd_path)), "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
+
+res$disp_prior_df <- sprintf("%g", res$disp_prior_df)
+
 
 ### Adjust the order of the variables for plotting
 
-disp_prior_df_levels <- sprintf("%g", sort(unique(res$disp_prior_df)))
+res$disp_prior_df <- factor(res$disp_prior_df, levels = disp_prior_df_levels)
 
-res$disp_prior_df <- factor(sprintf("%g", res$disp_prior_df), levels = disp_prior_df_levels)
+res$data_name <- NA 
+for(i in 1:length(data_name))
+  res$data_name[grepl(data_name[i], res$prop)] <- data_name[i]
+res$data_name <- factor(res$data_name, levels = unique(data_name))
 
-levels(res$disp_prior_df)
+res$count_method <- NA 
+for(i in 1:length(count_method))
+  res$count_method[grepl(count_method[i], res$prop)] <- count_method[i]
+res$count_method <- factor(res$count_method, levels = unique(count_method))
 
 
+res$interaction <- interaction(res$data_name, res$count_method, lex.order = TRUE)
+levels(res$interaction)
+
+res$n <- factor(res$n, levels = n, labels = paste0("n", n))
 
 ### Absolute error
 
 error <- res[complete.cases(res), ]
 error$error <- abs(error$est - error$true)
-
-
-# ggp <- ggplot(data = error, aes(y = error, x = disp_prior_df)) + 
-#   geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
-#   geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
-#   theme_bw() +
-#   ylab("Absolute error") +
-#   xlab("Moderation") +
-#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) 
-# 
-# pdf(paste0(out_dir_plots, out_name, "error_absolute_violin.pdf"))
-# print(ggp)
-# dev.off()
-
-
-
-ylim <- c(-2.5, 5)
 
 
 ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) + 
@@ -193,41 +219,31 @@ ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) +
   theme_bw() +
   ylab("Log10 of absolute error") +
   xlab("Moderation") +
-  # coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(n ~ interaction)
 
 
-pdf(paste0(out_dir_plots, out_name, "error_absolute_log_violin.pdf"))
+pdf(paste0(out_dir_plots, "error_absolute_log_violin.pdf"), 14,7)
 print(ggp)
 dev.off()
 
 
+### Estimates
 
 
-# ### Error as a ratio
-# 
-# error <- res[complete.cases(res), ]
-# error$error <- error$est/error$true
-# 
-# ylim <- c(-2, 2)
-# 
-# ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) + 
-#   geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
-#   geom_boxplot(outlier.size = 1, fill = NA, width = 0.5) +
-#   geom_hline(yintercept = 0, color="red", linetype = 2, size = 0.2) +
-#   theme_bw() +
-#   ylab("Log10 of error ratio") +
-#   xlab("Moderation") +
-#   # coord_cartesian(ylim = ylim) +
-#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
-# 
-# pdf(paste0(out_dir_plots, out_name, "error_ratio_log_violin.pdf"))
-# print(ggp)
-# dev.off()
+ggp <- ggplot(data = res, aes(y = log10(est), x = disp_prior_df)) + 
+  geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
+  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
+  theme_bw() +
+  ylab("Log10 of gamma_+") +
+  xlab("Moderation") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(n ~ interaction)
 
 
-
-
+pdf(paste0(out_dir_plots, "est_log_violin.pdf"),14,7)
+print(ggp)
+dev.off()
 
 
 
@@ -236,42 +252,57 @@ dev.off()
 ### Adjust the order of the variables for plotting
 
 
+mse$disp_prior_df <- sprintf("%g", as.numeric(as.character(mse$disp_prior_df)))
+
 mse$disp_prior_df <- factor(mse$disp_prior_df, levels = disp_prior_df_levels)
+
+mse$data_name <- NA 
+for(i in 1:length(data_name))
+  mse$data_name[grepl(data_name[i], mse$prop)] <- data_name[i]
+mse$data_name <- factor(mse$data_name, levels = unique(data_name))
+
+mse$count_method <- NA 
+for(i in 1:length(count_method))
+  mse$count_method[grepl(count_method[i], mse$prop)] <- count_method[i]
+mse$count_method <- factor(mse$count_method, levels = unique(count_method))
+
+
+mse$interaction <- interaction(mse$data_name, mse$count_method, lex.order = TRUE)
+levels(mse$interaction)
+
+mse$n <- factor(mse$n, levels = n, labels = paste0("n", n))
 
 
 ### plot mean 
 
 ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df)) + 
-  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
-  # geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.5) +
+  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Mean absolute error") +
   xlab("Moderation") +
-  # coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(n ~ interaction)
 
-pdf(paste0(out_dir_plots, out_name, "error_mean_absolute_boxplot.pdf"))
+pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"),14,7)
 print(ggp)
 dev.off()
-
-
-
 
 
 ### plot median 
 
 ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df)) + 
-  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
-  # geom_hline(yintercept = log10(min_median), color="red", linetype = 2, size = 0.5) +
+  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Median absolute error") +
   xlab("Moderation") +
-  # coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) 
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(n ~ interaction)
 
-pdf(paste0(out_dir_plots, out_name, "error_median_absolute_boxplot.pdf"))
+pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"),14,7)
 print(ggp)
 dev.off()
+
+
 
 
 
@@ -279,7 +310,25 @@ dev.off()
 
 ### False positives
 
-fp$disp_prior_df <- factor(sprintf("%g", fp$disp_prior_df), levels = disp_prior_df_levels)
+fp$disp_prior_df <- sprintf("%g", as.numeric(as.character(fp$disp_prior_df)))
+
+fp$disp_prior_df <- factor(fp$disp_prior_df, levels = disp_prior_df_levels)
+
+fp$data_name <- NA 
+for(i in 1:length(data_name))
+  fp$data_name[grepl(data_name[i], fp$prop)] <- data_name[i]
+fp$data_name <- factor(fp$data_name, levels = unique(data_name))
+
+fp$count_method <- NA 
+for(i in 1:length(count_method))
+  fp$count_method[grepl(count_method[i], fp$prop)] <- count_method[i]
+fp$count_method <- factor(fp$count_method, levels = unique(count_method))
+
+fp$interaction <- interaction(fp$data_name, fp$count_method, lex.order = TRUE)
+levels(fp$interaction)
+
+fp$n <- factor(fp$n, levels = n, labels = paste0("n", n))
+
 
 ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
 
@@ -291,58 +340,75 @@ ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df)) +
   ylab("FP rate") +
   xlab("Moderation") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) 
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(n ~ interaction)
 
-pdf(paste0(out_dir_plots, out_name, "fp_boxplot.pdf"))
+pdf(paste0(out_dir_plots, "fp_boxplot.pdf"),14,7)
 print(ggp)
 dev.off()
+
+
+
 
 
 
 #### Plot dispersion vesrus mean for different disp_prior_df
-
-# take only a subset of res
-
-res_sub <- res[res$run == 1, ]
-
-res_true <- res_sub[res_sub$disp_prior_df == 0, , drop = FALSE]
-res_true$disp_prior_df = "true"
-res_true$est <- res_true$true
-
-resgg <- rbind.fill(res_sub, res_true)
-
-mean_expression <- resgg$nm
-genewise_dispersion <- resgg$est
-nr_features <- resgg$q
-disp_prior_df <- factor(resgg$disp_prior_df, levels = c("true", disp_prior_df_levels))
-
-nlevels(disp_prior_df)
-
-
-
-df <- data.frame(mean_expression = log10(mean_expression + 1), dispersion = log10(genewise_dispersion), nr_features = nr_features, disp_prior_df = disp_prior_df)
-
-df_quant <- min(quantile(na.omit(df$nr_features), probs = 0.95), 30)
-breaks <- seq(2, df_quant, ceiling(df_quant/10))
-
-
-ggp <- ggplot(df, aes_string(x = "mean_expression", y = "dispersion", colour = "nr_features" )) +
-  theme_bw() +
-  xlab("Log10 of mean expression") +
-  ylab("Log10 of gamma_+") +
-  geom_point(size = 1.5, alpha = 0.7, na.rm = TRUE, shape = 1) +
-  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), legend.title = element_text(size=16, face="bold"), legend.text = element_text(size = 14), legend.position = "top") +
-  guides(colour = guide_colorbar(barwidth = 20, barheight = 0.5)) +
-  scale_colour_gradient(limits = c(2, max(breaks)), breaks = breaks, low = "royalblue2", high="red2", name = "Number of features", na.value = "red2") +
-  facet_wrap(~ disp_prior_df, nrow = 3)
-
-
-pdf(paste0(out_dir_plots, out_name, "dispersion_versus_mean.pdf"), 20, 12)
-print(ggp)
-dev.off()
-
-
-
+for(k in 1:length(n)){
+  
+  for(i in 1:length(data_name)){
+    
+    for(j in 1:length(count_method)){
+      # i = 1; j = 1
+      
+      
+      # take only a subset of res
+      
+      res_sub <- res[res$run == 1 & res$data_name == data_name[i] & res$count_method == count_method[j] & res$n == paste0("n", n[k]), ]
+      
+      res_true <- res_sub[res_sub$disp_prior_df == 0, , drop = FALSE]
+      res_true$disp_prior_df = "true"
+      res_true$est <- res_true$true
+      
+      resgg <- rbind.fill(res_sub, res_true)
+      
+      mean_expression <- resgg$mean_expression
+      genewise_dispersion <- resgg$est
+      nr_features <- resgg$q
+      disp_prior_df <- factor(resgg$disp_prior_df, levels = c("true", disp_prior_df_levels))
+      
+      nlevels(disp_prior_df)
+      
+      
+      
+      df <- data.frame(mean_expression = log10(mean_expression + 1), dispersion = log10(genewise_dispersion), nr_features = nr_features, disp_prior_df = disp_prior_df)
+      
+      df_quant <- min(quantile(na.omit(df$nr_features), probs = 0.95), 30)
+      breaks <- seq(2, df_quant, ceiling(df_quant/10))
+      
+      
+      ggp <- ggplot(df, aes_string(x = "mean_expression", y = "dispersion", colour = "nr_features" )) +
+        theme_bw() +
+        xlab("Log10 of mean expression") +
+        ylab("Log10 of gamma_+") +
+        geom_point(size = 1.5, alpha = 0.7, na.rm = TRUE, shape = 1) +
+        theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), legend.title = element_text(size=16, face="bold"), legend.text = element_text(size = 14), legend.position = "top") +
+        guides(colour = guide_colorbar(barwidth = 20, barheight = 0.5)) +
+        scale_colour_gradient(limits = c(2, max(breaks)), breaks = breaks, low = "royalblue2", high="red2", name = "Number of features", na.value = "red2") +
+        facet_wrap(~ disp_prior_df, nrow = 3)
+      
+      
+      pdf(paste0(out_dir_plots, "dispersion_versus_mean_n", n[k], "_", data_name[i], "_", count_method[j],".pdf"), 20, 12)
+      print(ggp)
+      dev.off()
+      
+      
+      
+      
+    }
+    
+  }
+  
+}
 
 
 

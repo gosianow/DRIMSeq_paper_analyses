@@ -16,10 +16,36 @@ setwd(rwd)
 # metadata
 ######################################################################################################
 
-metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors=F, sep="\t", header=T) 
 
-metadata
+fastq_dir <- paste0("1_reads/fastq/")
 
+sri.org <- read.table("3_metadata/SraRunInfo.csv", stringsAsFactors=F, sep=",", header=T)
+keep <- grep(paste("GSM4611", 76:82, sep="", collapse="|"), sri.org$SampleName)
+sri <- sri.org[keep,]
+
+sri$LibraryName = gsub("S2_DRSC_","",sri$LibraryName)
+metadata = unique(sri[,c("LibraryName","LibraryLayout", "SampleName", "avgLength")])
+
+for(i in seq_len(nrow(metadata))) {
+  rw = (sri$LibraryName==metadata$LibraryName[i])
+  if(metadata$LibraryLayout[i]=="PAIRED") {
+    metadata$fastq1[i] = paste0(fastq_dir, sri$Run[rw],"_1.fastq.gz",collapse=",")
+    metadata$fastq2[i] = paste0(fastq_dir, sri$Run[rw],"_2.fastq.gz",collapse=",")
+    # metadata$ReadLength[i] <- metadata$avgLength[i] / 2
+    # metadata$SRR[i] <- paste0(sri$Run[rw], collapse=",")
+  } else {
+    metadata$fastq1[i] = paste0(fastq_dir, sri$Run[rw],".fastq.gz",collapse=",")
+    metadata$fastq2[i] = ""
+    # metadata$ReadLength[i] <- metadata$avgLength[i]
+    # metadata$SRR[i] <- paste0(sri$Run[rw], collapse=",")
+  }
+}
+
+metadata$condition = "CTL"
+metadata$condition[grep("CG8144_RNAi",metadata$LibraryName)] = "KD"
+metadata$shortname = paste( seq_len(nrow(metadata)), substr(metadata$condition,1,2),  substr(metadata$LibraryLayout,1,2), metadata$ReadLength, sep=".")
+metadata$sampleName <- metadata$SampleName
+metadata$UniqueName <- paste0(1:nrow(metadata), "_", metadata$SampleName)
 
 #########################################################################################
 # Building an index
@@ -49,13 +75,13 @@ system(cmd)
 
 index <- "/home/Shared/data/annotation/Drosophila/Ensembl70/kallisto/Drosophila_melanogaster.BDGP5.70.cdna.all.idx"
 
-fastq_dir <- paste0(rwd, "/1_reads/fastq/")
+fastq_dir <- paste0(rwd, "/")
 
 
-for(i in 3:nrow(metadata)){
+for(i in 1:nrow(metadata)){
   # i = 2
   
-  sample <- metadata$SampleName[i]
+  sample <- metadata$UniqueName[i]
   
   out_dir <- paste0(rwd, "/2_counts/kallisto/", sample, "/")
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
@@ -66,7 +92,7 @@ for(i in 3:nrow(metadata)){
            
            fastq <- paste0(fastq_dir, unlist(strsplit(metadata$fastq1[i], split = ",")), collapse = " ")
            
-           cmd <- paste("kallisto quant -i", index, "-o", out_dir, "-b 0 -t 10 --single -l ", metadata$avgLength[i], " ", fastq)
+           cmd <- paste("kallisto quant -i", index, "-o", out_dir, "-b 0 -t 5 --single -l ", metadata$avgLength[i], fastq)
            
            system(cmd)
            
@@ -76,7 +102,7 @@ for(i in 3:nrow(metadata)){
            
            fastq <- paste0(fastq_dir, unlist(strsplit(metadata$fastq1[i], split = ",")), " " ,fastq_dir, unlist(strsplit(metadata$fastq2[i], split = ",")), collapse = " ")
            
-           cmd <- paste("kallisto quant -i", index, "-o", out_dir, "-b 0 -t 10 ", fastq)
+           cmd <- paste("kallisto quant -i", index, "-o", out_dir, "-b 0 -t 5 ", fastq)
            
            system(cmd)
            
@@ -108,19 +134,42 @@ rownames(gt) <- gt$transcript_id
 ############## save results in tables
 
 out_dir <- paste0(rwd, "/2_counts/kallisto/")
-samples <- metadata$SampleName
+samples <- unique(metadata$SampleName)
+
 
 counts_list <- lapply(1:length(samples), function(i){
-  # i = 1
+  # i = 4
   print(i)
   
-  abundance <- read.table(paste0(out_dir, samples[i], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+  indx <- which(metadata$SampleName == samples[i])
   
+  if(length(indx) == 1){
+    
+    abundance <- read.table(paste0(out_dir, metadata$UniqueName[indx], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+    
+  }else{
+    
+    abundance <- lapply(indx, function(j){
+      # j = indx[1]
+      
+      abundance_tmp <- read.table(paste0(out_dir, metadata$UniqueName[j], "/", "abundance.txt"), header = TRUE, sep = "\t", as.is = TRUE)
+      abundance_tmp <- abundance_tmp[, c("target_id", "est_counts")]
+      abundance_tmp
+      
+      })
+    
+    abundance <- Reduce(function(...) merge(..., by = "target_id", all = TRUE, sort = FALSE), abundance)
+    est_counts <- rowSums(abundance[, -1])
+    
+    abundance <- data.frame(target_id = abundance$target_id, est_counts = est_counts, stringsAsFactors = FALSE)
+    
+  }
+
   counts <- data.frame(paste0(gt[abundance$target_id, "gene_id"], ":", abundance$target_id), counts = round(abundance$est_counts), stringsAsFactors = FALSE)
   
   colnames(counts) <- c("group_id", samples[i])
   
-  write.table(counts, paste0(out_dir, samples[i], ".counts"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+  write.table(counts, paste0(out_dir, samples[i], ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
   
   return(counts)
   
@@ -128,10 +177,8 @@ counts_list <- lapply(1:length(samples), function(i){
 
 
 
-counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
-
-
-write.table(counts, paste0(out_dir, "kallisto_counts.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+# counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
+# write.table(counts, paste0(out_dir, "kallisto_counts.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 

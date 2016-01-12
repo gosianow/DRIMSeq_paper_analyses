@@ -14,14 +14,14 @@ library(limma)
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/brooks_pasilla/'
-workers=4
-count_method=c('htseq','kallisto')[2]
-model=c('model_full','model_full_paired','model_null1','model_null2','model_null3')[1]
-dispersion_common=TRUE
-results_common=TRUE
-disp_mode_list=c('grid','grid','optimize','optim','constrOptim')
-disp_moderation_list=c('none','common','none','none','none')
+# rwd='/home/Shared/data/seq/brooks_pasilla/'
+# workers=4
+# count_method=c('htseq','kallisto')[2]
+# model=c('model_full','model_full_paired','model_null1','model_null2','model_null3')[1]
+# dispersion_common=TRUE
+# results_common=TRUE
+# disp_mode_list=c('grid','grid','optimize','optim','constrOptim')
+# disp_moderation_list=c('none','common','none','none','none')
 
 
 ##############################################################################
@@ -72,7 +72,7 @@ count_dir <- paste0("2_counts/", count_method, "/")
 ### load counts
 counts_list <- lapply(1:length(metadata_org$sampleName), function(i){
   # i = 1
-  cts <- read.table(paste0(count_dir, metadata_org$sampleName[i], ".counts"), header = FALSE, as.is = TRUE)
+  cts <- read.table(paste0(count_dir, metadata_org$sampleName[i], ".txt"), header = FALSE, as.is = TRUE)
   colnames(cts) <- c("group_id", metadata_org$sampleName[i])  
   return(cts)
 })

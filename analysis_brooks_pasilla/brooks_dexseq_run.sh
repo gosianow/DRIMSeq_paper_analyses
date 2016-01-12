@@ -13,11 +13,14 @@ mkdir $ROUT
 
 for i in 'GSM461176' 'GSM461177' 'GSM461178' 'GSM461179' 'GSM461180' 'GSM461181' 'GSM461182'
  do 
-  samtools index $RWD/1_reads/tophat_2.0.9/${i}/accepted_hits.bam
+  samtools index $RWD/1_reads/tophat_2.0.14/${i}/accepted_hits.bam
 done
 
 
 ### Run HTSeq
+
+R214 CMD BATCH --no-save --no-restore "--args gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf' count_method='htseq'" $RCODE/brooks_htseq.R $ROUT/brooks_htseq_htseq.Rout
+
 
 R214 CMD BATCH --no-save --no-restore "--args gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf' count_method='htseqprefiltered5'" $RCODE/brooks_htseq.R $ROUT/brooks_htseq_htseqprefiltered5.Rout
 
@@ -31,7 +34,7 @@ do
     
     echo "${model}_${count_method}"
 
-    R214 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}'" $RCODE/brooks_dexseq_run.R $ROUT/brooks_dexseq_run_${model}_${count_method}.Rout
+    R214 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=10 count_method='${count_method}' model='${model}'" $RCODE/brooks_dexseq_run.R $ROUT/brooks_dexseq_run_${model}_${count_method}.Rout
 
   done
 done
