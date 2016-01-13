@@ -7,6 +7,10 @@
 
 ##############################################################################
 
+Sys.time()
+
+##############################################################################
+
 library(ggplot2)
 library(reshape2)
 library(tools)
@@ -18,15 +22,17 @@ library(DRIMSeq)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
-sim_name=''
-n=3
-nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal')
-nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq')
-prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff')
-disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal')
-data_name=c('brooks','brooks')
-count_method=c('kallisto','htseq')
+# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
+# sim_name=''
+# n=3
+# nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal','nm_kim_kallisto_lognormal','nm_kim_htseq_lognormal')
+# nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq','nd_common_kim_kallisto','nd_common_kim_htseq')
+# prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kallisto_fcutoff','prop_kim_htseq_fcutoff')
+# disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')
+# data_name=c('brooks','kim')
+# count_method=c('kallisto','htseq')
+# out_suffix='filtering_real_min_feature_prop'
+
 
 ##############################################################################
 # Read in the arguments
@@ -50,7 +56,7 @@ print(prop)
 print(disp)
 print(data_name)
 print(count_method)
-
+print(out_suffix)
 
 ##############################################################################
 
@@ -58,8 +64,8 @@ setwd(rwd)
 
 out_dir_res <- "filtering_real/run/"
 out_dir_plots <- "filtering_real/"
-out_suffix <- "filtering_real"
 
+feature_filter <- gsub("filtering_real_", "", out_suffix)
 
 ##############################################################################
 ### Merge all results into one data frame
@@ -84,7 +90,7 @@ for(ix_n in 1:length(n)){
           
           out_name <- paste0(sim_name, "n",  n[ix_n], "_", nm[ix_nm], "_", nd[ix_nd], "_", prop[ix_prop], "_", disp[ix_disp], "_")
           
-          files <- list.files(out_dir_res, pattern = paste0(out_name, "est"))
+          files <- list.files(out_dir_res, pattern = paste0(out_name, "est_", out_suffix))
           files
           
           if(length(files) > 0){
@@ -102,15 +108,15 @@ for(ix_n in 1:length(n)){
               
               # calculate mse
               rr$error_abs <- abs(rr$est - rr$true)
-              rr$min_feature_expr <- factor(rr$min_feature_expr)
+              rr[, feature_filter] <- factor(rr[, feature_filter])
               
-              out_mean <- aggregate(. ~ min_feature_expr, rr[, c("min_feature_expr", "error_abs")], mean)
-              colnames(out_mean) <- c( "min_feature_expr", "mean_error_abs")
+              out_mean <- aggregate(as.formula(paste0(". ~ ", feature_filter)), rr[, c(feature_filter, "error_abs")], mean)
+              colnames(out_mean) <- c(feature_filter, "mean_error_abs")
               
-              out_median <- aggregate(. ~ min_feature_expr, rr[, c("min_feature_expr", "error_abs")], median)
-              colnames(out_median) <- c("min_feature_expr", "median_error_abs")
+              out_median <- aggregate(as.formula(paste0(". ~ ", feature_filter)), rr[, c(feature_filter, "error_abs")], median)
+              colnames(out_median) <- c(feature_filter, "median_error_abs")
               
-              out <- merge(out_mean, out_median, by = c("min_feature_expr"), sort = FALSE)
+              out <- merge(out_mean, out_median, by = c(feature_filter), sort = FALSE)
               
               mse_tmp_list[[i]] <- out
               
@@ -132,7 +138,7 @@ for(ix_n in 1:length(n)){
             
           }
           
-          files <- list.files(out_dir_res, pattern = paste0(out_name, "fp"))
+          files <- list.files(out_dir_res, pattern = paste0(out_name, "fp_", out_suffix))
           files
           
           if(length(files) > 0){
@@ -178,13 +184,14 @@ whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
 
 
-min_feature_expr_levels <- sort(unique(res$min_feature_expr), decreasing = FALSE)
-min_feature_expr_levels
+feature_filter_levels <- sort(unique(res[, feature_filter]), decreasing = FALSE)
+feature_filter_levels
 
 
 ### Adjust the order of the variables for plotting
 
-res$min_feature_expr <- factor(res$min_feature_expr, levels = min_feature_expr_levels)
+res[, feature_filter] <- factor(res[, feature_filter], levels = feature_filter_levels)
+res$feature_filter <- res[, feature_filter]
 
 res$data_name <- NA 
 for(i in 1:length(data_name))
@@ -203,17 +210,17 @@ error <- res[complete.cases(res), ]
 error$error <- abs(error$est - error$true)
 
 
-ggp <- ggplot(data = error, aes(y = log10(error), x = min_feature_expr)) + 
+ggp <- ggplot(data = error, aes(y = log10(error), x = feature_filter)) + 
   geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
   geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Log10 of absolute error") +
-  xlab("Max features") +
+  xlab(feature_filter) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ data_name)
 
 
-pdf(paste0(out_dir_plots, "error_absolute_log_violin.pdf"), 7,7)
+pdf(paste0(out_dir_plots, out_suffix, "_error_absolute_log_violin.pdf"), 7,7)
 print(ggp)
 dev.off()
 
@@ -221,17 +228,17 @@ dev.off()
 ### Estimates
 
 
-ggp <- ggplot(data = res, aes(y = log10(est), x = min_feature_expr)) + 
+ggp <- ggplot(data = res, aes(y = log10(est), x = feature_filter)) + 
   geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
   geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Log 10 of gamma_+") +
-  xlab("Max features") +
+  xlab(feature_filter) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ data_name)
 
 
-pdf(paste0(out_dir_plots, "est_log_violin.pdf"),7,7)
+pdf(paste0(out_dir_plots, out_suffix, "_est_log_violin.pdf"),7,7)
 print(ggp)
 dev.off()
 
@@ -241,7 +248,8 @@ dev.off()
 
 ### Adjust the order of the variables for plotting
 
-mse$min_feature_expr <- factor(mse$min_feature_expr, levels = min_feature_expr_levels)
+mse[, feature_filter] <- factor(mse[, feature_filter], levels = feature_filter_levels)
+mse$feature_filter <- mse[, feature_filter]
 
 mse$data_name <- NA 
 for(i in 1:length(data_name))
@@ -256,30 +264,30 @@ mse$count_method <- factor(mse$count_method, levels = unique(count_method))
 
 ### plot mean 
 
-ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = min_feature_expr)) + 
+ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = feature_filter)) + 
   geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Mean absolute error") +
-  xlab("Max features") +
+  xlab(feature_filter) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ data_name, scales = "free")
 
-pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"),7,7)
+pdf(paste0(out_dir_plots, out_suffix, "_error_mean_absolute_boxplot.pdf"),7,7)
 print(ggp)
 dev.off()
 
 
 ### plot median 
 
-ggp <- ggplot(data = mse, aes(y = median_error_abs, x = min_feature_expr)) + 
+ggp <- ggplot(data = mse, aes(y = median_error_abs, x = feature_filter)) + 
   geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Median absolute error") +
-  xlab("Max features") +
+  xlab(feature_filter) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ data_name, scales = "free")
 
-pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"),7,7)
+pdf(paste0(out_dir_plots, out_suffix, "_error_median_absolute_boxplot.pdf"),7,7)
 print(ggp)
 dev.off()
 
@@ -291,7 +299,8 @@ dev.off()
 
 ### False positives
 
-fp$min_feature_expr <- factor(fp$min_feature_expr, levels = min_feature_expr_levels)
+fp[, feature_filter] <- factor(fp[, feature_filter], levels = feature_filter_levels)
+fp$feature_filter <- fp[, feature_filter]
 
 fp$data_name <- NA 
 for(i in 1:length(data_name))
@@ -308,17 +317,17 @@ fp$count_method <- factor(fp$count_method, levels = unique(count_method))
 ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
 
 
-ggp <- ggplot(data = fp, aes(y = fp, x = min_feature_expr)) + 
+ggp <- ggplot(data = fp, aes(y = fp, x = feature_filter)) + 
   geom_boxplot(outlier.size = 1, fill = "grey60") +
   geom_hline(yintercept = 0.05, color="black", linetype = 2, size = 0.3) +
   theme_bw() +
   ylab("FP rate") +
-  xlab("Max features") +
+  xlab(feature_filter) +
   coord_cartesian(ylim = ylim) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ data_name)
 
-pdf(paste0(out_dir_plots, "fp_boxplot.pdf"),7,7)
+pdf(paste0(out_dir_plots, out_suffix, "_fp_boxplot.pdf"),7,7)
 print(ggp)
 dev.off()
 

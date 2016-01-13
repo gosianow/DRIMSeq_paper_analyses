@@ -8,6 +8,10 @@
 
 ##############################################################################
 
+Sys.time()
+
+##############################################################################
+
 library(BiocParallel)
 library(pryr)
 library(plyr)
@@ -49,6 +53,7 @@ for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
+print(args)
 
 print(rwd)
 print(simulation_script)

@@ -1,10 +1,14 @@
-######################################################
+##############################################################################
 ## ----- filtering_sim_plots_run
 ## <<filtering_sim_plots_run.R>>
 
 # BioC 3.2
 # Created 1 Dec 2015 
 # Modified 18 Dec 2015
+
+##############################################################################
+
+Sys.time()
 
 ##############################################################################
 
@@ -19,14 +23,17 @@ library(DRIMSeq)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
-sim_name=''
-n=c(3)
-nm=c(10000,1000,500)
-nd=0
-prop='prop_q20_kim_kallisto_fcutoff'
-disp='disp_common_kim_kallisto'
-out_suffix='filtering'
+# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
+# sim_name=''
+# n=c(3,6)
+# nm=c(10000,100000)
+# nd=0
+# prop='prop_q20_kim_kallisto_fcutoff'
+# disp='disp_common_kim_kallisto'
+# out_suffix='filtering'
+# pdf_width=7 
+# pdf_height=7
+
 
 ##############################################################################
 # Read in the arguments
@@ -78,11 +85,15 @@ for(ix_n in 1:length(n)){
     for(ix_prop in 1:length(prop)){
       
       for(ix_disp in 1:length(disp)){
-        # ix_n=1; ix_nm=1; ix_prop=1; ix_disp=1
+        # ix_n=1; ix_nm=2; ix_prop=1; ix_disp=1
         
         out_name <- paste0(sim_name, "n", n[ix_n], "_nm", nm[ix_nm], "_nd", nd, "_", prop[ix_prop], "_", disp[ix_disp], "_")
+        out_name
+
+        pattern <- gsub("\\+", "\\\\+", paste0(out_name, "est_", out_suffix))
+        pattern
         
-        files <- list.files(out_dir_res, pattern = paste0(out_name, "est_", out_suffix))
+        files <- list.files(path = out_dir_res, pattern = pattern)
         files
         
         if(length(files) > 0){
@@ -130,8 +141,15 @@ for(ix_n in 1:length(n)){
           
         }
         
-        files <- list.files(out_dir_res, pattern = paste0(out_name, "fp_", out_suffix))
+#         files <- list.files(out_dir_res, pattern = paste0(out_name, "fp_", out_suffix))
+#         files
+        
+        pattern <- gsub("\\+", "\\\\+", paste0(out_name, "fp_", out_suffix))
+        pattern
+        
+        files <- list.files(path = out_dir_res, pattern = pattern)
         files
+        
         
         if(length(files) > 0){
           
@@ -146,7 +164,13 @@ for(ix_n in 1:length(n)){
             
           }
           
-          files <- list.files(out_dir_res, pattern = paste0(out_name, "fptruedisp_", out_suffix))
+#           files <- list.files(out_dir_res, pattern = paste0(out_name, "fptruedisp_", out_suffix))
+#           files
+          
+          pattern <- gsub("\\+", "\\\\+", paste0(out_name, "fptruedisp_", out_suffix))
+          pattern
+          
+          files <- list.files(path = out_dir_res, pattern = pattern)
           files
           
           if(length(files) > 0){
@@ -200,8 +224,8 @@ max_features_levels
 res$max_features <- factor(res$max_features, levels = max_features_levels)
 
 res$prop <- factor(res$prop, levels = prop)
-res$n <- factor(res$n, levels = n, labels = paste0("n", n))
-res$nm <- factor(res$nm, levels = nm, labels = paste0("nm", nm))
+res$n <- factor(res$n, levels = n, labels = paste0("n=", n))
+res$nm <- factor(res$nm, levels = nm, labels = paste0("nm=", nm))
 
 res$n_nm <- interaction(res$n, res$nm, lex.order = TRUE)
 levels(res$n_nm)
@@ -220,7 +244,7 @@ ggp <- ggplot(data = error, aes(y = log10(error), x = max_features)) +
   ylab("Log10 of absolute error") +
   xlab("Max features") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(prop ~ n_nm)
+  facet_grid(nm ~ n)
 
 
 pdf(paste0(out_dir_plots, out_suffix, "_error_absolute_log_violin.pdf"), width = pdf_width, height = pdf_height)
@@ -240,7 +264,7 @@ ggp <- ggplot(data = res, aes(y = log10(est), x = max_features)) +
   ylab("Log 10 of gamma_+") +
   xlab("Max features") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(prop ~ n_nm)
+  facet_grid(nm ~ n)
 
 
 pdf(paste0(out_dir_plots, out_suffix, "_est_log_violin.pdf"),width = pdf_width, height = pdf_height)
@@ -257,8 +281,8 @@ mse$max_features <- factor(mse$max_features, levels = max_features_levels)
 levels(mse$max_features)
 
 mse$prop <- factor(mse$prop, levels = prop)
-mse$n <- factor(mse$n, levels = n, labels = paste0("n", n))
-mse$nm <- factor(mse$nm, levels = nm, labels = paste0("nm", nm))
+mse$n <- factor(mse$n, levels = n, labels = paste0("n=", n))
+mse$nm <- factor(mse$nm, levels = nm, labels = paste0("nm=", nm))
 
 mse$n_nm <- interaction(mse$n, mse$nm, lex.order = TRUE)
 levels(mse$n_nm)
@@ -272,7 +296,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = max_features)) +
   ylab("Mean absolute error") +
   xlab("Max features") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(prop ~ n_nm)
+  facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
@@ -290,7 +314,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = max_features)) +
   ylab("Median absolute error") +
   xlab("Max features") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(prop ~ n_nm)
+  facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
@@ -309,8 +333,8 @@ fp$max_features <- factor(fp$max_features, levels = max_features_levels)
 levels(fp$max_features)
 
 fp$prop <- factor(fp$prop, levels = prop)
-fp$n <- factor(fp$n, levels = n, labels = paste0("n", n))
-fp$nm <- factor(fp$nm, levels = nm, labels = paste0("nm", nm))
+fp$n <- factor(fp$n, levels = n, labels = paste0("n=", n))
+fp$nm <- factor(fp$nm, levels = nm, labels = paste0("nm=", nm))
 
 fp$n_nm <- interaction(fp$n, fp$nm, lex.order = TRUE)
 levels(fp$n_nm)
@@ -328,7 +352,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = max_features, fill = disp_estimator)) +
   xlab("Max features") +
   coord_cartesian(ylim = ylim) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(prop ~ n_nm)
+  facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)

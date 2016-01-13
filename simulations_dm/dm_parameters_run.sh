@@ -5,7 +5,7 @@ RCODE=/home/gosia/R/drimseq_paper/simulations_dm
 RWD=/home/gosia/multinomial_project/simulations_dm/drimseq
 ROUT=$RWD/Rout
 
-# mkdir $ROUT
+mkdir $ROUT
 
 ## Run R scripts
 

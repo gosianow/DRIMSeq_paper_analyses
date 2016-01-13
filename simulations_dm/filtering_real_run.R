@@ -7,6 +7,10 @@
 
 ##############################################################################
 
+Sys.time()
+
+##############################################################################
+
 library(BiocParallel)
 library(pryr)
 library(plyr)
@@ -31,7 +35,7 @@ library(tools)
 # n=6 # Number of samples
 # 
 # min_feature_expr=0
-# min_feature_prop=0
+# min_feature_prop=NULL
 # 
 # param_nm_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/nm_kim_kallisto_lognormal.txt'
 # ### Common dispersion of gene expression
@@ -52,6 +56,7 @@ for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
+print(args)
 
 print(rwd)
 print(simulation_script)
@@ -69,8 +74,6 @@ print(param_gamma_path)
 
 
 ##############################################################################
-
-stopifnot(length(min_feature_expr) == length(min_feature_prop))
 
 source(simulation_script)
 
@@ -123,6 +126,19 @@ nd <- as.numeric(params)
 print(nd)
 
 
+
+
+if(is.null(min_feature_expr)){
+  min_feature_expr <- rep(0, length(min_feature_prop))
+  out_suffix <- paste0("filtering_real_min_feature_prop")
+}
+
+
+if(is.null(min_feature_prop)){
+  min_feature_prop <- rep(0, length(min_feature_expr))
+  out_suffix <- paste0("filtering_real_min_feature_expr")
+}
+
 ##############################################################################
 
 dir.create(rwd, recursive = T, showWarnings = FALSE)
@@ -131,7 +147,7 @@ setwd(rwd)
 out_dir <- "filtering_real/run/"
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
-out_suffix <- "filtering_real"
+
 
 out_name <- paste0(sim_name, "n", n, "_", basename(file_path_sans_ext(param_nm_path)), "_", basename(file_path_sans_ext(param_nd_path)), "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
@@ -211,5 +227,3 @@ write.table(fp, paste0(out_dir, out_name, "fp_", out_suffix ,"_", run,".txt"), q
 
 
 sessionInfo()
-
-

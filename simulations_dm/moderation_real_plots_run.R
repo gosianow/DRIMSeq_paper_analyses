@@ -8,6 +8,9 @@
 
 ##############################################################################
 
+Sys.time()
+
+##############################################################################
 
 library(ggplot2)
 library(reshape2)
@@ -30,7 +33,8 @@ disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_log
 data_name=c('brooks','kim')
 count_method=c('kallisto','htseq')
 out_suffix='moderation_real'
-
+pdf_width=14 
+pdf_height=7
 
 ##############################################################################
 # Read in the arguments
@@ -42,6 +46,7 @@ for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
+print(args)
 
 print(rwd)
 print(sim_name)
@@ -202,10 +207,11 @@ for(i in 1:length(count_method))
 res$count_method <- factor(res$count_method, levels = unique(count_method))
 
 
-res$interaction <- interaction(res$data_name, res$count_method, lex.order = TRUE)
+res$n <- factor(res$n, levels = n, labels = paste0("n=", n))
+
+res$interaction <- interaction(res$data_name, res$n, lex.order = FALSE)
 levels(res$interaction)
 
-res$n <- factor(res$n, levels = n, labels = paste0("n", n))
 
 ### Absolute error
 
@@ -215,15 +221,15 @@ error$error <- abs(error$est - error$true)
 
 ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) + 
   geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
-  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
+  geom_boxplot(outlier.size = 0.4, fill = NA, width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Log10 of absolute error") +
   xlab("Moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(n ~ interaction)
+  facet_grid(count_method ~ interaction)
 
 
-pdf(paste0(out_dir_plots, "error_absolute_log_violin.pdf"), 14,7)
+pdf(paste0(out_dir_plots, "error_absolute_log_violin.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -232,16 +238,16 @@ dev.off()
 
 
 ggp <- ggplot(data = res, aes(y = log10(est), x = disp_prior_df)) + 
-  geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
-  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
+  geom_violin(trim = FALSE, fill = "grey80", colour = "grey80", scale = "width") +
+  geom_boxplot(outlier.size = 0.4, fill = NA, width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Log10 of gamma_+") +
   xlab("Moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(n ~ interaction)
+  facet_grid(count_method ~ interaction, scales = "free")
 
 
-pdf(paste0(out_dir_plots, "est_log_violin.pdf"),14,7)
+pdf(paste0(out_dir_plots, "est_log_violin.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -267,10 +273,12 @@ for(i in 1:length(count_method))
 mse$count_method <- factor(mse$count_method, levels = unique(count_method))
 
 
-mse$interaction <- interaction(mse$data_name, mse$count_method, lex.order = TRUE)
+
+mse$n <- factor(mse$n, levels = n, labels = paste0("n=", n))
+
+mse$interaction <- interaction(mse$data_name, mse$n, lex.order = FALSE)
 levels(mse$interaction)
 
-mse$n <- factor(mse$n, levels = n, labels = paste0("n", n))
 
 
 ### plot mean 
@@ -281,9 +289,9 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df)) +
   ylab("Mean absolute error") +
   xlab("Moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(n ~ interaction)
+  facet_grid(count_method ~ interaction, scales = "free")
 
-pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"),14,7)
+pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -296,12 +304,25 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df)) +
   ylab("Median absolute error") +
   xlab("Moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(n ~ interaction)
+  facet_grid(count_method ~ interaction, scales = "free")
 
-pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"),14,7)
+pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
+
+
+ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
+  theme_bw() +
+  ylab("Log10 of median absolute error") +
+  xlab("Moderation") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(count_method ~ interaction, scales = "free")
+
+pdf(paste0(out_dir_plots, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
 
 
 
@@ -324,10 +345,12 @@ for(i in 1:length(count_method))
   fp$count_method[grepl(count_method[i], fp$prop)] <- count_method[i]
 fp$count_method <- factor(fp$count_method, levels = unique(count_method))
 
-fp$interaction <- interaction(fp$data_name, fp$count_method, lex.order = TRUE)
+
+fp$n <- factor(fp$n, levels = n, labels = paste0("n=", n))
+
+fp$interaction <- interaction(fp$data_name, fp$n, lex.order = FALSE)
 levels(fp$interaction)
 
-fp$n <- factor(fp$n, levels = n, labels = paste0("n", n))
 
 
 ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
@@ -341,9 +364,9 @@ ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df)) +
   xlab("Moderation") +
   coord_cartesian(ylim = ylim) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(n ~ interaction)
+  facet_grid(count_method ~ interaction)
 
-pdf(paste0(out_dir_plots, "fp_boxplot.pdf"),14,7)
+pdf(paste0(out_dir_plots, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -397,7 +420,7 @@ for(k in 1:length(n)){
         facet_wrap(~ disp_prior_df, nrow = 3)
       
       
-      pdf(paste0(out_dir_plots, "dispersion_versus_mean_n", n[k], "_", data_name[i], "_", count_method[j],".pdf"), 20, 12)
+      pdf(paste0(out_dir_plots, "dispersion_versus_mean_n", n[k], "_", data_name[i], "_", count_method[j],".pdf"), width = pdf_width, height = pdf_height)
       print(ggp)
       dev.off()
       

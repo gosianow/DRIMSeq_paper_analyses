@@ -24,7 +24,9 @@ library(plyr)
 # nd=0
 # prop=c('prop_q3_uniform','prop_q10_uniform','prop_q3_kim_kallisto_overall','prop_q10_kim_kallisto_overall')
 # disp=c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')
-
+# pdf_width=15
+# pdf_height=10
+# fig_name='all_'
 
 ##############################################################################
 # Read in the arguments
@@ -214,7 +216,7 @@ ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm_simulation)
 
-pdf(paste0(out_dir_plots, "/error_absolute_boxplot.pdf"), 15, 10)
+pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -236,7 +238,7 @@ dev.off()
 #   geom_vline(xintercept = c(1.5, 2.5), color = "grey90", size = 0.05) +
 #   facet_grid(prop ~ n_nm_simulation)
 # 
-# pdf(paste0(out_dir_plots, "error_ratio_log_boxplot.pdf"), 15, 10)
+# pdf(paste0(out_dir_plots, "/", fig_name, "error_ratio_log_boxplot.pdf"), width = pdf_width, height = pdf_height)
 # print(ggp)
 # dev.off()
 
@@ -282,7 +284,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = dispersion, colour = metho
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm_simulation)
 
-pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"), 15, 10)
+pdf(paste0(out_dir_plots, "/", fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -301,7 +303,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = dispersion, colour = met
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm_simulation)
 
-pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"), 15, 10)
+pdf(paste0(out_dir_plots, "/", fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -348,7 +350,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = dispersion)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(prop ~ n_nm_simulation)
 
-pdf(paste0(out_dir_plots, "fp_boxplot.pdf"), 15, 10)
+pdf(paste0(out_dir_plots, "/", fig_name, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
