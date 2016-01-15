@@ -75,7 +75,7 @@ done
 
 
 n="c(3,6)"
-nm="c(10000,1000)"
+nm="c(1000,10000)"
 nd=0
 disp='disp_common_kim_kallisto'
 

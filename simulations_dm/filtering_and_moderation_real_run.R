@@ -1,9 +1,9 @@
 ######################################################
-## ----- filtering_real_run
-## <<filtering_real_run.R>>
+## ----- filtering_and_moderation_real_run
+## <<filtering_and_moderation_real_run.R>>
 
 # BioC 3.2
-# Created 14 Dec 2015 
+# Created 14 Jan 2015 
 
 ##############################################################################
 
@@ -37,12 +37,12 @@ library(tools)
 # min_feature_expr=0
 # min_feature_prop=NULL
 # 
-# param_nm_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/nm_kim_kallisto_lognormal.txt'
+# param_nm_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/nm_kim_kallisto_lognormal.txt'
 # ### Common dispersion of gene expression
-# param_nd_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/nd_common_kim_kallisto.txt'
-# param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/prop_kim_kallisto.txt'
+# param_nd_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/nd_common_kim_kallisto.txt'
+# param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/prop_kim_kallisto_fcutoff.txt'
 # ### Genewise dispersion of feature proportions
-# param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/disp_genewise_kim_kallisto_lognormal.txt'
+# param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/disp_genewise_kim_kallisto_lognormal.txt'
 
 
 
@@ -130,28 +130,31 @@ print(nd)
 
 if(is.null(min_feature_expr)){
   min_feature_expr <- rep(0, length(min_feature_prop))
-  out_suffix <- paste0("filtering_real_min_feature_prop")
+  out_suffix <- paste0("famr_min_feature_prop")
 }
 
 
 if(is.null(min_feature_prop)){
   min_feature_prop <- rep(0, length(min_feature_expr))
-  out_suffix <- paste0("filtering_real_min_feature_expr")
+  out_suffix <- paste0("famr_min_feature_expr")
 }
+
+
 
 ##############################################################################
 
 dir.create(rwd, recursive = T, showWarnings = FALSE)
 setwd(rwd)
 
-out_dir <- "filtering_real/run/"
+out_dir <- "filtering_and_moderation_real/run/"
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
-
 
 
 out_name <- paste0(sim_name, "n", n, "_", basename(file_path_sans_ext(param_nm_path)), "_", basename(file_path_sans_ext(param_nd_path)), "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")
 
 out_name
+
+
 
 if(workers > 1){
   BPPARAM <- MulticoreParam(workers = workers)
@@ -187,6 +190,9 @@ names(g0) <- names(d_org@counts)
 names(pi) <- names(d_org@counts)
 names(nm) <- names(d_org@counts)
 
+
+
+
 ### Different filtering
 
 est <- list()
@@ -197,23 +203,56 @@ for(j in 1:length(min_feature_expr)){
   print(min_feature_expr[j])
   print(min_feature_prop[j])
   
-  d <- dmFilter(d_org, min_samps_gene_expr = 0, min_samps_feature_expr = n, min_samps_feature_prop = n, min_gene_expr = 0, min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], max_features = Inf)
+  d_tmp <- dmFilter(d_org, min_samps_gene_expr = 0, min_samps_feature_expr = n, min_samps_feature_prop = n, min_gene_expr = 0, min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], max_features = Inf)
   
-  keep_genes <- names(d@counts)
-  
-  d <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
+  keep_genes <- names(d_tmp@counts) # Not all the genes pass the filter 
   
   
-  est[[j]] <- data.frame(est = round(genewise_dispersion(d)$genewise_dispersion, 2), true = round(g0[keep_genes], 2), min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], q = sapply(pi[keep_genes], length), nm = nm[keep_genes])
+  ### Use no moderation for dispersion estimation
+  
+  d <- dmDispersion(d_tmp, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
+  
+  common_disp <- common_dispersion(d)
+  
+  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
+  res <- results(d)
+  
+  est[[paste0("moderation_none", j)]] <- data.frame(gene_id = genewise_dispersion(d)$gene_id, est = round(genewise_dispersion(d)$genewise_dispersion, 2), true = round(g0[keep_genes], 2), pvalue = res$pvalue, min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], q = sapply(pi[keep_genes], length), nm = nm[keep_genes], disp_estimator = "moderation_none")
+  
+  fp[[paste0("moderation_none", j)]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], disp_estimator = "moderation_none")
+  
+  rm("d")
+  
+  ### Use common moderation for dispersion estimation
+  
+  d <- dmDispersion(d_tmp, mean_expression = FALSE, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = common_disp, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "common", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
   
   d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
   d <- dmTest(d, BPPARAM = BPPARAM)
   res <- results(d)
   
-  fp[[j]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j])
+  
+  est[[paste0("moderation_common", j)]] <- data.frame(gene_id = genewise_dispersion(d)$gene_id, est = round(genewise_dispersion(d)$genewise_dispersion, 2), true = round(g0[keep_genes], 2), pvalue = res$pvalue, min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], q = sapply(pi[keep_genes], length), nm = nm[keep_genes], disp_estimator = "moderation_common")
+  
+  fp[[paste0("moderation_common", j)]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], disp_estimator = "moderation_common")
+  
+
+  ### Use true dispersion estimates
+  genewise_dispersion(d) <- g0[keep_genes]
+  
+  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
+  d <- dmTest(d, BPPARAM = BPPARAM)
+  res <- results(d)
+  
+  
+  est[[paste0("true", j)]] <- data.frame(gene_id = genewise_dispersion(d)$gene_id, est = round(g0[keep_genes], 2), true = round(g0[keep_genes], 2), pvalue = res$pvalue, min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], q = sapply(pi[keep_genes], length), nm = nm[keep_genes], disp_estimator = "true")
+  
+  fp[[paste0("true", j)]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), min_feature_expr = min_feature_expr[j], min_feature_prop = min_feature_prop[j], disp_estimator = "true")
   
   rm("d")
+  rm("d_tmp")
   
 }
 
