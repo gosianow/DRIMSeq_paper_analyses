@@ -4,21 +4,19 @@
 # Created 04 Nov 2014 
 # Get htseq counts
 
-# Updated 24 Nov 2015
-# Use kallisto reduced gtf
-
 ##############################################################################
 
-library("DEXSeq")
-library("tools")
+library(DEXSeq)
+library(tools)
 library(BiocParallel)
 
 ##############################################################################
 # Test arguments
 ##############################################################################
 
-gtf='/home/Shared_penticton/data/annotation/Human/Ensembl_GRCh37.71/gtf/Homo_sapiens.GRCh37.71_kallistoest_atleast5.gtf'
-count_method='htseqprefiltered5'
+# rwd='/home/Shared/data/seq/kim_adenocarcinoma'
+# gtf='/home/Shared_penticton/data/annotation/Human/Ensembl_GRCh37.71/gtf/Homo_sapiens.GRCh37.71_kallistoest_atleast5.gtf'
+# count_method='htseqprefiltered5'
 
 ##############################################################################
 # Read in the arguments
@@ -30,12 +28,14 @@ for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
+print(args)
+
 print(gtf)
 print(count_method)
 
 ##############################################################################
 
-setwd("/home/Shared/data/seq/kim_adenocarcinoma/")
+setwd(rwd)
 
 
 DEXSeq_gff <- paste0(file_path_sans_ext(gtf), ".DEXSeq.flattened.rNO.gff")

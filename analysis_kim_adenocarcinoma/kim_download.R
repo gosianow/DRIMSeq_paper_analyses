@@ -1,12 +1,41 @@
 ######################################################
+## ----- kim_download
+## <<kim_download.R>>
+
 # BioC 2.14
-# Created 04 Nov 2014 
+# Created 15 Jan 2015 
 
-# Download Kim adenocarcinoma data
+##############################################################################
 
-#######################################################
+Sys.time()
 
-setwd("/home/Shared/data/seq/kim_adenocarcinoma/")
+##############################################################################
+
+
+##############################################################################
+# Test arguments
+##############################################################################
+
+# rwd='/home/Shared/data/seq/kim_adenocarcinoma'
+
+##############################################################################
+# Read in the arguments
+##############################################################################
+
+## Read input arguments
+args <- (commandArgs(trailingOnly = TRUE))
+for (i in 1:length(args)) {
+  eval(parse(text = args[[i]]))
+}
+
+print(args)
+
+print(rwd)
+
+
+##############################################################################
+
+setwd(rwd)
 
 
 ##############################################################################
@@ -82,7 +111,6 @@ for(i in 1:nrow(metadata)){
 # download sra files
 ##############################################################################
 
-setwd("/home/Shared/data/seq/kim_adenocarcinoma/")
 
 out_dir <- "1_reads/fastq/"
 dir.create(out_dir)
@@ -108,7 +136,7 @@ for (i in 1:length(files.sra))
 
 #### convert sra to fastq
 
-for (i in 1:8) {
+for (i in 1:length(files.sra)) {
   cmd <- paste0("fastq-dump -O ", out_dir, " --split-3 ", files.sra[i])
   cat(cmd, "\n")
   system(cmd)

@@ -1,18 +1,53 @@
+######################################################
+## ----- kim_kallisto_filter_gtf
+## <<kim_kallisto_filter_gtf.R>>
 
 # BioC 3.1
-
 # Crated 24 Nov 2015
+# Get kallisto counts for reduced annotation
+
+#######################################################
+
+Sys.time()
+
+#######################################################
 
 library(DRIMSeq)
 library(limma)
 library(rtracklayer)
+library(tools)
+
+##############################################################################
+# Test arguments
+##############################################################################
 
 
-rwd <- "/home/Shared/data/seq/kim_adenocarcinoma/"
+# rwd='/home/Shared/data/seq/kim_adenocarcinoma'
+# gtf_path='/home/Shared/data/annotation/Human/Ensembl_GRCh37.71/gtf/Homo_sapiens.GRCh37.71.gtf'
+
+
+
+##############################################################################
+# Read in the arguments
+##############################################################################
+
+args <- (commandArgs(trailingOnly = TRUE))
+for (i in 1:length(args)) {
+  eval(parse(text = args[[i]]))
+}
+
+print(args)
+
+
+
+##############################################################################
+
+
 setwd(rwd)
 
-gtf_path = "/home/Shared/data/annotation/Human/Ensembl_GRCh37.71/gtf/Homo_sapiens.GRCh37.71.gtf"
-gtf_new_path <- "/home/Shared/data/annotation/Human/Ensembl_GRCh37.71/gtf/Homo_sapiens.GRCh37.71_kallistoest_atleast5.gtf"
+gtf_new_path <- paste0(dirname(gtf_path) ,"/", basename(file_path_sans_ext(gtf_path)) ,"_kallistoest_atleast5.gtf")
+
+
 
 ##########################################################################
 # load metadata

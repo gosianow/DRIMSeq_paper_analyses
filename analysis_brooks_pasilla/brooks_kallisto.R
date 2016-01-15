@@ -1,5 +1,9 @@
 ######################################################
-# BioC 2.14
+## ----- brooks_kallisto
+## <<brooks_kallisto.R>>
+
+
+# BioC 3.2
 
 # Created 15 Nov 2015 
 
@@ -7,14 +11,50 @@
 
 #######################################################
 
-rwd <- "/home/Shared/data/seq/brooks_pasilla"
+Sys.time()
+
+#######################################################
+
+library(tools)
+library(rtracklayer)
+
+##############################################################################
+# Test arguments
+##############################################################################
+
+
+# rwd='/home/Shared/data/seq/brooks_pasilla'
+# cDNA_fasta='/home/Shared/data/annotation/Drosophila/Ensembl70/cDNA/Drosophila_melanogaster.BDGP5.70.cdna.all.fa'
+# gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
+
+
+
+##############################################################################
+# Read in the arguments
+##############################################################################
+
+args <- (commandArgs(trailingOnly = TRUE))
+for (i in 1:length(args)) {
+  eval(parse(text = args[[i]]))
+}
+
+print(args)
+
+
+
+##############################################################################
+
 
 setwd(rwd)
 
+index <- paste0("0_annotation/kallisto/", basename(file_path_sans_ext(cDNA_fasta)) ,".idx")
 
-######################################################################################################
+dir.create(dirname(index), recursive = TRUE, showWarnings = FALSE)
+
+
+##############################################################################
 # metadata
-######################################################################################################
+##############################################################################
 
 
 fastq_dir <- paste0("1_reads/fastq/")
@@ -47,33 +87,26 @@ metadata$shortname = paste( seq_len(nrow(metadata)), substr(metadata$condition,1
 metadata$sampleName <- metadata$SampleName
 metadata$UniqueName <- paste0(1:nrow(metadata), "_", metadata$SampleName)
 
-#########################################################################################
+##############################################################################
 # Building an index
-#########################################################################################
+##############################################################################
 
 # kallisto index -i transcripts.idx transcripts.fasta.gz
 
-cDNA.fasta <- "/home/Shared/data/annotation/Drosophila/Ensembl70/cDNA/Drosophila_melanogaster.BDGP5.70.cdna.all.fa"
-index <- "/home/Shared/data/annotation/Drosophila/Ensembl70/kallisto/Drosophila_melanogaster.BDGP5.70.cdna.all.idx"
-
-dir.create(dirname(index), recursive = TRUE, showWarnings = FALSE)
-
-
-cmd <- paste("kallisto index -i",  index, cDNA.fasta, sep = " ")
+cmd <- paste("kallisto index -i",  index, cDNA_fasta, sep = " ")
 
 system(cmd)
 
 
 
-#########################################################################################
+##############################################################################
 # Quantification
-#########################################################################################
+##############################################################################
 ### Paired-end
 # kallisto quant -i index -o output pairA_1.fastq pairA_2.fastq pairB_1.fastq pairB_2.fastq
 ### Single-end 
 # kallisto quant -i index -o output --single -l 180 file1.fastq.gz file2.fastq.gz file3.fastq.gz
 
-index <- "/home/Shared/data/annotation/Drosophila/Ensembl70/kallisto/Drosophila_melanogaster.BDGP5.70.cdna.all.idx"
 
 fastq_dir <- paste0(rwd, "/")
 
@@ -120,14 +153,12 @@ for(i in 1:nrow(metadata)){
 # Save abundance in files that can be an input for DEXSeq (estimated counts)
 #########################################################################################
 
-library(rtracklayer)
 
-gtf_dir = "/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf"
-
-gtf <- import(gtf_dir)
+gtf <- import(gtf_path)
 
 gt <- unique(mcols(gtf)[, c("gene_id", "transcript_id")])
 rownames(gt) <- gt$transcript_id
+
 
 
 
@@ -156,7 +187,7 @@ counts_list <- lapply(1:length(samples), function(i){
       abundance_tmp <- abundance_tmp[, c("target_id", "est_counts")]
       abundance_tmp
       
-      })
+    })
     
     abundance <- Reduce(function(...) merge(..., by = "target_id", all = TRUE, sort = FALSE), abundance)
     est_counts <- rowSums(abundance[, -1])
@@ -164,7 +195,7 @@ counts_list <- lapply(1:length(samples), function(i){
     abundance <- data.frame(target_id = abundance$target_id, est_counts = est_counts, stringsAsFactors = FALSE)
     
   }
-
+  
   counts <- data.frame(paste0(gt[abundance$target_id, "gene_id"], ":", abundance$target_id), counts = round(abundance$est_counts), stringsAsFactors = FALSE)
   
   colnames(counts) <- c("group_id", samples[i])

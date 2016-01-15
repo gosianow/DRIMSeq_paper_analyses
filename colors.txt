@@ -1,8 +1,0 @@
-methods	colors
-dexseq	#4065B1
-drimseq_common	#7FB972
-drimseq_genewise_grid_common	#D92120
-drimseq_genewise_grid_none	#E68E34
-drimseq_genewise_constrOptim	#C71585
-drimseq_genewise_optim	#781C81
-drimseq_genewise_optimize	#B17BA6

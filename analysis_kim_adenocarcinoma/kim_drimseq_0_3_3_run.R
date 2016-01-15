@@ -142,7 +142,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 3, min_samps_feature_prop = 3, min_feature_prop = 0.01)
+    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
 
   },
   

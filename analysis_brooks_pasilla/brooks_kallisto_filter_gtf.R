@@ -1,17 +1,55 @@
+######################################################
+## ----- brooks_kallisto_filter_gtf
+## <<brooks_kallisto_filter_gtf.R>>
+
+
 # BioC 3.2
 
 # Crated 24 Nov 2015
 
+# Get kallisto counts for reduced annotation
+
+#######################################################
+
+Sys.time()
+
+#######################################################
+
 library(DRIMSeq)
 library(limma)
 library(rtracklayer)
+library(tools)
+
+##############################################################################
+# Test arguments
+##############################################################################
 
 
-rwd <- "/home/Shared/data/seq/brooks_pasilla/"
+# rwd='/home/Shared/data/seq/brooks_pasilla'
+# gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
+
+
+
+##############################################################################
+# Read in the arguments
+##############################################################################
+
+args <- (commandArgs(trailingOnly = TRUE))
+for (i in 1:length(args)) {
+  eval(parse(text = args[[i]]))
+}
+
+print(args)
+
+
+
+##############################################################################
+
+
 setwd(rwd)
 
-gtf_path = "/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf"
-gtf_new_path = "/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf"
+gtf_new_path <- paste0(dirname(gtf_path) ,"/", basename(file_path_sans_ext(gtf_path)) ,"_kallistoest_atleast5.gtf")
+
 
 ##########################################################################
 # load metadata
