@@ -8,6 +8,7 @@
 
 ##############################################################################
 
+library(ggplot2)
 library(iCOBRA)
 library(Hmisc)
 library(plyr)
@@ -21,9 +22,10 @@ library(plyr)
 # simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull')
 # count_method_list=c('kallisto','htseq')
 # filter_method_list=c('filter0','filter1','filter2','filter3')
-# name=''
-# legend_nrow=1
-# pdf_width=12
+# prefilter_method_list=c('kallistoprefiltered5','htseqprefiltered5')
+# name='_prefilt'
+# legend_nrow=2
+# pdf_width=9
 # pdf_height=7
 
 ##############################################################################
@@ -74,6 +76,10 @@ results_padj_list <- list()
 truth_list <- list()
 ix <- 1
 
+results_padj_list <- list()
+truth_list <- list()
+ix <- 1
+
 for(i in 1:length(simulation_list)){
   
   for(j in 1:length(count_method_list)){
@@ -96,17 +102,17 @@ for(i in 1:length(simulation_list)){
       
       load(paste0(out_dir, "cobradata.Rdata"))
       
-      results_padj <- cobradata@padj
-      colnames(results_padj) <- paste0(colnames(results_padj), ".", filter_method)
-      results_padj$rns <- paste0(simulation, "_", count_method, ".", rownames(cobradata@padj))
-      results_padj_tmp[[paste0(ix)]] <- results_padj
+      rpadj <- cobradata@padj
+      colnames(rpadj) <- paste0(colnames(rpadj), ".", filter_method)
+      rpadj$rns <- paste0(simulation, "_", count_method, ".", rownames(cobradata@padj))
+      results_padj_tmp[[paste0(ix)]] <- rpadj
       
       if(k == 1){
-        truth <-  cobradata@truth
-        rownames(truth) <- paste0(simulation, "_", count_method, ".", rownames(cobradata@truth))
-        truth$simulation <- simulation
-        truth$count_method <- count_method
-        truth_list[[paste0(ix)]] <- truth
+        tr <-  cobradata@truth
+        rownames(tr) <- paste0(simulation, "_", count_method, ".", rownames(cobradata@truth))
+        tr$simulation <- simulation
+        tr$count_method <- count_method
+        truth_list[[paste0(ix)]] <- tr
       }
       
       ix <- ix + 1
@@ -115,7 +121,7 @@ for(i in 1:length(simulation_list)){
     results_padj_tmp <- Reduce(function(...) merge(..., by = "rns", all = TRUE, sort = FALSE), results_padj_tmp)
     rownames(results_padj_tmp) <- results_padj_tmp$rns
     
-    results_padj_list[[ix]] <- results_padj_tmp[, -1]
+    results_padj_list[[ix]] <- results_padj_tmp[, -grep("rns", colnames(results_padj_tmp))]
     
   }
 }
@@ -140,9 +146,94 @@ truth$count_method <- factor(truth$count_method, levels = count_method_list)
 all(rownames(results_padj) %in% rownames(truth))
 
 
-results_padj <- results_padj[, -grep(pattern = "dexseq", colnames(results_padj))[-1]]
+results_padj <- results_padj[, -grep(pattern = "dexseq.filter[1-9]", colnames(results_padj))]
 
-colnames(results_padj)[grep(pattern = "dexseq", colnames(results_padj))] <- "dexseq"
+
+
+
+### add results of prefiltering with filter0
+if(!is.null(prefilter_method_list)){
+  
+  count_method_list <- prefilter_method_list
+  filter_method_list <- "filter0"
+  simulation_list <- simulation_list[!grepl("hsapiens_withde", simulation_list)]
+    
+  results_padj_list <- list()
+  truth_list <- list()
+  ix <- 1
+  
+  for(i in 1:length(simulation_list)){
+    
+    for(j in 1:length(count_method_list)){
+      # i = 1; j = 1;
+      
+      results_padj_tmp <- list()
+      
+      for(k in 1:length(filter_method_list)){
+        # i = 2; j = 2; k = 1
+        
+        simulation <- simulation_list[i]
+        count_method <- count_method_list[j]
+        filter_method <- filter_method_list[k]
+        
+        comparison_out <- paste0(simulation, "/drimseq_0_3_3_comparison")
+        out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
+        
+        if(!file.exists(paste0(out_dir, "cobradata.Rdata")))
+          next
+        
+        load(paste0(out_dir, "cobradata.Rdata"))
+        
+        rpadj <- cobradata@padj
+        colnames(rpadj) <- paste0(colnames(rpadj), ".", filter_method)
+        rpadj$rns <- paste0(simulation, "_", count_method, ".", rownames(cobradata@padj))
+        results_padj_tmp[[paste0(ix)]] <- rpadj
+        
+        print(out_dir)
+        print(head(rpadj))
+        
+        if(k == 1){
+          tr <-  cobradata@truth
+          rownames(tr) <- paste0(simulation, "_", count_method, ".", rownames(cobradata@truth))
+          tr$simulation <- simulation
+          tr$count_method <- count_method
+          truth_list[[paste0(ix)]] <- tr
+        }
+        
+        ix <- ix + 1
+      }
+      
+      results_padj_tmp <- Reduce(function(...) merge(..., by = "rns", all = TRUE, sort = FALSE), results_padj_tmp)
+      rownames(results_padj_tmp) <- results_padj_tmp$rns
+      
+      results_padj_list[[ix]] <- results_padj_tmp[, -grep("rns", colnames(results_padj_tmp))]
+      
+      print(head(results_padj_list[[ix]]))
+      
+    }
+  }
+  
+  
+  pre_results_padj <- rbind.fill(results_padj_list)
+  rownames(pre_results_padj) <- unlist(lapply(results_padj_list, rownames))
+  
+  rownames(pre_results_padj) <- gsub("prefiltered5", "", rownames(pre_results_padj))
+  
+  colnames(pre_results_padj) <- gsub("filter0", "prefilter5", colnames(pre_results_padj))
+  
+  results_padj <- merge(results_padj, pre_results_padj, by = 0, all = TRUE, sort = FALSE)
+  
+  rownames(results_padj) <- results_padj$Row.names
+  
+  results_padj <- results_padj[, -grep("Row.names", colnames(results_padj))]
+  
+}
+
+
+
+all(rownames(results_padj) %in% rownames(truth))
+
+
 
 
 
@@ -150,10 +241,16 @@ colnames(results_padj)[grep(pattern = "dexseq", colnames(results_padj))] <- "dex
 ### Order for split - simulations per row
 ##############################################################################
 
+truth <- truth[rownames(results_padj), ]
+
 
 truth$split <- interaction(truth$simulation, truth$count_method, lex.order = FALSE)
 
 levels(truth$split)
+
+head(results_padj[truth$split == "hsapiens_node_nonull.htseq", "dexseq.prefilter5"])
+
+
 
 facet_nrow <- length(count_method_list)
 
@@ -162,7 +259,7 @@ facet_nrow <- length(count_method_list)
 
 for(drimseq_version in c("drimseq_genewise_grid_none", "drimseq_genewise_grid_common")){
   # drimseq_version <- "drimseq_genewise_grid_none"
-
+  
   
   cobradata <- COBRAData(padj = results_padj[, grep(paste0("dexseq|", drimseq_version), colnames(results_padj))], truth = truth)
   
@@ -179,7 +276,7 @@ for(drimseq_version in c("drimseq_genewise_grid_none", "drimseq_genewise_grid_co
   levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
   
   
-  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.7), yaxisrange = c(0.4, 1))
+  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
   ggp <- ggp + 
     theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
     guides(colour = guide_legend(nrow = legend_nrow)) + 

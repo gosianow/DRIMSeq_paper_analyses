@@ -340,15 +340,15 @@ dev.off()
 
 
 
-ggp <- ggplot(data = res, aes(x = pvalue, linetype = feature_filter, colour = disp_estimator)) + 
-  geom_density(size = 1, alpha = 0.7, trim = TRUE, adjust = 0.5) +
+ggp <- ggplot(data = res, aes(x = pvalue, linetype = disp_estimator, colour = feature_filter)) + 
+  geom_density(alpha = 0.75, trim = TRUE, adjust = 0.5) +
   theme_bw() +
   ylab("Density") +
   xlab("P-values") +
   coord_cartesian(xlim = c(0, 1)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
-  scale_colour_discrete(name = "Dispersion") +
-  scale_linetype_discrete(name = feature_filter) +
+  scale_colour_discrete(name = feature_filter) +
+  scale_linetype_discrete(name = "Dispersion") +
   facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_pvalues_density.pdf"), width = pdf_width, height = pdf_height)
@@ -357,15 +357,15 @@ dev.off()
 
 
 
-ggp <- ggplot(data = res, aes(x = pvalue, linetype = feature_filter, colour = disp_estimator)) + 
-  geom_freqpoly(binwidth = 0.05, size = 1, alpha = 0.7) +
+ggp <- ggplot(data = res, aes(x = pvalue, linetype = disp_estimator, colour = feature_filter)) + 
+  geom_freqpoly(binwidth = 0.05, alpha = 0.75) +
   theme_bw() +
   ylab("Count") +
   xlab("P-values") +
   coord_cartesian(xlim = c(0, 1)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
-  scale_colour_discrete(name = "Dispersion") +
-  scale_linetype_discrete(name = feature_filter) +
+  scale_colour_discrete(name = feature_filter) +
+  scale_linetype_discrete(name = "Dispersion") +
   facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_pvalues_freqpoly.pdf"), width = pdf_width, height = pdf_height)

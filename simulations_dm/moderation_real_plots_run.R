@@ -23,18 +23,20 @@ library(DRIMSeq)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
-sim_name=''
-n=c(3,6) # Number of samples
-nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal','nm_kim_kallisto_lognormal','nm_kim_htseq_lognormal')
-nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq','nd_common_kim_kallisto','nd_common_kim_htseq')
-prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kallisto_fcutoff','prop_kim_htseq_fcutoff')
-disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')
-data_name=c('brooks','kim')
-count_method=c('kallisto','htseq')
-out_suffix='moderation_real'
-pdf_width=14 
-pdf_height=7
+# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
+# sim_name=''
+# n=c(3,6) # Number of samples
+# nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal','nm_kim_kallisto_lognormal','nm_kim_htseq_lognormal')
+# nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq','nd_common_kim_kallisto','nd_common_kim_htseq')
+# prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kallisto_fcutoff','prop_kim_htseq_fcutoff')
+# disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')
+# data_name=c('brooks','kim')
+# count_method=c('kallisto','htseq')
+# out_suffix='moderation_real'
+# pdf_width=14 
+# pdf_height=7
+# fig_name=''
+
 
 ##############################################################################
 # Read in the arguments
@@ -229,7 +231,7 @@ ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) +
   facet_grid(count_method ~ interaction)
 
 
-pdf(paste0(out_dir_plots, "error_absolute_log_violin.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, fig_name, "error_absolute_log_violin.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -247,7 +249,7 @@ ggp <- ggplot(data = res, aes(y = log10(est), x = disp_prior_df)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
 
-pdf(paste0(out_dir_plots, "est_log_violin.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, fig_name, "est_log_violin.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -291,7 +293,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
-pdf(paste0(out_dir_plots, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -306,7 +308,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
-pdf(paste0(out_dir_plots, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -320,7 +322,7 @@ ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
-pdf(paste0(out_dir_plots, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -366,7 +368,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df)) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction)
 
-pdf(paste0(out_dir_plots, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, fig_name, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 

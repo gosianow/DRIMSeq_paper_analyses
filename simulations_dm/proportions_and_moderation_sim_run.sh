@@ -28,7 +28,7 @@ do
       
     echo "n${n}_nm${nm}_${run}_${out_suffix}"
 
-      R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' nr_features=c(2,4,6,8,10) out_suffix='${out_suffix}'" $RCODE/proportions_and_moderation_sim_run.R $ROUT/proportions_and_moderation_sim_run_n${n}_nm${nm}_${out_suffix}.Rout
+      R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' nr_features=c(2,4,6,8,10,13,16,19) out_suffix='${out_suffix}'" $RCODE/proportions_and_moderation_sim_run.R $ROUT/proportions_and_moderation_sim_run_n${n}_nm${nm}_${out_suffix}.Rout
       
     done
   done
@@ -53,7 +53,7 @@ do
       
     echo "n${n}_nm${nm}_${run}_${out_suffix}"
 
-      R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' nr_features=c(2,4,6,8,10) out_suffix='${out_suffix}'" $RCODE/proportions_and_moderation_sim_run.R $ROUT/proportions_and_moderation_sim_run_n${n}_nm${nm}_${out_suffix}.Rout
+      R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' nr_features=c(2,4,6,8,10,13,16,19) out_suffix='${out_suffix}'" $RCODE/proportions_and_moderation_sim_run.R $ROUT/proportions_and_moderation_sim_run_n${n}_nm${nm}_${out_suffix}.Rout
       
     done
   done
@@ -91,33 +91,6 @@ done
 ######################
 ### Individual run
 ######################
-
-RCODE=/home/gosia/R/drimseq_paper/simulations_dm
-RWD=/home/gosia/multinomial_project/simulations_dm/drimseq
-ROUT=$RWD/Rout
-DMPARAMS=$RWD/dm_parameters_drimseq_0_3_3
-
-out_suffix='proportions_decay'
-workers=1
-disp='disp_genewise_kim_kallisto_lognormal'
-
-for n in 6
-do
-
-  for nm in 1000 100000
-  do
-    
-    
-    for run in {1..50}
-    do
-      
-    echo "n${n}_nm${nm}_${run}_${out_suffix}"
-
-      R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' nr_features=c(2,4,6,8,10) out_suffix='${out_suffix}'" $RCODE/proportions_and_moderation_sim_run.R $ROUT/proportions_and_moderation_sim_run_n${n}_nm${nm}_${out_suffix}.Rout
-      
-    done
-  done
-done
 
 
 ##############################################################################

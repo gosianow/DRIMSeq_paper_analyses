@@ -1,16 +1,19 @@
 ######################################################
-## ----- geuvadis_sqtlseeker_2_1_run
-## <<geuvadis_sqtlseeker_2_1_run.R>>
+## ----- geuvadis_sqtlseeker_2_1_random
+## <<geuvadis_sqtlseeker_2_1_random.R>>
 
 # BioC 3.1
-# Created 25 Nov 2015
+# Created 9 Feb 2016
 
 ##############################################################################
+# Do the sqtl analysis for SNP randomly assigned to genes. This is a validation method. We want to see how many significant sQTLs will be found. If many, then the method works badly.
 
 Sys.time()
 
 ##############################################################################
 
+library(GenomicRanges)
+library(rtracklayer)
 library(sQTLseekeR)
 library(tools)
 library(BiocParallel)
@@ -21,8 +24,8 @@ library(ggplot2)
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/Shared/data/seq/geuvadis'
-# workers=4
+rwd='/home/Shared/data/seq/geuvadis'
+workers=4
 
 
 ##############################################################################
@@ -47,7 +50,7 @@ setwd(rwd)
 
 data_dir <- "data/"
 
-out_dir <- "sqtlseeker_2_1_analysis/"
+out_dir <- "sqtlseeker_2_1_analysis_random/"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 out_data_dir <- paste0(out_dir, "data/")
@@ -60,84 +63,87 @@ out_plots_dir <- paste0(out_dir, "plots/")
 dir.create(out_plots_dir, showWarnings = FALSE, recursive = TRUE)
 
 
+
+## Input files: transcript expression, gene location and genotype information
+counts_path = paste0(data_dir, "expression/trExpCount_CEU.tsv")
+gene_bed_path = paste0(data_dir, "annotation/gencode.v12.annotation_genes.bed")
+genotypes_path = paste0(out_data_dir, "snps_CEU_full.tsv")
+
+
 ##################################################################################
 ### Prepare genotypes data for sQTLSeekeR
 ##################################################################################
 
-
-snps_files <- list.files(path = paste0(data_dir, "/genotypes"), pattern = "snps_CEU", full.names = TRUE, include.dirs = FALSE)
-
-snps_files <- snps_files[grepl("chr",snps_files) & !grepl("sort",snps_files)]
-
-x <- gsub("^.*chr","", snps_files)
-xx <- gsub(".tsv$", "", x)
-
-snps_files <- snps_files[order(as.numeric(xx))]
-
-snps_files
-
-### sort by SNP position
-
-for(i in 1:length(snps_files)){
-  # i = 1
-  cat(i, fill = TRUE)
-  #### Does not sort in the right way -->> use tab as separator
-  #   cmd <- paste0("(head -n 1 ", snps_files[i], " && tail -n +2 ", snps_files[i], " | sort -k 2 ) > ", snps_files[i], ".sort.tsv")
-  #   cmd <- paste0( "tail -n +2 ", snps_files[i], " | sort -k 2  > ", snps_files[i], ".sort.tsv")  
-  #   system(cmd)
+if(!file.exists(genotypes_path)){
   
-  d <- read.table(snps_files[i], header = TRUE, as.is = TRUE)
+  snps_files <- list.files(path = paste0(data_dir, "/genotypes/random"), pattern = "snps_CEU", full.names = TRUE, include.dirs = FALSE)
   
-  o <- order(d[,2])
+  snps_files <- snps_files[grepl("chr",snps_files) & !grepl("sort",snps_files)]
   
-  print(table(o[-1] - o[-length(o)]))
+  x <- gsub("^.*chr","", snps_files)
+  xx <- gsub("_random.tsv$", "", x)
   
-  do <- d[o, ]
+  snps_files <- snps_files[order(as.numeric(xx))]
   
-  write.table(do, paste0(out_data_dir, basename(file_path_sans_ext(snps_files[i])), "_sort.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+  snps_files
   
-  gc()
+  ### sort by SNP position
+  
+  for(i in 1:length(snps_files)){
+    # i = 1
+    cat(i, fill = TRUE)
+    #### Does not sort in the right way -->> use tab as separator
+    #   cmd <- paste0("(head -n 1 ", snps_files[i], " && tail -n +2 ", snps_files[i], " | sort -k 2 ) > ", snps_files[i], ".sort.tsv")
+    #   cmd <- paste0( "tail -n +2 ", snps_files[i], " | sort -k 2  > ", snps_files[i], ".sort.tsv")  
+    #   system(cmd)
+    
+    d <- read.table(snps_files[i], header = TRUE, as.is = TRUE)
+    
+    o <- order(d[,2])
+    
+    # print(table(o[-1] - o[-length(o)]))
+    
+    do <- d[o, ]
+    
+    write.table(do, paste0(out_data_dir, basename(file_path_sans_ext(snps_files[i])), "_sort.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+    
+    gc()
+    
+  }
+  
+  
+  ### merge chromosome files
+  
+  cmd <- paste0("cat ", paste0(paste0(out_data_dir, basename(file_path_sans_ext(snps_files)), "_sort.tsv"), collapse = " "), " > ", out_data_dir ,"/snps_CEU.tsv")
+  
+  cat(cmd, fill = TRUE)
+  
+  system(cmd)
+  
+  
+  
+  ### add header with samples names
+  
+  cmd <- paste0("head -n 1 ", snps_files[1], " > ", out_data_dir ,"snps_CEU_head.tsv")
+  
+  cat(cmd, fill = TRUE)
+  
+  system(cmd)
+  
+  
+  cmd <- paste0("cat ", out_data_dir, "snps_CEU_head.tsv ", out_data_dir, "snps_CEU.tsv > ", out_data_dir, "snps_CEU_full.tsv")
+  
+  cat(cmd, fill = TRUE)
+  
+  system(cmd)
   
 }
-
-
-### merge chromosome files
-
-cmd <- paste0("cat ", paste0(paste0(out_data_dir, basename(file_path_sans_ext(snps_files)), "_sort.tsv"), collapse = " "), " > ", out_data_dir ,"/snps_CEU.tsv")
-
-cat(cmd, fill = TRUE)
-
-system(cmd)
-
-
-
-### add header with samples names
-
-cmd <- paste0("head -n 1 ", snps_files[1], " > ", out_data_dir ,"snps_CEU_head.tsv")
-
-cat(cmd, fill = TRUE)
-
-system(cmd)
-
-
-cmd <- paste0("cat ", out_data_dir, "snps_CEU_head.tsv ", out_data_dir, "snps_CEU.tsv > ", out_data_dir, "snps_CEU_full.tsv")
-
-cat(cmd, fill = TRUE)
-
-system(cmd)
-
 
 
 
 ###############################################################################
 ### Run sQTLseekeR analysis 
 ###############################################################################
-
-
-## Input files: transcript expression, gene location and genotype information
-counts_path = paste0(data_dir, "expression/trExpCount_CEU.tsv")
-gene_bed_path = paste0(data_dir, "annotation/gencode.v12.annotation_genes.bed")
-genotypes_path = paste0(out_data_dir, "snps_CEU_full.tsv")
 
 
 
@@ -169,12 +175,7 @@ counts <- counts_raw[,c("trId", "geneId", metadata$sample)]
 colnames(counts) <- c("trId", "geneId", metadata$sampleShort)
 
 
-lib_size <- colSums(counts[, -c(1,2)])/1e+6 ### used in cpm calculations
-lib_size
-min(lib_size)
-
-
-ratios <- prepare.trans.exp(te.df = counts, min.transcript.exp = min(lib_size), min.gene.exp = min(lib_size), min.dispersion = 0.01, verbose = FALSE)
+ratios <- sQTLseekeR::prepare.trans.exp(te.df = counts, min.transcript.exp = 10, min.gene.exp = 10, min.dispersion = 0.01, verbose = FALSE)
 
 
 write.table(ratios, paste0(out_data_dir, "trExpCount_CEU_sqtlseeker_ratios.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
@@ -223,6 +224,10 @@ dir.create(out_res_dir_gene)
 gene_bed <- read.table(gene_bed_path, as.is=TRUE, sep="\t")
 colnames(gene_bed) <- c("chr","start","end","geneId")
 
+### change gene length to 1 so the randomly assignes SNPs stay unchanged
+gene_bed$end <- gene_bed$start + 1
+
+
 
 genes_unique <- unique(ratios$geneId)
 
@@ -233,7 +238,7 @@ results_list <- bplapply(1:length(genes_split), function(g){
   # g = 1
   print(g)
   
-  res <- sqtl.seeker(ratios[ratios$geneId %in% genes_split[[g]],  , drop = FALSE], genotypes_path_index, gene_bed)
+  res <- sQTLseekeR::sqtl.seeker(tre.df = ratios[ratios$geneId %in% genes_split[[g]],  , drop = FALSE], genotype.f = genotypes_path_index, gene.loc = gene_bed, genic.window = 1)
   
   if(!is.null(res))
     write.table(res, paste0(out_res_dir_gene, "results_", g, ".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
@@ -269,7 +274,7 @@ write.table(results, paste0(out_res_dir, "CEU_results_all.txt"), quote = FALSE, 
 ########################################
 
 
-results_sign = sqtls(results, FDR = 0.05, out.pdf = paste0(out_res_dir, "CEU_results_fdr05.pdf"))
+results_sign = sQTLseekeR::sqtls(results, FDR = 0.05, out.pdf = paste0(out_res_dir, "CEU_results_fdr05.pdf"))
 
 
 write.table(results_sign, paste0(out_res_dir, "CEU_results_fdr05.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)

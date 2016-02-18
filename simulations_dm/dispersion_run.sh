@@ -135,7 +135,14 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${
 
 
 
+n="c(3)"
+nm="c(1000)"
+nd=0
+prop="c('prop_q3_kim_kallisto_overall','prop_q10_kim_kallisto_overall')"
+disp="c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')"
 
+
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 prop=${prop} disp=${disp} pdf_width=7 pdf_height=7 fig_name='3_1000_'" $RCODE/dispersion_plots_run.R $ROUT/dispersion_plots_run.Rout
 
 
 

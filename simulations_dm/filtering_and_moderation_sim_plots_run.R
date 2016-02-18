@@ -348,7 +348,7 @@ dev.off()
 
 
 ggp <- ggplot(data = res, aes(x = pvalue, linetype = feature_filter, colour = disp_estimator)) + 
-  geom_density(size = 1, alpha = 0.7, trim = TRUE, adjust = 0.5) +
+  geom_density(alpha = 0.75, trim = TRUE, adjust = 0.75) +
   theme_bw() +
   ylab("Density") +
   xlab("P-values") +
@@ -365,7 +365,7 @@ dev.off()
 
 
 ggp <- ggplot(data = res, aes(x = pvalue, linetype = feature_filter, colour = disp_estimator)) + 
-  geom_freqpoly(binwidth = 0.05, size = 1, alpha = 0.7) +
+  geom_freqpoly(binwidth = 0.05, alpha = 0.75) +
   theme_bw() +
   ylab("Count") +
   xlab("P-values") +

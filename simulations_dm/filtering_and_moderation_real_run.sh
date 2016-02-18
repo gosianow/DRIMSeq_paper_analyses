@@ -106,36 +106,6 @@ done
 ### Individual runs
 ################################
 
-RCODE=/home/gosia/R/drimseq_paper/simulations_dm
-RWD=/home/gosia/multinomial_project/simulations_dm/drimseq
-ROUT=$RWD/Rout
-DMPARAMS=$RWD/dm_parameters_drimseq_0_3_3
-
-workers=1
-
-for n in 3
-do
-  
-for data_name in 'kim'
-do 
-  
-for count_method in 'htseq'
-do
-    
-    for run in {1..50}
-    do
-      
-      echo "${data_name}_${count_method}_n${n}_${run}"
-      
-    
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=2000 n=${n} min_feature_expr=c(0,5,10,50,100,250) min_feature_prop=NULL param_pi_path='$DMPARAMS/${data_name}_${count_method}/prop_${data_name}_${count_method}_fcutoff.txt' param_gamma_path='$DMPARAMS/${data_name}_${count_method}/disp_genewise_${data_name}_${count_method}_lognormal.txt' param_nm_path='$DMPARAMS/${data_name}_${count_method}/nm_${data_name}_${count_method}_lognormal.txt' param_nd_path='$DMPARAMS/${data_name}_${count_method}/nd_common_${data_name}_${count_method}.txt'" $RCODE/filtering_and_moderation_real_run.R $ROUT/filtering_and_moderation_real_run_${data_name}_${count_method}_n${n}.Rout
-    
-  done
-
-done
-done
-done
-
 
 ##############################################################################
 ### Plot
@@ -156,14 +126,14 @@ count_method="c('kallisto','htseq')"
 out_suffix='famr_min_feature_expr'
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} out_suffix='${out_suffix}'" $RCODE/filtering_and_moderation_real_plots_run.R $ROUT/filtering_and_moderation_real_plots_run.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/filtering_and_moderation_real_plots_run.R $ROUT/filtering_and_moderation_real_plots_run.Rout
      
 
 
 # out_suffix='famr_min_feature_prop'
 
 
-# R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} out_suffix='${out_suffix}'" $RCODE/filtering_and_moderation_real_plots_run.R $ROUT/filtering_and_moderation_real_plots_run.Rout
+# R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/filtering_and_moderation_real_plots_run.R $ROUT/filtering_and_moderation_real_plots_run.Rout
      
 
 

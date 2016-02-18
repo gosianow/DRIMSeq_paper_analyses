@@ -187,8 +187,8 @@ res$method <- factor(res$method, levels = c("ML-dirmult", "PL", "CR"))
 res$prop <- factor(res$prop, levels = prop)
 levels(res$prop)
 
-res$n <- factor(res$n, levels = n, labels = paste0("n", n))
-res$nm <- factor(res$nm, levels = nm, labels = paste0("nm", nm))
+res$n <- factor(res$n, levels = n, labels = paste0("n=", n))
+res$nm <- factor(res$nm, levels = nm, labels = paste0("m=", nm))
 
 res$n_nm <- interaction(res$n, res$nm, lex.order = TRUE)
 levels(res$n_nm)
@@ -259,8 +259,8 @@ mse$method <- factor(mse$method, levels = c("ML-dirmult", "PL", "CR"))
 mse$prop <- factor(mse$prop, levels = prop)
 levels(mse$prop)
 
-mse$n <- factor(mse$n, levels = n, labels = paste0("n", n))
-mse$nm <- factor(mse$nm, levels = nm, labels = paste0("nm", nm))
+mse$n <- factor(mse$n, levels = n, labels = paste0("n=", n))
+mse$nm <- factor(mse$nm, levels = nm, labels = paste0("m=", nm))
 
 mse$n_nm <- interaction(mse$n, mse$nm, lex.order = TRUE)
 levels(mse$n_nm)
@@ -324,8 +324,8 @@ fp$dispersion <- factor(fp$dispersion, levels = c("genewise", "moderated", "comm
 fp$prop <- factor(fp$prop, levels = prop)
 levels(fp$prop)
 
-fp$n <- factor(fp$n, levels = n, labels = paste0("n", n))
-fp$nm <- factor(fp$nm, levels = nm, labels = paste0("nm", nm))
+fp$n <- factor(fp$n, levels = n, labels = paste0("n=", n))
+fp$nm <- factor(fp$nm, levels = nm, labels = paste0("m=", nm))
 
 fp$n_nm <- interaction(fp$n, fp$nm, lex.order = TRUE)
 levels(fp$n_nm)
