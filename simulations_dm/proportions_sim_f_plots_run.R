@@ -500,7 +500,7 @@ for(i in 1:nlevels(res$test)){
   }
   
   
-  pdf(paste0(out_dir_plots, out_suffix, "_qqplot_", test, ".pdf"), width = 3 * pdf_width, height = 1.5 * pdf_height)
+  png(paste0(out_dir_plots, out_suffix, "_qqplot_", test, ".png"), width = 300 * pdf_width, height = 150 * pdf_height)
   print(multiplot(plotlist = ggpl, cols = 4))
   dev.off()
   

@@ -15,16 +15,16 @@ library(plyr)
 library(ggplot2)
 library(rtracklayer)
 library(DRIMSeq)
+library(iCOBRA)
 
 ##############################################################################
 # Test arguments
 ##############################################################################
 
 # rwd='/home/Shared/data/seq/brooks_pasilla'
-# count_method=c('htseq','kallisto','kallistofiltered5','htseqprefiltered5')[3]
-# model=c('model_full','model_full_glm','model_full_paired')[2]
-# gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
-
+# count_method=c('htseq','kallisto','kallistofiltered5','htseqprefiltered5')[2]
+# model=c('model_full','model_full_glm','model_full_paired')[1]
+# valid_path='5_validation/brooks_validated_genes.txt'
 
 ##############################################################################
 # Read in the arguments
@@ -50,6 +50,8 @@ method_out <- "drimseq_0_3_3"
 comparison_out <- "drimseq_0_3_3_positive_controls/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
+dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
+
 
 ##############################################################################
 # metadata
@@ -61,28 +63,23 @@ metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors=F, sep="\t", 
 metadata
 
 ##############################################################################
+# colors
+##############################################################################
+
+
+load(paste0(rwd, "/", "drimseq_0_3_3_comparison", "/colors.Rdata"))
+colors
+colors_df
+
+colors_df$methods <- as.character(colors_df$methods)
+
+
+##############################################################################
 # validated genes
 ##############################################################################
 
 
-valid <- read.table("5_validation/brooks_validated_genes.txt", header = TRUE, sep = "\t", as.is = TRUE) 
-
-
-##############################################################################
-# get gene names 
-##############################################################################
-
-gtf <- import(gtf_path)
-
-
-all(valid$brooks_gene_id %in% mcols(gtf)$gene_name)
-
-keep <- !duplicated(mcols(gtf)$gene_id)
-annot <- mcols(gtf)[keep, c("gene_id", "gene_name")]
-
-annot_valid <- annot[annot$gene_name %in% valid$brooks_gene_id, ]
-
-valid$gene_id <- annot_valid[match(valid$brooks_gene_id, annot_valid$gene_name), "gene_id"]
+valid <- read.table(valid_path, header = TRUE, sep = "\t", as.is = TRUE) 
 
 
 
@@ -138,6 +135,10 @@ if(length(files) > 0){
   }
 }
 
+
+results_padj_list <- results_padj
+
+
 results_padj <- Reduce(function(...) merge(..., by = "gene_id", all=TRUE, sort = FALSE), results_padj)
 rownames(results_padj) <- results_padj$gene_id
 
@@ -153,6 +154,7 @@ results_padj <- results_padj[, !grepl("gene_id", colnames(results_padj)), drop =
 all(valid$gene_id %in% rownames(results_padj))
 
 
+
 results_padj_valid <- results_padj[valid$gene_id, , drop = FALSE]
 
 rownames(results_padj_valid) <- valid$gene_id
@@ -162,6 +164,8 @@ results_padj_valid
 out <-  data.frame(valid, model = model , count_method = count_method, results_padj_valid, stringsAsFactors = FALSE)
 
 write.table(out, file = paste0(comparison_out, model, "_", count_method, "_validation.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
 
 
 number_sign_valid <- matrix(colSums(results_padj_valid[-which(valid$brooks_gene_id == "Ant2"), , drop = FALSE] < 0.05, na.rm = TRUE), nrow = 1)
@@ -174,9 +178,8 @@ out_summary
 write.table(out_summary, file = paste0(comparison_out, model, "_", count_method, "_validation_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
-
 ############################################################################
-# DRIMSeq plots of proportions - counts from DRIMSeq
+# DRIMSeq plots of proportions - counts from DRIMSeq, may be with filtering
 ############################################################################
 
 
@@ -214,7 +217,7 @@ if(length(files) > 0){
 
 
 ############################################################################
-# DRIMSeq plots of proportions - no filtering
+# DRIMSeq plots of proportions - based on raw counts
 ############################################################################
 
 

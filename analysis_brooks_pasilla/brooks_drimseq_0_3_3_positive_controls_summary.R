@@ -24,10 +24,10 @@ library(limma)
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/brooks_pasilla'
-path_gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
-path_gtf_filtered = '/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf'
-
+# rwd='/home/Shared/data/seq/brooks_pasilla'
+# path_gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
+# path_gtf_filtered = '/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf'
+# valid_path='5_validation/brooks_validated_genes.txt'
 
 ##############################################################################
 # Read in the arguments
@@ -52,6 +52,7 @@ method_out <- "drimseq_0_3_3"
 comparison_out <- "drimseq_0_3_3_positive_controls/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
+dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
 
 path_gtf_dexseq <- paste0(file_path_sans_ext(path_gtf), ".DEXSeq.flattened.rNO.gff")
 path_gtf_filtered_dexseq <- paste0(file_path_sans_ext(path_gtf_filtered), ".DEXSeq.flattened.rNO.gff")
@@ -73,26 +74,9 @@ metadata
 # validated genes
 ##############################################################################
 
-valid <- read.table("5_validation/brooks_validated_genes.txt", header = TRUE, sep = "\t", as.is = TRUE) 
+valid <- read.table(valid_path, header = TRUE, sep = "\t", as.is = TRUE) 
 
-
-##############################################################################
-# get gene names 
-##############################################################################
-
-gtf <- import(path_gtf)
-
-
-all(valid$brooks_gene_id %in% mcols(gtf)$gene_name)
-
-keep <- !duplicated(mcols(gtf)$gene_id)
-annot <- mcols(gtf)[keep, c("gene_id", "gene_name")]
-
-annot_valid <- annot[annot$gene_name %in% valid$brooks_gene_id, ]
-
-valid$gene_id <- annot_valid[match(valid$brooks_gene_id, annot_valid$gene_name), "gene_id"]
-
-valid
+valid 
 
 ##############################################################################
 # merge positive controls summary into one table
@@ -138,7 +122,7 @@ ggp <- ggplot(summarym, aes(x = count_method, y = variable, fill = value)) +
   facet_wrap(~ model)
 
 
-pdf(paste0(comparison_out, "validation_summary.pdf"), 15, 5)
+pdf(paste0(comparison_out, "figures/validation_summary.pdf"), 15, 5)
 print(ggp)
 dev.off()
 
@@ -194,7 +178,7 @@ for(i in 1:nlevels(summary$model)){
     facet_wrap(~ count_method, nrow = 1)
   
   
-  pdf(paste0(comparison_out, models[i], "_validation_summary.pdf"), 13, 10)
+  pdf(paste0(comparison_out, "figures/", models[i], "_validation_summary.pdf"), 13, 10)
   print(ggp)
   dev.off()
   

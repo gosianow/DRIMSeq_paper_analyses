@@ -2,7 +2,7 @@
 ## <<colors.R>>
 
 # BioC 3.2
-# Created 15 Jan 2015 
+# Created 1 Mar 2016 
 
 ##############################################################################
 
@@ -16,8 +16,8 @@ library(ggplot2)
 # Test arguments
 ##############################################################################
 
-# rwd='/home/Shared/data/seq/brooks_pasilla'
-# out_dir='/home/Shared/data/seq/brooks_pasilla/drimseq_0_3_3_comparison'
+# rwd='/home/Shared/data/seq/geuvadis'
+# out_dir='/home/Shared/data/seq/geuvadis/drimseq_0_3_3_comparison'
 
 ##############################################################################
 # Read in the arguments
@@ -43,10 +43,10 @@ dir.create(out_dir, recursive = TRUE)
 ##############################################################################
 
 
-methods <- factor(c("dexseq","drimseq_common", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"), levels = c("dexseq","drimseq_common", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"))
+methods <- factor(c("sqtlseeker","drimseq"), levels = c("sqtlseeker","drimseq"))
 
 
-colors_df <- data.frame(methods = methods, colors = c("royalblue3", "darkolivegreen3", "firebrick3", "orange2", "mediumvioletred", "orchid4", "plum3"), colors_hex = c("#4065B1", "#7FB972", "#D92120", "#E68E34", "#C71585", "#781C81", "#B17BA6"))
+colors_df <- data.frame(methods = methods, colors = c("forestgreen", "orange2"), colors_hex = c("#228B22", "#EE9A00"))
 colors_df$colors <- as.character(colors_df$colors)
 colors_df$colors_hex <- as.character(colors_df$colors_hex)
 

@@ -142,7 +142,7 @@ workers=5
 
 for filter_method in 'filter0'
 do
-for simulation in 'drosophila_node_nonull'
+for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull'
 do 
   for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
   do
@@ -160,27 +160,6 @@ done
 
 
 
-workers=5
-
-for filter_method in 'filter0'
-do
-for simulation in 'hsapiens_node_nonull'
-do 
-  for count_method in 'kallistofiltered5' 'htseqprefiltered5'
-  do
-    
-    echo "${simulation}_${count_method}_${filter_method}"
-
-    R32dev CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=TRUE results_common=FALSE disp_mode='grid' disp_moderation='none'" $RCODE/sim5_drimseq_f_run.R $ROUT/sim5_drimseq_f_run_${simulation}_${count_method}_${filter_method}_grid_none.Rout
-    
-    R32dev CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='common'" $RCODE/sim5_drimseq_f_run.R $ROUT/sim5_drimseq_f_run_${simulation}_${count_method}_${filter_method}_grid_common.Rout  
-    
-
-  done
-done
-done
-
-
 
 ##############################################################################
 ### Comparison 
@@ -190,9 +169,9 @@ done
 for filter_method in 'filter0'
 do
 
-for simulation in 'hsapiens_node_nonull'
+for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull'
 do 
-  for count_method in 'kallisto' 'htseq'
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
   do
     
     echo "${simulation}_${count_method}_${filter_method}"
@@ -205,6 +184,20 @@ done
 
 
 
+##############################################################################
+# Combined plots
+##############################################################################
+
+for filter_method in 'filter0'
+do
+  
+  echo "${filter_method}"
+
+# Main
+
+R32dev CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull') count_method_list=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') filter_method='${filter_method}' name='' legend_nrow=1 pdf_width=14 pdf_height=8" $RCODE/sim5_drimseq_f_comparison_combined.R $ROUT/sim5_drimseq_f_comparison_combined.Rout
+
+done
 
 
 

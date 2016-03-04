@@ -113,36 +113,22 @@ do
   
     echo "${model}_${count_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}'" $RCODE/kim_drimseq_0_3_3_comparison_run.R $ROUT/kim_drimseq_0_3_3_comparison_run.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}'" $RCODE/kim_drimseq_0_3_3_comparison.R $ROUT/kim_drimseq_0_3_3_comparison_run.Rout
 
   done
 done
 
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/kim_drimseq_0_3_3_summary.R $ROUT/kim_drimseq_0_3_3_summary.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/kim_drimseq_0_3_3_comparison_summary.R $ROUT/kim_drimseq_0_3_3_comparison_summary.Rout
 
 
 
+### Plots of the overlap versus number of top ranked genes
 
-###############################################################################
-### Individual runs
-###############################################################################
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full') Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'" $RCODE/kim_drimseq_0_3_3_comparison_plots.R $ROUT/kim_drimseq_0_3_3_comparison_plots.Rout
 
 
-for model in 'model_null_tumor1'
-do 
-  for count_method in 'htseqprefiltered5'
-  do
-    
-    echo "${model}_${count_method}"
-
-    # R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/kim_drimseq_0_3_3_run.R $ROUT/kim_drimseq_0_3_3_run_${model}_${count_method}_grid_none.Rout
-    
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common'" $RCODE/kim_drimseq_0_3_3_run.R $ROUT/kim_drimseq_0_3_3_run_${model}_${count_method}_grid_common2.Rout
-
-  done
-done
 
 
 

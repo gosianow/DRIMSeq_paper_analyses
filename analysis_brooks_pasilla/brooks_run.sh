@@ -109,13 +109,22 @@ do
   
     echo "${model}_${count_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}'" $RCODE/brooks_drimseq_0_3_3_comparison_run.R $ROUT/brooks_drimseq_0_3_3_comparison_run.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}'" $RCODE/brooks_drimseq_0_3_3_comparison.R $ROUT/brooks_drimseq_0_3_3_comparison_run.Rout
 
   done
 done
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/brooks_drimseq_0_3_3_summary.R $ROUT/brooks_drimseq_0_3_3_summary.Rout
+### Barplots of the number of all and DS genes
+
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/brooks_drimseq_0_3_3_comparison_summary.R $ROUT/brooks_drimseq_0_3_3_summary.Rout
+
+
+### Plots of the overlap versus number of top ranked genes
+
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired','model_full_glm') Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'" $RCODE/brooks_drimseq_0_3_3_comparison_plots.R $ROUT/brooks_drimseq_0_3_3_comparison_plots.Rout
+
+
 
 
 ##############################
@@ -124,25 +133,39 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/brooks_drimseq_0
 
 ### ! Save brooks_validated_genes.txt in "$RWD/5_validation" directory !
 
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'" $RCODE/brooks_validated_genes.R $ROUT/brooks_validated_genes.Rout
 
 
-for model in 'model_full' 'model_full_glm' 'model_full_paired'
+for model in 'model_full' 'model_full_paired' 'model_full_glm'
 do 
   for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
   do 
   
     echo "${model}_${count_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' gtf_path='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70.gtf' count_method='${count_method}' model='${model}'" $RCODE/brooks_drimseq_0_3_3_positive_controls.R $ROUT/brooks_drimseq_0_3_3_positive_controls_run.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' valid_path='5_validation/brooks_validated_genes.txt' count_method='${count_method}' model='${model}'" $RCODE/brooks_drimseq_0_3_3_positive_controls.R $ROUT/brooks_drimseq_0_3_3_positive_controls_run.Rout
 
   done
 done
 
 
+### Plots of tables with adj p-values for validated genes 
+
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' path_gtf='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70.gtf' path_gtf_filtered='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf' valid_path='5_validation/brooks_validated_genes.txt'" $RCODE/brooks_drimseq_0_3_3_positive_controls_summary.R $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
 
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' path_gtf='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70.gtf' path_gtf_filtered='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf'" $RCODE/brooks_drimseq_0_3_3_positive_controls_summary.R $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
+### Plots of the number of validated genes versus number of genes detected as DS
+
+
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' valid_path='5_validation/brooks_validated_genes.txt' count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired','model_full_glm') ROC_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotROCx.R'" $RCODE/brooks_drimseq_0_3_3_positive_controls_plots.R $ROUT/brooks_drimseq_0_3_3_positive_controls_plots.Rout
+
+
+
+
+
+
+
 
 
 

@@ -1,6 +1,4 @@
-######################################################
-## ----- brooks_drimseq_0_3_3_summary
-## <<brooks_drimseq_0_3_3_summary.R>>
+# <<brooks_drimseq_0_3_3_summary.R>>
 
 # BioC 3.2
 # Created 15 Jan 2015 
@@ -42,6 +40,8 @@ print(rwd)
 setwd(rwd)
 
 comparison_out <- "drimseq_0_3_3_comparison/"
+
+dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
 
 
 out_dir <- paste0(comparison_out)
@@ -98,7 +98,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_ds, fill = 
 
 
 
-pdf(paste0(comparison_out, "summary_genes_ds_all.pdf"), 14, 7)
+pdf(paste0(comparison_out, "figures/summary_genes_ds_all.pdf"), 14, 7)
 print(ggp)
 dev.off()
 
@@ -114,7 +114,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_ds_overlap,
 
 
 
-pdf(paste0(comparison_out, "summary_genes_ds_overlap.pdf"), 14, 7)
+pdf(paste0(comparison_out, "figures/summary_genes_ds_overlap.pdf"), 14, 7)
 print(ggp)
 dev.off()
 
@@ -132,7 +132,7 @@ ggp <- ggplot(data = summary, aes(x = count_method, y = counts_genes_all, fill =
 
 
 
-pdf(paste0(comparison_out, "summary_genes_all.pdf"), 14, 7)
+pdf(paste0(comparison_out, "figures/summary_genes_all.pdf"), 14, 7)
 print(ggp)
 dev.off()
 
@@ -167,7 +167,7 @@ ggp <- ggplot(data = summary2, aes(x = count_method, y = counts_genes_ds, group 
 
 
 
-pdf(paste0(comparison_out, "summary_genes_ds_unique_and_overlap.pdf"), 14, 7)
+pdf(paste0(comparison_out, "figures/summary_genes_ds_unique_and_overlap.pdf"), 14, 7)
 print(ggp)
 dev.off()
 

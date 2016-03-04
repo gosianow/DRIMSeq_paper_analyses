@@ -1,5 +1,4 @@
-######################################################
-## ----- brooks_drimseq_0_3_3_comparison_run
+##############################################################################
 ## <<brooks_drimseq_0_3_3_comparison_run.R>>
 
 # BioC 3.2
@@ -124,6 +123,8 @@ if(nrow(summary) == 1){
   
 }else{
   
+  stopifnot("dexseq" %in% colnames(results_padj))
+  
   
   cobradata <- COBRAData(padj = results_padj)
   
@@ -133,10 +134,10 @@ if(nrow(summary) == 1){
   
   summary$counts_genes_all <- apply(overlap, 2, sum)
   
-  ref_dexseq <- overlap[, "dexseq"]
+  ref_method <- overlap[, "dexseq"]
   
   summary$counts_genes_all_overlap <- apply(overlap, 2, function(i){
-    sum((ref_dexseq + i) == 2)
+    sum((ref_method + i) == 2)
   })
   
   
@@ -149,10 +150,10 @@ if(nrow(summary) == 1){
   
   summary$counts_genes_ds <- apply(overlap, 2, sum)
   
-  ref_dexseq <- overlap[, "dexseq"]
+  ref_method <- overlap[, "dexseq"]
   
   summary$counts_genes_ds_overlap <- apply(overlap, 2, function(i){
-    sum((ref_dexseq + i) == 2)
+    sum((ref_method + i) == 2)
   })
   
   
