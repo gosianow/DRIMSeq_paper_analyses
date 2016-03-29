@@ -52,8 +52,11 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU'" $RCODE
 
 
 ### Plots of the overlap versus number of top ranked genes
+### CAT (concordance at top) plots
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots.Rout
+
+
 
 
 ##############################
@@ -140,6 +143,7 @@ R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5" $RCODE/geuvad
 ##############################################################################
 
 ## Run DRIMSeq analysis using F test - R32dev
+## With and without CR adjustment
 
 ##############################################################################
 
@@ -149,7 +153,7 @@ do
 
 echo "${n}"
 
-R32dev CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=6 population='CEU' chr=${n}" $RCODE/geuvadis_drimseq_0_3_3_run_f.R $ROUT/geuvadis_drimseq_0_3_3_run_f_CEU_chr${n}.Rout
+R32dev CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 population='CEU' chr=${n}" $RCODE/geuvadis_drimseq_0_3_3_run_f.R $ROUT/geuvadis_drimseq_0_3_3_run_f_CEU_chr${n}.Rout
 
 done
 

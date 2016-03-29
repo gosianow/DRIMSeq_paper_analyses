@@ -24,6 +24,7 @@ library(plyr)
 # rwd='/home/Shared/data/seq/geuvadis'
 # population='CEU'
 # Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'
+# CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
 
 ##############################################################################
 # Read in the arguments
@@ -40,6 +41,7 @@ print(args)
 print(rwd)
 print(population)
 print(Overlaps_function_path)
+print(CAT_function_path)
 
 ##############################################################################
 
@@ -166,11 +168,57 @@ results <- lapply(results, function(x){
 ############################################################################
 
 
-source(Overlaps_function_path)
+# source(Overlaps_function_path)
+# 
+# data_Overlaps <- list()
+# 
+# data_Overlaps[[1]] <- calculateOverlaps(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100)
+# 
+# 
+# 
+# reference_method <- "sqtlseeker"
+# 
+# metadata_ov <- metadata[metadata$method_name == "drimseq", , drop = FALSE]
+# ### Drop unnecessary levels
+# metadata_ov$method_name <- factor(metadata_ov$method_name)
+# 
+# 
+# ggp <- plotOverlaps(data_Overlaps, metadata = metadata_ov, plot_var = "method_name", facet_var = NULL, plot_colors = colors[levels(metadata_ov$method_name)], plotx = TRUE, reference_color = colors[reference_method])
+# 
+# 
+# ggp <- ggp + 
+#   # coord_cartesian(xlim = c(0, 500), ylim = c(0, 300)) +
+#   ylab("Overlap with sqtlseeker") +
+#   xlab("Number of top ranked sQTLs")
+# 
+# 
+# pdf(paste0(comparison_out, "overlap_top_ranked_genes.pdf"), width = 7, height = 7)
+# print(ggp)
+# dev.off()
+# 
+# 
+# ggp <- ggp + 
+#   coord_cartesian(xlim = c(0, 40000), ylim = c(0, 40000)) +
+#   ylab("Overlap with sqtlseeker") +
+#   xlab("Number of top ranked sQTLs")
+# 
+# 
+# pdf(paste0(comparison_out, "overlap_top_ranked_genes_zoom.pdf"), width = 7, height = 7)
+# print(ggp)
+# dev.off()
+# 
 
-data_Overlaps <- list()
 
-data_Overlaps[[1]] <- calculateOverlaps(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100)
+############################################################################
+# CAT plots - percentage overlap versus top x DS genes
+############################################################################
+
+
+source(CAT_function_path)
+
+data_CAT <- list()
+
+data_CAT[[1]] <- calculateCAT(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100)
 
 
 
@@ -181,31 +229,29 @@ metadata_ov <- metadata[metadata$method_name == "drimseq", , drop = FALSE]
 metadata_ov$method_name <- factor(metadata_ov$method_name)
 
 
-ggp <- plotOverlaps(data_Overlaps, metadata = metadata_ov, plot_var = "method_name", facet_var = NULL, plot_colors = colors[levels(metadata_ov$method_name)], plotx = TRUE, reference_color = colors[reference_method])
+ggp <- plotCAT(data_CAT, metadata = metadata_ov, plot_var = "method_name", facet_var = NULL, plot_colors = colors[levels(metadata_ov$method_name)], plotx = TRUE, reference_color = colors[reference_method])
 
 
 ggp <- ggp + 
-  # coord_cartesian(xlim = c(0, 500), ylim = c(0, 300)) +
-  ylab("Overlap with sqtlseeker") +
+  coord_cartesian(ylim = c(0, 1)) +
+  ylab("Percentage overlap with sqtlseeker") +
   xlab("Number of top ranked sQTLs")
 
 
-pdf(paste0(comparison_out, "overlap_top_ranked_genes.pdf"), width = 7, height = 7)
+pdf(paste0(comparison_out, "cat.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
 
 
 ggp <- ggp + 
-  coord_cartesian(xlim = c(0, 40000), ylim = c(0, 40000)) +
-  ylab("Overlap with sqtlseeker") +
+  coord_cartesian(xlim = c(0, 40000), ylim = c(0, 1)) +
+  ylab("Percentage overlap with sqtlseeker") +
   xlab("Number of top ranked sQTLs")
 
 
-pdf(paste0(comparison_out, "overlap_top_ranked_genes_zoom.pdf"), width = 7, height = 7)
+pdf(paste0(comparison_out, "cat_zoom.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
-
-
 
 
 

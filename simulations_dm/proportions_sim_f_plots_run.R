@@ -23,15 +23,15 @@ library(RColorBrewer)
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
-# sim_name=''
-# n=c(3,6)
-# nm=c(1000,100000)
-# nd=0
-# disp='disp_common_kim_kallisto'
-# out_suffix='proportions_decay'
-# pdf_width=7
-# pdf_height=7
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
+sim_name=''
+n=c(3)
+nm=c(1000)
+nd=0
+disp='disp_common_kim_kallisto'
+out_suffix='proportions_decay'
+pdf_width=7
+pdf_height=7
 
 
 ##############################################################################
@@ -212,6 +212,9 @@ res$nm <- factor(res$nm, levels = nm, labels = paste0("nm=", nm))
 
 res$n_nm <- interaction(res$n, res$nm, lex.order = TRUE)
 levels(res$n_nm)
+
+
+
 
 
 ### Absolute error
@@ -418,7 +421,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     # ncol: Number of columns of plots
     # nrow: Number of rows needed, calculated from # of cols
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
+      ncol = cols, nrow = ceiling(numPlots/cols))
   }
   
   if (numPlots==1) {
@@ -435,7 +438,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
       
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
+        layout.pos.col = matchidx$col))
     }
   }
 }
@@ -463,38 +466,38 @@ for(i in 1:nlevels(res$test)){
     
     
     switch(test, 
-           
-           f = {
-             
-             res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
-             
-             print(all.equal(res_tmp[, "df1"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
-             
-             ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
-               geom_point(stat = "qq", distribution = qf, dparams = list(df1 = as.numeric(nr_features) - 1, df2 = (n - 1) * (as.numeric(nr_features) - 1))) +
-               geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
-               theme_bw() +
-               theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
-               ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
-             
-             
-           },
-           
-           lr = {
-             
-             res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
-             
-             print(all.equal(res_tmp[, "df"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
-             
-             ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
-               geom_point(stat = "qq", distribution = qchisq, dparams = list(df = as.numeric(nr_features) - 1)) +
-               geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
-               theme_bw() +
-               theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
-               ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
-             
-           }
-           
+      
+      f = {
+        
+        res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
+        
+        print(all.equal(res_tmp[, "df1"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
+        
+        ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
+          geom_point(stat = "qq", distribution = qf, dparams = list(df1 = as.numeric(nr_features) - 1, df2 = (n - 1) * (as.numeric(nr_features) - 1))) +
+          geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
+          theme_bw() +
+          theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
+          ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
+        
+        
+      },
+      
+      lr = {
+        
+        res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
+        
+        print(all.equal(res_tmp[, "df"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
+        
+        ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
+          geom_point(stat = "qq", distribution = qchisq, dparams = list(df = as.numeric(nr_features) - 1)) +
+          geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
+          theme_bw() +
+          theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
+          ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
+        
+      }
+      
     )
     
   }
@@ -505,6 +508,66 @@ for(i in 1:nlevels(res$test)){
   dev.off()
   
 }
+
+
+
+
+
+### Plots of dispersion versus p-values
+
+n <- 3
+nm <- 1000
+
+res <- res[res$n == paste0("n=", n) & res$nm == paste0("nm=", nm), ]
+
+true_disp <- res$true[1]
+test <- "lr"
+
+res_tmp <- res[res$test == test & res$disp_estimator == "moderation_none", ]
+
+
+ggp <- ggplot(data = res_tmp, aes(x = pvalue, y = log10(est))) + 
+  geom_hex(binwidth = c(0.01, 0.01)) +
+  geom_hline(yintercept = log10(true_disp), color="black", linetype = 2, size = 0.5) +
+  theme_bw() +
+  ylab("gamma_+") +
+  xlab("P-values") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  scale_fill_gradientn("", colours = rev(rainbow(10, end = 4/6))) +
+  facet_wrap(~ nr_features, nrow = 2, scales = "fixed")
+
+
+
+
+pdf(paste0(out_dir_plots, out_suffix, "_est_vs_pvalues_", test, ".pdf"), width = 2 * pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+
+
+
+ggp <- ggplot(data = res_tmp, aes(x = pvalue, y = est)) + 
+  geom_hex(binwidth = c(0.01, 2)) +
+  geom_hline(yintercept = true_disp, color="black", linetype = 2, size = 0.5) +
+  theme_bw() +
+  ylab("gamma_+") +
+  xlab("P-values") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  scale_fill_gradientn("", colours = rev(rainbow(10, end = 4/6))) +
+  facet_wrap(~ nr_features, nrow = 2, scales = "fixed") +
+  coord_cartesian(ylim = c(0, 250)) 
+
+
+
+
+pdf(paste0(out_dir_plots, out_suffix, "_est_vs_pvalues2_", test, ".pdf"), width = 2 * pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+
+
+
+
 
 
 

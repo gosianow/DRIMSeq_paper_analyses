@@ -44,7 +44,7 @@ dm_simulate <- function(m = 10, n = 5, pi = c(1/3, 1/3, 1/3), g0 = 100, nm = 100
     g_dir <- dm_rdirichlet(n, g_dir_org)
     
     # simulate total counts
-    if(nd > 0)
+    if(nd[i] > 0)
       t <- rnbinom(n, mu = nm[i], size = 1/nd[i]) # Variance = mu + mu^2/size
     else
       t <- rep(nm[i], n)

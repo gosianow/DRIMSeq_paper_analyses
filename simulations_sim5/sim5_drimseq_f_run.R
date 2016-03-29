@@ -1,6 +1,6 @@
 ######################################################
 ## ----- sim5_drimseq_f_run
-## <<sim5_drimseq_F_run.R>>
+## <<sim5_drimseq_f_run.R>>
 
 # BioC 3.2 - R32dev
 # Created 16 Nov 2015 
