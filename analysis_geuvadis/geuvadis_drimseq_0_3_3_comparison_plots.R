@@ -3,6 +3,7 @@
 
 # BioC 3.2
 # Created 2 Mar 2016 
+# Modified 9 Apr 2016
 
 # Plot the overlap versus top ranked sQTLs for drimseq and sqtlseeker
 
@@ -16,6 +17,8 @@ Sys.time()
 
 library(ggplot2)
 library(plyr)
+library(ffpe)
+
 
 ##############################################################################
 # Test arguments
@@ -23,6 +26,8 @@ library(plyr)
 
 # rwd='/home/Shared/data/seq/geuvadis'
 # population='CEU'
+# method_out='drimseq_0_3_3_analysis_permutations'
+# comparison_out='drimseq_0_3_3_comparison_permutations'
 # Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'
 # CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
 
@@ -47,9 +52,9 @@ print(CAT_function_path)
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_3_analysis/"
+method_out <- paste0(method_out, "/")
+comparison_out <- paste0(comparison_out, "/")
 
-comparison_out <- "drimseq_0_3_3_comparison/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
 
@@ -58,7 +63,7 @@ dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 ##############################################################################
 
 
-load(paste0(rwd, "/", "drimseq_0_3_3_comparison", "/colors.Rdata"))
+load(paste0(rwd, "/", comparison_out, "/colors.Rdata"))
 colors
 colors_df
 
@@ -220,6 +225,7 @@ data_CAT <- list()
 
 data_CAT[[1]] <- calculateCAT(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100)
 
+save(data_CAT, file = paste0(comparison_out, "data_CAT.Rdata"))
 
 
 reference_method <- "sqtlseeker"
@@ -253,12 +259,21 @@ pdf(paste0(comparison_out, "cat_zoom.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
 
+save(ggp, file = paste0(comparison_out, "cat.Rdata"))
 
+############################################################################
+# CAT plots with CATplot from ffpe
+############################################################################
 
+vec1 <- results[["sqtlseeker"]]
+vec1 <- vec1[order(vec1$pvalue, decreasing = FALSE), "gene_snp"]
 
+vec2 <- results[["drimseq"]]
+vec2 <- vec2[order(vec2$pvalue, decreasing = FALSE), "gene_snp"]
 
-
-
+pdf(paste0(comparison_out, "cat_ffpe.pdf"), width = 7, height = 7)
+CATplot(vec1, vec2, maxrank = 10000, make.plot = TRUE)
+dev.off()
 
 
 

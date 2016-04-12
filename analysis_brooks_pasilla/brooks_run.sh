@@ -83,12 +83,42 @@ do
     
     echo "${model}_${count_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none'" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_none.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none' disp_prior_df=0.1" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_none.Rout
     
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common'" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_common.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common' disp_prior_df=0.1" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_common.Rout
+    
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='trended' disp_prior_df=1" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_trended.Rout
 
   done
 done
+
+
+for model in 'model_full' 'model_full_paired' 'model_null1' 'model_null2' 'model_null3'
+do 
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  do
+    
+    echo "${model}_${count_method}"
+    
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='trended' disp_prior_df=1" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_trended.Rout
+
+  done
+done
+
+
+for model in 'model_full' 'model_full_paired' 'model_null1' 'model_null2' 'model_null3'
+do 
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  do
+    
+    echo "${model}_${count_method}"
+    
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common' disp_prior_df=0.1" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_common.Rout
+    
+  done
+done
+
+
 
 ##############################
 ### Colors
@@ -115,14 +145,14 @@ do
 done
 
 
-### Barplots of the number of all and DS genes
+### Barplots of the number of all and DS genes + overlaps
 
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/brooks_drimseq_0_3_3_comparison_summary.R $ROUT/brooks_drimseq_0_3_3_summary.Rout
 
 
-### Plots of the overlap versus number of top ranked genes
+### Plots of the overlap versus number of top ranked genes + CAT plots
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired','model_full_glm') Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'" $RCODE/brooks_drimseq_0_3_3_comparison_plots.R $ROUT/brooks_drimseq_0_3_3_comparison_plots.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired') Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/brooks_drimseq_0_3_3_comparison_plots.R $ROUT/brooks_drimseq_0_3_3_comparison_plots.Rout
 
 
 

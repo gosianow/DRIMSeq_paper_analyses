@@ -1,9 +1,9 @@
 
-calculateCAT <- function(results1, results2, by = 1){
+calculateCAT <- function(results1, results2, by = 1, maxrank = min(nrow(results1), nrow(results1))){
   
   
-  results1 <- results1[order(results1$pvalue, decreasing = FALSE), ]
-  results2 <- results2[order(results2$pvalue, decreasing = FALSE), ]
+  results1 <- results1[order(results1$pvalue, decreasing = FALSE), , drop = FALSE]
+  results2 <- results2[order(results2$pvalue, decreasing = FALSE), , drop = FALSE]
   
   results1 <- results1[complete.cases(results1), , drop = FALSE]
   results2 <- results2[complete.cases(results2), , drop = FALSE]
@@ -12,13 +12,21 @@ calculateCAT <- function(results1, results2, by = 1){
   x2 <- min(which(!results2$adj_pvalue < 0.05))
   
   
-  top_ds_genes <- sort(unique(c(seq(1, min(nrow(results1), nrow(results2)), by = by), x1, x2)), decreasing = FALSE)
+  top_ds_genes <- sort(unique(c(seq(1, maxrank, by = by), x1, x2)), decreasing = FALSE)
   overlap <- rep(0, length(top_ds_genes))
+  
+  overpal_nr_so_far <- 0
+  overpal_elem_so_far <- NULL
   
   for(i in 1:length(top_ds_genes)){
     # i = 1000
     
-    overlap[i] <- length(intersect(results1[1:top_ds_genes[i], "gene_id"], results2[1:top_ds_genes[i], "gene_id"])) / top_ds_genes[i]
+    set1 <- results1[1:top_ds_genes[i], "gene_id"]
+    set2 <- results2[1:top_ds_genes[i], "gene_id"]
+    
+    overlap_elem <- intersect(set1, set2)
+    
+    overlap[i] <- length(overlap_elem) / top_ds_genes[i]
     
   }
   
@@ -31,6 +39,7 @@ calculateCAT <- function(results1, results2, by = 1){
   return(list(overlaps = overlaps, X = X))
   
 }
+
 
 
 

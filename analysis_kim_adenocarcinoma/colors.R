@@ -1,5 +1,4 @@
-######################################################
-## ----- colors
+##############################################################################
 ## <<colors.R>>
 
 # BioC 3.2
@@ -18,7 +17,7 @@ library(ggplot2)
 ##############################################################################
 
 # rwd='/home/Shared/data/seq/brooks_pasilla'
-# out_dir='/home/Shared/data/seq/brooks_pasilla/drimseq_0_3_1_comparison'
+# out_dir='/home/Shared/data/seq/brooks_pasilla/drimseq_0_3_3_comparison'
 
 ##############################################################################
 # Read in the arguments
@@ -44,11 +43,13 @@ dir.create(out_dir, recursive = TRUE)
 ##############################################################################
 
 
-methods <- factor(c("dexseq","drimseq_common", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"), levels = c("dexseq","drimseq_common", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"))
+methods <- factor(c("dexseq","drimseq_common", "drimseq_genewise_grid_trended", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"), levels = c("dexseq","drimseq_common", "drimseq_genewise_grid_trended", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"))
 
 
-colors_df <- data.frame(methods = methods, colors = c("#4065B1", "#7FB972", "#D92120", "#E68E34", "#C71585", "#781C81", "#B17BA6"))
+colors_df <- data.frame(methods = methods, colors = c("royalblue3", "darkolivegreen3", "chocolate4", "firebrick3", "orange2", "mediumvioletred", "orchid4", "plum3"), colors_hex = c("#3A5FCD", "#A2CD5A", "#8B4513", "#CD2626", "#EE9A00", "#C71585", "#8B4789", "#CD96CD"))
 colors_df$colors <- as.character(colors_df$colors)
+colors_df$colors_hex <- as.character(colors_df$colors_hex)
+
 
 ggp <- ggplot(colors_df, aes(x = methods, y=rep(1, length(colors)), fill = methods)) + geom_bar(stat="identity") + scale_fill_manual(values = colors_df$colors) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 

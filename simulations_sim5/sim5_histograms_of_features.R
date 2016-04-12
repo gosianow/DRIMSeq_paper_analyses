@@ -19,10 +19,10 @@ library(plyr)
 # Test arguments
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_sim5'
-simulation='hsapiens_node_nonull'
-count_method=c('htseq','kallisto','htseq_prefiltered15')[2]
-filter_method='filter1'
+# rwd='/home/gosia/multinomial_project/simulations_sim5'
+# simulation='hsapiens_node_nonull'
+# count_method=c('htseq','kallisto','htseq_prefiltered15')[2]
+# filter_method='filter1'
 
 ##############################################################################
 # Read in the arguments

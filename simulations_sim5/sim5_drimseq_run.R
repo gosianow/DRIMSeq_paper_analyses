@@ -4,11 +4,13 @@
 
 # BioC 3.2
 # Created 16 Nov 2015 
-# Modified 11 Dec 2015
-
+# Modified 29 Mar 2016
 
 ##############################################################################
+Sys.time()
+##############################################################################
 
+library(BiocParallel)
 library(DRIMSeq)
 library(limma)
 library(ggplot2)
@@ -17,16 +19,16 @@ library(ggplot2)
 # Test arguments
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_sim5'
-simulation='drosophila_node_nonull'
-workers=4
-count_method=c('htseq','kallisto','htseqprefiltered15','htseqprefiltered5','kallistofiltered5','kallistoprefiltered5')[5]
-filter_method=c("filter1", "filter2")[1]
-dispersion_common=TRUE
-results_common=TRUE
-disp_mode=c('grid','grid','optimize','optim','constrOptim')[1]
-disp_moderation=c('none','common','none','none','none')[1]
-
+# rwd='/home/gosia/multinomial_project/simulations_sim5'
+# simulation='drosophila_node_nonull'
+# workers=4
+# count_method=c('htseq','kallisto','htseqprefiltered15','htseqprefiltered5','kallistofiltered5','kallistoprefiltered5')[5]
+# filter_method=c("filter1", "filter2")[1]
+# dispersion_common=TRUE
+# results_common=TRUE
+# disp_mode=c('grid','grid','optimize','optim','constrOptim')[1]
+# disp_moderation=c('none','common','none','none','none')[1]
+# disp_prior_df=0.1
 
 ##############################################################################
 # Read in the arguments
@@ -53,6 +55,12 @@ print(disp_moderation)
 
 setwd(paste0(rwd, "/", simulation))
 method_out <- "drimseq_0_3_3"
+
+if(workers > 1){
+  BPPARAM <- MulticoreParam(workers = workers)
+}else{
+  BPPARAM <- SerialParam()
+}
 
 ########################################################
 # create metadata file
@@ -155,7 +163,7 @@ if(dispersion_common){
   disp <- "common"
   out_name <- paste0(out_dir, "/drimseq_", disp, "_")
   
-  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
   common_disp <- common_dispersion(d)
   common_disp
@@ -164,9 +172,9 @@ if(dispersion_common){
   
   if(results_common){
     
-    d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+    d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BPPARAM)
     
-    d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+    d <- dmTest(d, BPPARAM = BPPARAM)
     
     plotTest(d, out_dir = out_name)
     
@@ -197,14 +205,14 @@ if(disp_mode == "grid"){
 }
 
 # genewise dispersion
-d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, disp_prior_df = 0.1, verbose = TRUE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = disp_moderation, disp_prior_df = disp_prior_df, disp_span = 0.1, verbose = TRUE, BPPARAM = BPPARAM)
 common_dispersion(d) <- common_disp
 
 plotDispersion(d, out_dir = out_name)
 
-d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
 
-d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmTest(d, BPPARAM = BPPARAM)
 
 plotTest(d, out_dir = out_name)
 

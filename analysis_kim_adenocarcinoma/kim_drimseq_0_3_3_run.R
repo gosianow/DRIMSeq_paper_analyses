@@ -6,7 +6,10 @@
 # Created 29 Dec 2015 
 
 ##############################################################################
+Sys.time()
+##############################################################################
 
+library(BiocParallel)
 library(DRIMSeq)
 library(limma)
 
@@ -22,6 +25,7 @@ library(limma)
 # results_common=TRUE
 # disp_mode_list=c("grid","grid","optimize","optim","constrOptim")
 # disp_moderation_list=c("none","common","none","none","none")
+# disp_prior_df=0.1
 
 ##############################################################################
 # Read in the arguments
@@ -49,6 +53,12 @@ print(disp_moderation_list)
 
 setwd(rwd)
 method_out <- "drimseq_0_3_3"
+
+if(workers > 1){
+  BPPARAM <- MulticoreParam(workers = workers)
+}else{
+  BPPARAM <- SerialParam()
+}
 
 ##########################################################################
 # load metadata
@@ -101,7 +111,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 12, min_samps_feature_expr = 6, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
+    d <- dmFilter(d, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 0, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0, max_features = Inf)
   },
   
   model_null_normal1 = {
@@ -114,7 +124,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
+    d <- dmFilter(d, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 0, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0, max_features = Inf)
   },
   
   model_null_normal2 = {
@@ -127,7 +137,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
+    d <- dmFilter(d, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 0, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0, max_features = Inf)
 
   },
   
@@ -142,7 +152,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
+    d <- dmFilter(d, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 0, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0, max_features = Inf)
 
   },
   
@@ -157,7 +167,7 @@ switch(
     save(d, file = paste0(out_dir, "d.Rdata"))
     ### Filtering
     table(samples(d)$group)
-    d <- dmFilter(d, min_samps_gene_expr = 6, min_samps_feature_expr = 3, min_samps_feature_prop = 0, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf)
+    d <- dmFilter(d, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_samps_feature_prop = 0, min_gene_expr = 0, min_feature_expr = 0, min_feature_prop = 0, max_features = Inf)
     
   }
 )
@@ -173,7 +183,7 @@ if(dispersion_common){
   disp <- "common"
   out_name <- paste0(out_dir, "/drimseq_", disp, "_")
   
-  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
   common_disp <- common_dispersion(d)
   common_disp
@@ -182,9 +192,9 @@ if(dispersion_common){
   
   if(results_common){
     
-    d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+    d <- dmFit(d, dispersion = "common_dispersion", BPPARAM = BPPARAM)
     
-    d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+    d <- dmTest(d, BPPARAM = BPPARAM)
     
     plotTest(d, out_dir = out_name)
     
@@ -221,14 +231,14 @@ for(i in 1:length(disp_mode_list)){
     out_name <- paste0(out_dir, "/drimseq_", disp, "_", disp_mode, "_")
   
   # genewise dispersion
-  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, disp_prior_df = 0.1, verbose = TRUE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, disp_prior_df = disp_prior_df, verbose = TRUE, BPPARAM = BPPARAM)
   common_dispersion(d) <- common_disp
   
   plotDispersion(d, out_dir = out_name)
   
-  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmFit(d, dispersion = "genewise_dispersion", BPPARAM = BPPARAM)
   
-  d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+  d <- dmTest(d, BPPARAM = BPPARAM)
   
   plotTest(d, out_dir = out_name)
   

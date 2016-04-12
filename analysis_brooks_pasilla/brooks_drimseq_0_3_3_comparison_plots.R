@@ -23,8 +23,9 @@ library(iCOBRA)
 
 # rwd='/home/Shared/data/seq/brooks_pasilla'
 # count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5')
-# models=c('model_full','model_full_paired','model_full_glm')
+# models=c('model_full','model_full_paired')
 # Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'
+# CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
 
 ##############################################################################
 # Read in the arguments
@@ -185,14 +186,14 @@ reference_method <- "dexseq"
 
 indx <- lapply(1:nlevels(metadata$interaction), function(i){
   # i = 1
-  
+
   metadata_tmp <- subset(metadata, interaction == interaction_levels[i])
-  
+
   indx1 <- metadata_tmp[metadata_tmp$method_name == reference_method, "results_order"]
   indx2 <- metadata_tmp[!metadata_tmp$method_name == reference_method, "results_order"]
-  
+
   data.frame(indx1 = rep(indx1, length(indx2)), indx2 = indx2)
-  
+
 })
 
 indx <- rbind.fill(indx)
@@ -200,10 +201,10 @@ indx <- rbind.fill(indx)
 
 data_Overlaps <- lapply(1:nrow(indx), function(j){
   # j = 1
-  
+
   calculateOverlaps(results1 = results_padj[[indx$indx1[j]]], results2 = results_padj[[indx$indx2[j]]])
-  
-  
+
+
 })
 
 
@@ -217,8 +218,8 @@ metadata_ov$method_name <- factor(metadata_ov$method_name)
 ggp <- plotOverlaps(data_Overlaps, metadata = metadata_ov, plot_var = "method_name", facet_var = c("count_method", "model"), plot_colors = colors[levels(metadata_ov$method_name)], plotx = TRUE, reference_color = colors[reference_method])
 
 
-ggp <- ggp + 
-  coord_cartesian(xlim = c(0, 500), ylim = c(0, 300)) 
+ggp <- ggp +
+  coord_cartesian(xlim = c(0, 500), ylim = c(0, 300))
 
 
 pdf(paste0(comparison_out, "figures/", "overlap_top_ranked_genes.pdf"), width = 14, height = 7)
@@ -227,6 +228,64 @@ dev.off()
 
 
 
+
+############################################################################
+# CAT plots
+############################################################################
+
+
+source(CAT_function_path)
+
+
+metadata$interaction <- interaction(metadata$model, metadata$count_method, lex.order = TRUE)
+
+interaction_levels <- levels(metadata$interaction)
+
+metadata$results_order <- 1:nrow(metadata)
+
+reference_method <- "dexseq"
+
+### Index that indicates pairs of methods to be compared
+indx <- lapply(1:nlevels(metadata$interaction), function(i){
+  # i = 1
+  
+  metadata_tmp <- subset(metadata, interaction == interaction_levels[i])
+  
+  indx1 <- metadata_tmp[metadata_tmp$method_name == reference_method, "results_order"]
+  indx2 <- metadata_tmp[!metadata_tmp$method_name == reference_method, "results_order"]
+  
+  data.frame(indx1 = rep(indx1, length(indx2)), indx2 = indx2)
+  
+})
+
+indx <- rbind.fill(indx)
+
+
+data_CAT <- lapply(1:nrow(indx), function(j){
+  # j = 1
+  
+  calculateCAT(results1 = results_padj[[indx$indx1[j]]], results2 = results_padj[[indx$indx2[j]]], by = 10)
+  
+  
+})
+
+
+### Metadata for overlaps in data_Overlaps list
+metadata_ov <- metadata[indx$indx2, ]
+metadata_ov$method_name <- factor(metadata_ov$method_name)
+
+
+ggp <- plotCAT(data_CAT, metadata = metadata_ov, plot_var = "method_name", facet_var = c("count_method", "model"), plot_colors = colors[levels(metadata_ov$method_name)], plotx = TRUE, reference_color = colors[reference_method])
+
+
+
+ggp <- ggp + 
+  coord_cartesian(xlim = c(0, 700), ylim = c(0, 1)) 
+
+
+pdf(paste0(comparison_out, "figures/", "cat.pdf"), width = 14, height = 7)
+print(ggp)
+dev.off()
 
 
 

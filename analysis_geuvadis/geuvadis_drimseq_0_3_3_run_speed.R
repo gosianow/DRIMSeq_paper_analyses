@@ -1,6 +1,5 @@
 ######################################################
-## ----- geuvadis_drimseq_0_3_3_run
-## <<geuvadis_drimseq_0_3_3_run.R>>
+## <<geuvadis_drimseq_0_3_3_run_speed.R>>
 
 # BioC 3.2
 # Created 7 Feb 2016
@@ -9,6 +8,7 @@
 Sys.time()
 ##############################################################################
 
+library(BiocParallel)
 library(DRIMSeq)
 library(ggplot2)
 library(limma)
@@ -44,13 +44,19 @@ print(chr)
 
 setwd(rwd)
 
-out_dir <- "drimseq_0_3_3_analysis/"
+out_dir <- "drimseq_0_3_3_analysis_speed/"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 out_name <- paste0(out_dir, population, "_chr",chr, "_")
 
 data_dir <- "data/"
 
+
+if(workers > 1){
+  BPPARAM <- MulticoreParam(workers = workers)
+}else{
+  BPPARAM <- SerialParam()
+}
 ########################################################
 # sqtl analysis per chromosome
 ########################################################
@@ -88,25 +94,25 @@ stopifnot(all(strsplit2(colnames(counts_raw[, -c(1:2)]), "\\.")[, 1] == colnames
 
 ### DRIMSeq SQTL analysis
 
-d <- dmSQTLdataFromRanges(counts = counts_raw[, -c(1:2)], gene_id = counts_raw$geneId, feature_id = counts_raw$trId, gene_ranges = gene_ranges, genotypes = genotypes_raw[, -c(1:4)], snp_id = genotypes_raw$snpId, snp_ranges = snp_ranges, sample_id = colnames(genotypes_raw[, -c(1:4)]), window = 5e3, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmSQTLdataFromRanges(counts = counts_raw[, -c(1:2)], gene_id = counts_raw$geneId, feature_id = counts_raw$trId, gene_ranges = gene_ranges, genotypes = genotypes_raw[, -c(1:4)], snp_id = genotypes_raw$snpId, snp_ranges = snp_ranges, sample_id = colnames(genotypes_raw[, -c(1:4)]), window = 5e3, BPPARAM = BPPARAM)
+
+rm("counts_raw", "genotypes_raw", "gene_ranges", "snp_ranges", "gtf0")
 
 
-
-
-d <- dmFilter(d, min_samps_gene_expr = 70, min_samps_feature_expr = 5, min_samps_feature_prop = 0, minor_allele_freq = 5, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmFilter(d, min_samps_gene_expr = 70, min_samps_feature_expr = 5, min_samps_feature_prop = 0, minor_allele_freq = 5, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf, BPPARAM = BPPARAM)
 
 
 plotData(d, out_dir = out_name)
 
 
-d <- dmDispersion(d, verbose = TRUE,  speed = FALSE, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmDispersion(d, common_dispersion = FALSE, disp_init = 10, verbose = TRUE,  speed = TRUE, BPPARAM = BPPARAM)
 
 plotDispersion(d, out_dir = out_name)
 
 
-d <- dmFit(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmFit(d, BPPARAM = BPPARAM)
 
-d <- dmTest(d, BPPARAM = BiocParallel::MulticoreParam(workers = workers))
+d <- dmTest(d, BPPARAM = BPPARAM)
 
 
 plotTest(d, out_dir = out_name)
@@ -130,12 +136,12 @@ write.table(res, file = paste0(out_name, "results.txt"), quote = FALSE, sep = "\
 
 
 ### Plot dispersion versus mean with marked significant sqtls
-res <- res[res$adj_pvalue < 0.05, , drop = FALSE]
+res_sign <- res[res$adj_pvalue < 0.05, , drop = FALSE]
 
 ggp <- plotDispersion(d)
 
 ggp2 <- ggp +
-  geom_point(data = ggp$data[paste0(res$gene_id, ".", res$block_id), ], aes(x = mean_expression, y = dispersion), color = "black", size = 0.6)
+  geom_point(data = ggp$data[paste0(res_sign$gene_id, ".", res_sign$block_id), ], aes(x = mean_expression, y = dispersion), color = "black", size = 0.6)
 
 pdf(paste0(out_name, "dispersion_vs_mean_marked_sqtls.pdf"))
 print(ggp2)

@@ -7,12 +7,20 @@ ROUT=$RWD/Rout
 
 mkdir $ROUT
 
+
+##############################
+### Colors
+##############################
+
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD'" $RCODE/colors.R $ROUT/colors.Rout
+
+
 ##############################################################################
 # Run
 ##############################################################################
 
 
-workers=5
+workers=1
 
 for filter_method in 'filter0' 'filter1' 'filter2' 'filter3'
 do
@@ -23,10 +31,11 @@ do
     
     echo "${simulation}_${count_method}_${filter_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=TRUE results_common=TRUE disp_mode='grid' disp_moderation='none'" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_none.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=TRUE results_common=TRUE disp_mode='grid' disp_moderation='none' disp_prior_df=0.1" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_none.Rout
     
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='common'" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_common.Rout  
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='common' disp_prior_df=0.1" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_common.Rout  
     
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='trended' disp_prior_df=1" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_trended.Rout  
 
   done
 done
@@ -38,6 +47,41 @@ done
 # Individual runs
 ############################
 
+workers=10
+
+for filter_method in 'filter0' 'filter1'
+do
+for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull'
+do 
+  for count_method in 'kallisto' 'htseq'
+  do
+    
+    echo "${simulation}_${count_method}_${filter_method}"
+    
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='trended' disp_prior_df=1" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_trended.Rout  
+    
+
+  done
+done
+done
+
+workers=5
+
+for filter_method in 'filter1'
+do
+for simulation in 'hsapiens_node_nonull'
+do 
+  for count_method in 'htseq'
+  do
+    
+    echo "${simulation}_${count_method}_${filter_method}"
+    
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='trended' disp_prior_df=1" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_trended.Rout  
+    
+
+  done
+done
+done
 
 
 ##############################################################################
