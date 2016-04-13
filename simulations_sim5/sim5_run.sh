@@ -43,47 +43,6 @@ done
 
 
 
-############################
-# Individual runs
-############################
-
-workers=10
-
-for filter_method in 'filter0' 'filter1'
-do
-for simulation in 'drosophila_node_nonull' 'hsapiens_node_nonull'
-do 
-  for count_method in 'kallisto' 'htseq'
-  do
-    
-    echo "${simulation}_${count_method}_${filter_method}"
-    
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='trended' disp_prior_df=1" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_trended.Rout  
-    
-
-  done
-done
-done
-
-workers=5
-
-for filter_method in 'filter1'
-do
-for simulation in 'hsapiens_node_nonull'
-do 
-  for count_method in 'htseq'
-  do
-    
-    echo "${simulation}_${count_method}_${filter_method}"
-    
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' dispersion_common=FALSE results_common=FALSE disp_mode='grid' disp_moderation='trended' disp_prior_df=1" $RCODE/sim5_drimseq_run.R $ROUT/sim5_drimseq_run_${simulation}_${count_method}_${filter_method}_grid_trended.Rout  
-    
-
-  done
-done
-done
-
-
 ##############################################################################
 ### Histograms of features
 ##############################################################################
@@ -119,7 +78,7 @@ do
     
     echo "${simulation}_${count_method}_${filter_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}'" $RCODE/sim5_drimseq_comparison_run.R $ROUT/sim5_drimseq_comparison_run.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/sim5_drimseq_comparison.R $ROUT/sim5_drimseq_comparison_run.Rout
 
   done
 done
@@ -153,12 +112,12 @@ done
 
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull') count_method_list=c('kallisto','htseq') filter_method_list=c('filter0','filter1','filter2','filter3') prefilter_method_list=NULL name='' legend_nrow=2 pdf_width=10 pdf_height=8" $RCODE/sim5_drimseq_comparison_filtering.R $ROUT/sim5_drimseq_comparison_filtering.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull') count_method_list=c('kallisto','htseq') filter_method_list=c('filter0','filter1','filter2','filter3') prefilter_method_list=NULL name='' legend_nrow=3 pdf_width=12 pdf_height=9" $RCODE/sim5_drimseq_comparison_filtering.R $ROUT/sim5_drimseq_comparison_filtering.Rout
 
 
+### Prefiltering plotted as a separate method
 
-
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull') count_method_list=c('kallisto','htseq') filter_method_list=c('filter0','filter1','filter2','filter3') prefilter_method_list=c('kallistoprefiltered5','htseqprefiltered5') name='_prefilt' legend_nrow=2 pdf_width=10 pdf_height=8" $RCODE/sim5_drimseq_comparison_filtering.R $ROUT/sim5_drimseq_comparison_filtering.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull') count_method_list=c('kallisto','htseq') filter_method_list=c('filter0','filter1','filter2','filter3') prefilter_method_list=c('kallistoprefiltered5','htseqprefiltered5') name='_prefilt' legend_nrow=3 pdf_width=12 pdf_height=9" $RCODE/sim5_drimseq_comparison_filtering.R $ROUT/sim5_drimseq_comparison_filtering.Rout
 
 
 

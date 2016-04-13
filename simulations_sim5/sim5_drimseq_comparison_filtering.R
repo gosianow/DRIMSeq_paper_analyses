@@ -4,7 +4,7 @@
 
 # BioC 3.2
 # Created 18 Dec 2015 
-
+# Modified 13 Apr 2016
 
 ##############################################################################
 
@@ -257,7 +257,7 @@ facet_nrow <- length(count_method_list)
 
 
 
-for(drimseq_version in c("drimseq_genewise_grid_none", "drimseq_genewise_grid_common")){
+for(drimseq_version in c("drimseq_genewise_grid_none", "drimseq_genewise_grid_common", "drimseq_genewise_grid_trended")){
   # drimseq_version <- "drimseq_genewise_grid_none"
   
   
@@ -273,14 +273,21 @@ for(drimseq_version in c("drimseq_genewise_grid_none", "drimseq_genewise_grid_co
   cobraplot <- prepare_data_for_plot(cobraperf, incloverall = FALSE)
   
   
+  
+  ### Plot points only
+  
   levels(cobraplot@fdrtpr$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtpr$splitval))
   
+  xaxisrange = c(0, 0.7)
+  yaxisrange = c(0.4, 0.8)
   
-  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 9, xaxisrange = c(0, 0.6), yaxisrange = c(0.4, 1))
+  ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3)
   ggp <- ggp + 
-    theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+    theme_bw() +
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16, color = "darkgrey"), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), strip.text = element_text(size = 11), strip.background = element_rect(colour = "black", fill="white")) + 
     guides(colour = guide_legend(nrow = legend_nrow)) + 
-    facet_wrap(~splitval, nrow = facet_nrow)
+    facet_wrap(~splitval, nrow = facet_nrow) +
+    coord_cartesian(xlim = xaxisrange, ylim = yaxisrange)
   
   
   pdf(paste0(out_dir_plots, "fdrtpr_", drimseq_version , name, ".pdf"), width = pdf_width, height = pdf_height)
@@ -288,16 +295,21 @@ for(drimseq_version in c("drimseq_genewise_grid_none", "drimseq_genewise_grid_co
   dev.off()
   
   
+  ### Plot points and a curve
   
   levels(cobraplot@fdrnbrcurve$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrnbrcurve$splitval))
   levels(cobraplot@fdrtprcurve$splitval) <- gsub(paste0(cobraplot@splv, ":"), "", levels(cobraplot@fdrtprcurve$splitval))
   
+  xaxisrange = c(0, 0.7)
+  yaxisrange = c(0.4, 0.8)
   
-  ggp <- plot_fdrtprcurve(cobraplot, pointsize = 3, stripsize = 9, xaxisrange = c(0, 1), yaxisrange = c(0, 1))
+  ggp <- plot_fdrtprcurve(cobraplot, pointsize = 3)
   ggp <- ggp + 
-    theme(legend.position = "bottom", strip.text = element_text(size = 11)) + 
+    theme_bw() +
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16, color = "darkgrey"), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), strip.text = element_text(size = 11), strip.background = element_rect(colour = "black", fill="white")) + 
     guides(colour = guide_legend(nrow = legend_nrow)) + 
-    facet_wrap(~splitval, nrow = facet_nrow)
+    facet_wrap(~splitval, nrow = facet_nrow) +
+    coord_cartesian(xlim = xaxisrange, ylim = yaxisrange)
   
   
   pdf(paste0(out_dir_plots, "fdrtprcurve_", drimseq_version, name, ".pdf"), width = pdf_width, height = pdf_height)
