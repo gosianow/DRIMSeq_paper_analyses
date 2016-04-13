@@ -3,7 +3,7 @@
 
 # BioC 3.2
 # Created 2 Mar 2016 
-# Modified 9 Apr 2016
+# Modified 13 Apr 2016
 
 # Plot the overlap versus top ranked sQTLs for drimseq and sqtlseeker
 
@@ -69,81 +69,35 @@ colors_df
 
 colors_df$methods <- as.character(colors_df$methods)
 
-
-
 #######################################################
 # merge results 
 #######################################################
-
-
-##############################################################################
-# merge results 
-##############################################################################
 
 results <- list()
 metadata <- list()
-
 
 #####################################
 ### sqtlseeker results
 #####################################
 
 
-res_tmp <- read.table(paste0("sqtlseeker_2_1_analysis/results/", population, "_results_all.txt"), header = TRUE, as.is = TRUE)
-head(res_tmp)
-
-colnames(res_tmp) <- c("gene_id", "snp_id", "F", "nb.groups", "md", "tr.first", "tr.second", "nb.perms", "pvalue")
-res_tmp <- unique(res_tmp)
+res <- read.table(paste0(comparison_out, "results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
+head(res)
 
 
-res_tmp$gene_snp <- paste0(res_tmp$gene_id, ":", res_tmp$snp_id)
-
-res_tmp$adj_pvalue <- qvalue::qvalue(res_tmp$pvalue)$qvalues
-
-
-
-results[["sqtlseeker"]] <- res_tmp
+results[["sqtlseeker"]] <- res
 metadata[["sqtlseeker"]] <- data.frame(method_name = "sqtlseeker", stringsAsFactors = FALSE)
 
 
-# dim(results[["sqtlseeker"]])
-# 
-# table(duplicated(results[["sqtlseeker"]][, "gene_snp"]))
-
-
-
 #####################################
-### DRIMSeq results + adjust p-value
+### DRIMSeq results 
 #####################################
 
-
-res_list <- lapply(1:22, function(chr){
-  # chr = 1
-  
-  res <- read.table(paste0(method_out, population, "_chr",chr, "_results.txt"), header = TRUE, sep = "\t", as.is = TRUE)
-  
-  return(res)
-  
-})
-
-
-res <- rbind.fill(res_list)
-
-res <- res[!is.na(res$pvalue), ]
-
-res$gene_block <- paste0(res$gene_id, ":", res$block_id)
-res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
-
-
-res_uniq <- res[!duplicated(res$gene_block), ]
-res_uniq$adj_pvalue <- p.adjust(res_uniq$pvalue, method = "BH")
-mm <- match(res$gene_block, res_uniq$gene_block)
-res$adj_pvalue <- res_uniq$adj_pvalue[mm]
-
+res <- read.table(paste0(comparison_out, "results_drimseq.txt"), header = TRUE, as.is = TRUE)
+head(res)
 
 results[["drimseq"]] <- res
 metadata[["drimseq"]] <- data.frame(method_name = "drimseq", stringsAsFactors = FALSE)
-
 
 
 #####################################
@@ -250,7 +204,7 @@ dev.off()
 
 
 ggp <- ggp + 
-  coord_cartesian(xlim = c(0, 40000), ylim = c(0, 1)) +
+  coord_cartesian(xlim = c(0, 10000), ylim = c(0, 1)) +
   ylab("Percentage overlap with sqtlseeker") +
   xlab("Number of top ranked sQTLs")
 

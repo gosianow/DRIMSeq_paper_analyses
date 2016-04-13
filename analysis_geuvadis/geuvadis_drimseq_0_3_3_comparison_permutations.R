@@ -1,9 +1,9 @@
 ##############################################################################
-# <<geuvadis_drimseq_0_3_3_comparison_run.R>>
+# <<geuvadis_drimseq_0_3_3_comparison_permutations.R>>
 
 # BioC 3.2
 # Created 29 Feb 2016 
-# Modified 9 Apr 2016
+# Modified 12 Apr 2016
 
 # For DRIMSeq merge results from all chromosomes; Calculate adjusted p-values for drimseq and sqtlseeker
 # Plot histograms of p-values
@@ -31,8 +31,8 @@ library(limma)
 
 rwd='/home/Shared/data/seq/geuvadis'
 population='CEU'
-method_out='drimseq_0_3_3_analysis_permutations'
-comparison_out='drimseq_0_3_3_comparison_permutations'
+method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
 
 ##############################################################################
 # Read in the arguments
@@ -97,6 +97,7 @@ res_tmp$adj_pvalue <- p.adjust(res_tmp$pvalue, method = "BH")
 
 write.table(res_tmp, paste0(out_dir, "results_sqtlseeker.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
+
 results[["sqtlseeker"]] <- res_tmp
 
 
@@ -129,13 +130,67 @@ res <- res[!is.na(res$pvalue), ]
 res$gene_block <- paste0(res$gene_id, ":", res$block_id)
 res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
 
-
+### Keep data for unique blocks
 res_uniq <- res[!duplicated(res$gene_block), ]
 
-res_uniq$adj_pvalue <- p.adjust(res_uniq$pvalue, method = "BH")
+### Redo the permutation adjustment of p-values based on p-values from all the genes
+
+
+### Extract p-values from permutations
+pval_perm_list <- lapply(1:22, function(chr){
+  # chr = 1
+  
+  load(paste0(method_out, population, "_chr",chr, "_d.Rdata"))
+  
+  return(d@pvalues_permutations)
+  
+})
+
+pval_perm <- do.call(rbind, pval_perm_list)
+
+
+pval <- res_uniq$pvalue
+nas <- is.na(pval)
+pval <- pval[!nas]
+pval <- factor(pval)
+
+
+### Count how many pval_permuted is lower than pval from the model
+pval_perm <- c(pval_perm)
+nas_perm <- is.na(pval_perm)
+pval_perm <- pval_perm[!nas_perm]
+pval_perm_cut <- cut(pval_perm, c(-1, levels(pval), 2), right=FALSE)
+pval_perm_sum <- table(pval_perm_cut)
+pval_perm_cumsum <- cumsum(pval_perm_sum)[-length(pval_perm_sum)]
+names(pval_perm_cumsum) <- levels(pval)
+sum_sign_pval <- pval_perm_cumsum[pval]
+
+nr_perm_tot <- length(pval_perm)
+pval_adj <- (sum_sign_pval + 1) / (nr_perm_tot + 1)
+
+
+res_uniq$pvalue_perm_new <- NA
+res_uniq$pvalue_perm_new[!nas] <- pval_adj
+
+res_uniq$adj_pvalue_perm_new <- p.adjust(res_uniq$pvalue_perm_new, method = "BH")
+
+
+pdf(paste0(out_dir, "pvalues_perm_new.pdf"))
+smoothScatter(res_uniq$pvalue_perm, res_uniq$pvalue_perm_new)
+dev.off()
+
+
+
+### Remove the permutation columns
+
+res <- res[, -grep("perm", colnames(res))]
+
+
+### Replace current p-values with one adjusted by permutations
 
 mm <- match(res$gene_block, res_uniq$gene_block)
-res$adj_pvalue <- res_uniq$adj_pvalue[mm]
+res$pvalue <- res_uniq$pvalue_perm_new[mm]
+res$adj_pvalue <- res_uniq$adj_pvalue_perm_new[mm]
 
 
 write.table(res, paste0(out_dir, "results_drimseq.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
@@ -278,7 +333,86 @@ colors_df <- colors_df[keep_methods, , drop = FALSE]
 summary <- data.frame(method = c("drimseq", "sqtlseeker", "overlap"))
 
 
-# All tested cases
+
+
+# Significant gene-SNPs
+
+
+cobradata <- COBRAData(padj = results_padj)
+
+cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 0.05)
+
+basemethods(cobraperf)
+
+colorscheme <- colors[basemethods(cobraperf)]
+
+cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colorscheme, incltruth = FALSE)
+
+
+pdf(paste0(out_dir, "/venn_gene_snp_sign.pdf"))
+plot_overlap(cobraplot, cex=c(1.2,1,0.7))
+dev.off()
+
+
+pdf(paste0(out_dir, "/upset_gene_snp_sign.pdf"))
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 15)
+dev.off()
+
+
+
+overlap <- cobraplot@overlap
+
+summary$gene_snp_sign <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
+
+
+
+### Significant genes
+
+# Keep minimal p-value per gene
+library(matrixStats)
+
+gene_ids <- factor(strsplit2(rownames(results_padj), ":")[, 1])
+
+results_padj_split <- by(results_padj, gene_ids, function(x){
+  
+  colMins(as.matrix(x), na.rm = TRUE)
+  
+}, simplify = FALSE)
+
+
+results_padj_gene <- data.frame(do.call(rbind, results_padj_split))
+colnames(results_padj_gene) <- colnames(results_padj)
+
+# Use iCOBRA
+cobradata <- COBRAData(padj = results_padj_gene)
+
+cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 0.05)
+
+basemethods(cobraperf)
+
+colorscheme <- colors[basemethods(cobraperf)]
+
+cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colorscheme, incltruth = FALSE)
+
+
+pdf(paste0(out_dir, "/venn_gene_sign.pdf"))
+plot_overlap(cobraplot, cex=c(1.2,1,0.7))
+dev.off()
+
+
+pdf(paste0(out_dir, "/upset_gene_sign.pdf"))
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 15)
+dev.off()
+
+
+
+overlap <- cobraplot@overlap
+
+summary$gene_sign <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
+
+
+
+# All tested gene-SNPs
 
 cobradata <- COBRAData(padj = results_padj)
 
@@ -302,70 +436,39 @@ plot_upset(cobraplot, order.by = "degree", empty.intersections = "on")
 dev.off()
 
 
-
-
 overlap <- cobraplot@overlap
 
 summary$gene_snp_all <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
 
-overlap <- cobraplot@overlap[!duplicated(strsplit2(rownames(cobraplot@overlap), ":")[, 1]), ]
 
-summary$gene_all <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
-
-
-pdf(paste0(out_dir, "/venn_gene_all.pdf"))
-vennDiagram(overlap, circle.col = colorscheme)
-dev.off()
+# All tested genes
 
 
+cobradata <- COBRAData(padj = results_padj_gene)
 
-# Significant cases
-
-
-cobradata <- COBRAData(padj = results_padj)
-
-cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 0.05)
+cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 1.1)
 
 basemethods(cobraperf)
+
 
 colorscheme <- colors[basemethods(cobraperf)]
 
 cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colorscheme, incltruth = FALSE)
 
 
-pdf(paste0(out_dir, "/venn_gene_snp_sign.pdf"))
+pdf(paste0(out_dir, "/venn_gene_all.pdf"))
 plot_overlap(cobraplot, cex=c(1.2,1,0.7))
 dev.off()
 
 
-pdf(paste0(out_dir, "/upset_gene_snp_sign.pdf"))
+pdf(paste0(out_dir, "/upset_gene_all.pdf"))
 plot_upset(cobraplot, order.by = "degree", empty.intersections = "on")
 dev.off()
 
 
-
 overlap <- cobraplot@overlap
 
-summary$gene_snp_sign <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
-
-
-overlap_split <- split.data.frame(overlap, strsplit2(rownames(cobraplot@overlap), ":")[, 1])
-
-overlap_list <- lapply(overlap_split, function(i){
-  
-  colSums(i) > 0
-  
-})
-
-
-
-overlap <- do.call(rbind, overlap_list)
-
-summary$gene_sign <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
-
-pdf(paste0(out_dir, "/venn_gene_sign.pdf"))
-vennDiagram(overlap, circle.col = colorscheme)
-dev.off()
+summary$gene_all <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
 
 
 

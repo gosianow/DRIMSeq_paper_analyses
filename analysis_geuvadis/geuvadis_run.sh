@@ -29,18 +29,6 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 population='CE
 done
 
 
-### With speed = TRUE
-
-for n in {22..1}
-do 
-
-echo "${n}"
-
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 population='CEU' chr=${n}" $RCODE/geuvadis_drimseq_0_3_3_run_speed.R $ROUT/geuvadis_drimseq_0_3_3_run_speed_CEU_chr${n}.Rout
-
-done
-
-
 ### Run with permutations: p-values from all the genes
 
 for n in {22..1}
@@ -94,7 +82,7 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' method_
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots.Rout
 
 
-
+##############################
 ###### Comparisons for run with permutations: p-values from all the genes v1 - permutated p-values are saved under results$pvalue
 
 ### Colors 
@@ -113,8 +101,8 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' method_
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' method_out='drimseq_0_3_3_analysis_permutations' comparison_out='drimseq_0_3_3_comparison_permutations' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots.Rout
 
 
-
-###### Comparisons for run with permutations: p-values from all the genes v1 - permutated p-values are saved under results$pvalue
+##############################
+###### Comparisons for run with permutations: p-values from all the genes v2 - permutated p-values are saved under results$pvalue_perm
 
 ### Colors 
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/drimseq_0_3_3_comparison_permutations_all_genes'" $RCODE/colors.R $ROUT/colors.Rout
@@ -122,8 +110,7 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/drimseq_0_
 
 ### Venn diagrams and upsetr plots with iCOBRA
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' method_out='drimseq_0_3_3_analysis_permutations_all_genes' comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'" $RCODE/geuvadis_drimseq_0_3_3_comparison.R $ROUT/geuvadis_drimseq_0_3_3_comparison_run.Rout
-
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='CEU' method_out='drimseq_0_3_3_analysis_permutations_all_genes' comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'" $RCODE/geuvadis_drimseq_0_3_3_comparison_permutations.R $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations.Rout
 
 
 ### Plots of the overlap versus number of top ranked genes
