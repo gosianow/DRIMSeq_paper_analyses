@@ -28,6 +28,9 @@ library(limma)
 # path_gtf='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
 # path_gtf_filtered = '/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf'
 # valid_path='5_validation/brooks_validated_genes.txt'
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_positive_controls'
+# keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended')
 
 ##############################################################################
 # Read in the arguments
@@ -47,9 +50,8 @@ print(rwd)
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_3"
+comparison_out <- paste0(comparison_out, "/")
 
-comparison_out <- "drimseq_0_3_3_positive_controls/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
 dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
@@ -58,13 +60,9 @@ path_gtf_dexseq <- paste0(file_path_sans_ext(path_gtf), ".DEXSeq.flattened.rNO.g
 path_gtf_filtered_dexseq <- paste0(file_path_sans_ext(path_gtf_filtered), ".DEXSeq.flattened.rNO.gff")
 
 
-keep_methods <- c("dexseq", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none")
-
-
 ##############################################################################
 # metadata
 ##############################################################################
-
 
 metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors=F, sep="\t", header=T) 
 
@@ -178,7 +176,7 @@ for(i in 1:nlevels(summary$model)){
     facet_wrap(~ count_method, nrow = 1)
   
   
-  pdf(paste0(comparison_out, "figures/", models[i], "_validation_summary.pdf"), 13, 10)
+  pdf(paste0(comparison_out, "figures/", models[i], "_validation_summary.pdf"), 16, 10)
   print(ggp)
   dev.off()
   

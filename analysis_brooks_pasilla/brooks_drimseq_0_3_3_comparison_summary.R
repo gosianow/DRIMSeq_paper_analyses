@@ -1,7 +1,8 @@
-# <<brooks_drimseq_0_3_3_summary.R>>
+# <<brooks_drimseq_0_3_3_comparison_summary.R>>
 
 # BioC 3.2
 # Created 15 Jan 2015 
+# Modified 14 Apr 2016
 
 ##############################################################################
 
@@ -17,7 +18,8 @@ library(ggplot2)
 ##############################################################################
 
 # rwd='/home/Shared/data/seq/brooks_pasilla'
-
+# comparison_out='drimseq_0_3_3_comparison'
+# keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended')
 
 ##############################################################################
 # Read in the arguments
@@ -34,12 +36,11 @@ print(args)
 print(rwd)
 
 
-
 ##############################################################################
 
 setwd(rwd)
 
-comparison_out <- "drimseq_0_3_3_comparison/"
+comparison_out <- paste0(comparison_out, "/")
 
 dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
 
@@ -54,7 +55,7 @@ colors_df
 
 colors_df$methods <- as.character(colors_df$methods)
 
-keep_methods <- c("dexseq", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none")
+
 
 colors <- colors[keep_methods]
 colors_df <- colors_df[colors_df$methods %in% keep_methods, , drop = FALSE]

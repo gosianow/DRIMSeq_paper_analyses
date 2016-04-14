@@ -17,9 +17,11 @@ library(DRIMSeq)
 ##############################################################################
 
 rwd='/home/Shared/data/seq/brooks_pasilla'
-count_method=c('htseq','kallisto','kallistofiltered5','htseqprefiltered5')[3]
-model=c('model_full','model_full_glm','model_full_paired')[2]
-
+count_method='kallisto'
+model='model_full'
+method_out='drimseq_0_3_3'
+comparison_out='drimseq_0_3_1_positive_controls'
+gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
 
 ##############################################################################
 # Read in the arguments
@@ -40,13 +42,9 @@ print(count_method)
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_1"
+comparison_out <- paste0(comparison_out, "/")
 
-comparison_out <- "drimseq_0_3_1_positive_controls/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
-
-gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'
-
 
 
 ##############################################################################
@@ -70,7 +68,6 @@ valid <- read.table("5_validation/brooks_validated_genes.txt", header = TRUE, se
 ##############################################################################
 
 gtf <- import(gtf_path)
-
 
 
 all(valid$brooks_gene_id %in% mcols(gtf)$gene_name)
@@ -101,17 +98,6 @@ head(rt)
 
 results_padj[["dexseq"]] <- rt
 
-####################### exon levels results from DEXSeq
-
-# rt <- read.table(paste0("4_results/dexseq_1_10_8/", model,"/", count_method, "/dexseq_exon_results.txt"), header = TRUE, as.is = TRUE, sep = "\t")
-# head(rt)
-# 
-# rt <- rt[complete.cases(rt[, c("padj")]), c("groupID", "padj")]
-# colnames(rt) <- c("gene_id", "dexseq_exon")
-# 
-# rt <- aggregate(. ~ gene_id, rt, min)
-# 
-# results_padj[["dexseq_exon"]] <- rt
 
 
 ####################### results from DRIMSeq
@@ -135,6 +121,8 @@ if(length(files) > 0){
     
   }
 }
+
+####################### merge results
 
 results_padj <- Reduce(function(...) merge(..., by = "gene_id", all=TRUE, sort = FALSE), results_padj)
 rownames(results_padj) <- results_padj$gene_id

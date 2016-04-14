@@ -93,44 +93,20 @@ do
 done
 
 
-for model in 'model_full' 'model_full_paired' 'model_null1' 'model_null2' 'model_null3'
-do 
-  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
-  do
-    
-    echo "${model}_${count_method}"
-    
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='trended' disp_prior_df=1" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_trended.Rout
-
-  done
-done
-
-
-for model in 'model_full' 'model_full_paired' 'model_null1' 'model_null2' 'model_null3'
-do 
-  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
-  do
-    
-    echo "${model}_${count_method}"
-    
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common' disp_prior_df=0.1" $RCODE/brooks_drimseq_0_3_3_run.R $ROUT/brooks_drimseq_0_3_3_run_${model}_${count_method}_grid_common.Rout
-    
-  done
-done
-
-
-
 ##############################
 ### Colors
 ##############################
 
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/drimseq_0_3_3_comparison'" $RCODE/colors.R $ROUT/colors.Rout
 
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/drimseq_0_3_3_positive_controls'" $RCODE/colors.R $ROUT/colors.Rout
+
 
 ##############################
 ### DRIMSeq comparison
 ##############################
 
+### Plot venn diagrams, upset plots; Update dispersion plots; Create a summary file with numbers of positive genes
 
 for model in 'model_full' 'model_full_glm' 'model_full_paired' 'model_null1' 'model_null2' 'model_null3'
 do 
@@ -139,7 +115,7 @@ do
   
     echo "${model}_${count_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}'" $RCODE/brooks_drimseq_0_3_3_comparison.R $ROUT/brooks_drimseq_0_3_3_comparison_run.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/brooks_drimseq_0_3_3_comparison.R $ROUT/brooks_drimseq_0_3_3_comparison_run.Rout
 
   done
 done
@@ -147,14 +123,40 @@ done
 
 ### Barplots of the number of all and DS genes + overlaps
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'" $RCODE/brooks_drimseq_0_3_3_comparison_summary.R $ROUT/brooks_drimseq_0_3_3_summary.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' comparison_out='drimseq_0_3_3_comparison' keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended')" $RCODE/brooks_drimseq_0_3_3_comparison_summary.R $ROUT/brooks_drimseq_0_3_3_summary.Rout
 
 
 ### Plots of the overlap versus number of top ranked genes + CAT plots
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired') Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/brooks_drimseq_0_3_3_comparison_plots.R $ROUT/brooks_drimseq_0_3_3_comparison_plots.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/brooks_drimseq_0_3_3_comparison_plots.R $ROUT/brooks_drimseq_0_3_3_comparison_plots.Rout
 
 
+### Plot overlaps between models
+
+for ds_method in 'drimseq_genewise_grid_none' 'drimseq_genewise_grid_common' 'drimseq_genewise_grid_trended'
+do 
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  do 
+  
+    echo "${ds_method}_${count_method}"
+
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' ds_method='${ds_method}' model_list=c('model_full','model_full_paired') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/brooks_drimseq_0_3_3_comparison_models.R $ROUT/brooks_drimseq_0_3_3_comparison_models.Rout
+
+  done
+done
+
+
+for ds_method in 'dexseq'
+do 
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  do 
+  
+    echo "${ds_method}_${count_method}"
+
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' ds_method='${ds_method}' model_list=c('model_full','model_full_paired','model_full_glm') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/brooks_drimseq_0_3_3_comparison_models.R $ROUT/brooks_drimseq_0_3_3_comparison_models.Rout
+
+  done
+done
 
 
 ##############################
@@ -163,8 +165,12 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallis
 
 ### ! Save brooks_validated_genes.txt in "$RWD/5_validation" directory !
 
+### Add Ensemble gene IDs to the brooks_validated_genes.txt file
+
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' gtf_path='/home/Shared/data/annotation/Drosophila/Ensembl70/gtf/Drosophila_melanogaster.BDGP5.70.gtf'" $RCODE/brooks_validated_genes.R $ROUT/brooks_validated_genes.Rout
 
+
+### Make DRIMSeq plots of proportions for the validated genes; Create summary files
 
 for model in 'model_full' 'model_full_paired' 'model_full_glm'
 do 
@@ -173,22 +179,22 @@ do
   
     echo "${model}_${count_method}"
 
-    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' valid_path='5_validation/brooks_validated_genes.txt' count_method='${count_method}' model='${model}'" $RCODE/brooks_drimseq_0_3_3_positive_controls.R $ROUT/brooks_drimseq_0_3_3_positive_controls_run.Rout
+    R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' valid_path='5_validation/brooks_validated_genes.txt' count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_positive_controls'" $RCODE/brooks_drimseq_0_3_3_positive_controls.R $ROUT/brooks_drimseq_0_3_3_positive_controls_run.Rout
 
   done
 done
 
 
-### Plots of tables with adj p-values for validated genes 
+### Plot tables with adj p-values for validated genes - validation_summary.pdf; Plot coverage and annotations for the validated genes
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' path_gtf='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70.gtf' path_gtf_filtered='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf' valid_path='5_validation/brooks_validated_genes.txt'" $RCODE/brooks_drimseq_0_3_3_positive_controls_summary.R $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' path_gtf='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70.gtf' path_gtf_filtered='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf' valid_path='5_validation/brooks_validated_genes.txt' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_positive_controls' keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended')" $RCODE/brooks_drimseq_0_3_3_positive_controls_summary.R $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
 
 
 
 ### Plots of the number of validated genes versus number of genes detected as DS
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' valid_path='5_validation/brooks_validated_genes.txt' count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired','model_full_glm') ROC_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotROCx.R'" $RCODE/brooks_drimseq_0_3_3_positive_controls_plots.R $ROUT/brooks_drimseq_0_3_3_positive_controls_plots.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' valid_path='5_validation/brooks_validated_genes.txt' count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired','model_full_glm') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_positive_controls' ROC_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotROCx.R'" $RCODE/brooks_drimseq_0_3_3_positive_controls_plots.R $ROUT/brooks_drimseq_0_3_3_positive_controls_plots.Rout
 
 
 

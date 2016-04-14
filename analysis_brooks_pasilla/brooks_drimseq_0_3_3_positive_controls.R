@@ -25,6 +25,8 @@ library(iCOBRA)
 # count_method=c('htseq','kallisto','kallistofiltered5','htseqprefiltered5')[2]
 # model=c('model_full','model_full_glm','model_full_paired')[1]
 # valid_path='5_validation/brooks_validated_genes.txt'
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_positive_controls'
 
 ##############################################################################
 # Read in the arguments
@@ -45,9 +47,8 @@ print(count_method)
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_3"
+comparison_out <- paste0(comparison_out, "/")
 
-comparison_out <- "drimseq_0_3_3_positive_controls/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
 dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
@@ -100,18 +101,6 @@ head(rt)
 
 results_padj[["dexseq"]] <- rt
 
-####################### exon levels results from DEXSeq
-
-# rt <- read.table(paste0("4_results/dexseq_1_10_8/", model,"/", count_method, "/dexseq_exon_results.txt"), header = TRUE, as.is = TRUE, sep = "\t")
-# head(rt)
-# 
-# rt <- rt[complete.cases(rt[, c("padj")]), c("groupID", "padj")]
-# colnames(rt) <- c("gene_id", "dexseq_exon")
-# 
-# rt <- aggregate(. ~ gene_id, rt, min)
-# 
-# results_padj[["dexseq_exon"]] <- rt
-
 
 ####################### results from DRIMSeq
 
@@ -136,8 +125,7 @@ if(length(files) > 0){
 }
 
 
-results_padj_list <- results_padj
-
+####################### Merge results
 
 results_padj <- Reduce(function(...) merge(..., by = "gene_id", all=TRUE, sort = FALSE), results_padj)
 rownames(results_padj) <- results_padj$gene_id

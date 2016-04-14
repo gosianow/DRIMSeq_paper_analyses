@@ -3,6 +3,7 @@
 
 # BioC 3.2
 # Created 15 Jan 2015 
+# Modified 14 Apr 2014
 
 ##############################################################################
 
@@ -43,10 +44,11 @@ dir.create(out_dir, recursive = TRUE)
 ##############################################################################
 
 
-methods <- factor(c("dexseq","drimseq_common", "drimseq_genewise_grid_trended", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"), levels = c("dexseq","drimseq_common", "drimseq_genewise_grid_trended", "drimseq_genewise_grid_common", "drimseq_genewise_grid_none", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize"))
+methods <- factor(c("dexseq", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize","drimseq_common", "drimseq_genewise_grid_none", "drimseq_genewise_grid_common", "drimseq_genewise_grid_trended"),
+  levels = c("dexseq", "drimseq_genewise_constrOptim", "drimseq_genewise_optim", "drimseq_genewise_optimize", "drimseq_common", "drimseq_genewise_grid_none", "drimseq_genewise_grid_common", "drimseq_genewise_grid_trended"))
 
 
-colors_df <- data.frame(methods = methods, colors = c("royalblue3", "darkolivegreen3", "chocolate4", "firebrick3", "orange2", "mediumvioletred", "orchid4", "plum3"), colors_hex = c("#3A5FCD", "#A2CD5A", "#8B4513", "#CD2626", "#EE9A00", "#C71585", "#8B4789", "#CD96CD"))
+colors_df <- data.frame(methods = methods, colors = c("royalblue3", "mediumvioletred", "orchid4", "plum3", "darkolivegreen3", "orange2", "firebrick3", "chocolate4"), colors_hex = c("#3A5FCD", "#C71585", "#8B4789", "#CD96CD", "#A2CD5A", "#EE9A00", "#CD2626", "#8B4513"))
 colors_df$colors <- as.character(colors_df$colors)
 colors_df$colors_hex <- as.character(colors_df$colors_hex)
 

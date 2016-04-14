@@ -24,6 +24,8 @@ library(iCOBRA)
 # rwd='/home/Shared/data/seq/brooks_pasilla'
 # count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5')
 # models=c('model_full','model_full_paired','model_full_glm')
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_positive_controls'
 # ROC_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotROCx.R'
 # valid_path='5_validation/brooks_validated_genes.txt'
 
@@ -46,9 +48,8 @@ print(count_methods)
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_3"
+comparison_out <- paste0(comparison_out, "/")
 
-comparison_out <- "drimseq_0_3_3_positive_controls/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
 dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
@@ -68,7 +69,7 @@ metadata
 ##############################################################################
 
 
-load(paste0(rwd, "/", "drimseq_0_3_3_comparison", "/colors.Rdata"))
+load(paste0(rwd, "/", comparison_out, "/colors.Rdata"))
 colors
 colors_df
 
@@ -111,18 +112,7 @@ for(model in models){
     results_padj[[paste(model, count_method, method_name, sep = "_")]] <- rt
     metadata[[paste(model, count_method, method_name, sep = "_")]] <- data.frame(model = model, count_method = count_method, method_name = method_name, stringsAsFactors = FALSE)
     
-    ####################### exon levels results from DEXSeq
-    
-    # rt <- read.table(paste0("4_results/dexseq_1_10_8/", model,"/", count_method, "/dexseq_exon_results.txt"), header = TRUE, as.is = TRUE, sep = "\t")
-    # head(rt)
-    # 
-    # rt <- rt[complete.cases(rt[, c("padj")]), c("groupID", "padj")]
-    # colnames(rt) <- c("gene_id", "dexseq_exon")
-    # 
-    # rt <- aggregate(. ~ gene_id, rt, min)
-    # 
-    # results_padj[["dexseq_exon"]] <- rt
-    
+
     
     ####################### results from DRIMSeq
     
@@ -202,8 +192,8 @@ ggp <- plotROCx(data_ROCx, metadata, plot_var = "method_name", facet_var = c("co
 ggp <- ggp + 
   coord_cartesian(xlim = c(0, 1000), ylim = c(0, nrow(valid))) +
   xlab("Number of genes detected as DS") +
-  ylab("Number of validated genes detected as DS")
-
+  ylab("Number of validated genes detected as DS") +
+  guides(colour = guide_legend(nrow = 1))
 
 
 

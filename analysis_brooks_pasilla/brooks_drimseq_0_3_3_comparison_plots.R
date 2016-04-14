@@ -6,9 +6,7 @@
 # Created 24 Feb 2016 
 
 ##############################################################################
-
 Sys.time()
-
 ##############################################################################
 
 library(plyr)
@@ -24,6 +22,8 @@ library(iCOBRA)
 # rwd='/home/Shared/data/seq/brooks_pasilla'
 # count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5')
 # models=c('model_full','model_full_paired')
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_comparison'
 # Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'
 # CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
 
@@ -37,38 +37,25 @@ for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
-
-print(rwd)
-print(models)
-print(count_methods)
+print(args)
 
 ##############################################################################
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_3"
+comparison_out <- paste0(comparison_out, "/")
 
-comparison_out <- "drimseq_0_3_3_comparison/"
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
 dir.create(paste0(comparison_out, "figures/"), showWarnings = FALSE, recursive = TRUE)
 
 
 ##############################################################################
-# metadata
-##############################################################################
-
-
-metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors=F, sep="\t", header=T) 
-
-metadata
-
-##############################################################################
 # colors
 ##############################################################################
 
 
-load(paste0(rwd, "/", "drimseq_0_3_3_comparison", "/colors.Rdata"))
+load(paste0(rwd, "/", comparison_out, "/colors.Rdata"))
 colors
 colors_df
 
@@ -103,19 +90,7 @@ for(model in models){
     results_padj[[paste(model, count_method, method_name, sep = "_")]] <- rt
     metadata[[paste(model, count_method, method_name, sep = "_")]] <- data.frame(model = model, count_method = count_method, method_name = method_name, stringsAsFactors = FALSE)
     
-    ####################### exon levels results from DEXSeq
-    
-    # rt <- read.table(paste0("4_results/dexseq_1_10_8/", model,"/", count_method, "/dexseq_exon_results.txt"), header = TRUE, as.is = TRUE, sep = "\t")
-    # head(rt)
-    # 
-    # rt <- rt[complete.cases(rt[, c("padj")]), c("groupID", "padj")]
-    # colnames(rt) <- c("gene_id", "dexseq_exon")
-    # 
-    # rt <- aggregate(. ~ gene_id, rt, min)
-    # 
-    # results_padj[["dexseq_exon"]] <- rt
-    
-    
+
     ####################### results from DRIMSeq
     
     res_path <- paste0(method_out, "/",  model, "/", count_method, "/")
@@ -152,7 +127,7 @@ metadata$method_name <- factor(metadata$method_name)
 metadata$model <- factor(metadata$model, levels = models)
 metadata$count_method <- factor(metadata$count_method, levels = count_methods)
 
-
+### Data frames in results_padj must have gene_id, pvalue and adj_pvalue columns
 ### Create results list using adjusted p-values as p-values
 
 
