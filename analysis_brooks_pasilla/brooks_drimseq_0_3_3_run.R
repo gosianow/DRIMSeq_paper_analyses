@@ -230,7 +230,7 @@ for(i in 1:length(disp_mode_list)){
     out_name <- paste0(out_dir, "/drimseq_", disp, "_", disp_mode, "_")
   
   # genewise dispersion
-  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, disp_prior_df = disp_prior_df, verbose = TRUE, BPPARAM = BPPARAM)
+  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = disp_moderation, disp_prior_df = disp_prior_df, disp_span = 0.1, verbose = TRUE, BPPARAM = BPPARAM)
   common_dispersion(d) <- common_disp
   
   plotDispersion(d, out_dir = out_name)

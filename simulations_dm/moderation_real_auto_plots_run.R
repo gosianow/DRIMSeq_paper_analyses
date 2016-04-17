@@ -1,10 +1,9 @@
 ######################################################
-## ----- moderation_real_plots_run
-## <<moderation_real_plots_run.R>>
+## <<moderation_real_auto_plots_run.R>>
 
 # BioC 3.2
-# Created 28 Nov 2015 
-# Updated 16 Apr 2016
+# Created 16 Apr 2016 
+
 
 ##############################################################################
 
@@ -32,7 +31,7 @@ library(DRIMSeq)
 # disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')
 # data_name=c('brooks','kim')
 # count_method=c('kallisto','htseq')
-# out_suffix='moderation_real'
+# out_suffix='moderation_real_auto'
 # pdf_width=7
 # pdf_height=7
 # fig_name='n3_'
@@ -65,15 +64,14 @@ print(out_suffix)
 
 setwd(rwd)
 
-out_dir_plots <- "moderation_real/"
-out_dir_res <- "moderation_real/run/"
+out_dir_plots <- "moderation_real_auto/"
+out_dir_res <- "moderation_real_auto/run/"
 
 
 
 ##############################################################################
 ### Merge all results into one data frame
 ##############################################################################
-
 
 
 res_list <- list()
@@ -192,71 +190,8 @@ fp <- rbind.fill(fp_list)
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
 whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
-disp_prior_df_levels <- sprintf("%g", sort(unique(res$disp_prior_df)))
-disp_prior_df_levels
 
 
-res$disp_prior_df <- sprintf("%g", res$disp_prior_df)
-
-
-### Adjust the order of the variables for plotting
-
-res$disp_prior_df <- factor(res$disp_prior_df, levels = disp_prior_df_levels)
-
-res$data_name <- NA 
-for(i in 1:length(data_name))
-  res$data_name[grepl(data_name[i], res$prop)] <- data_name[i]
-res$data_name <- factor(res$data_name, levels = unique(data_name))
-
-res$count_method <- NA 
-for(i in 1:length(count_method))
-  res$count_method[grepl(count_method[i], res$prop)] <- count_method[i]
-res$count_method <- factor(res$count_method, levels = unique(count_method))
-
-
-res$n <- factor(res$n, levels = n, labels = paste0("n=", n))
-
-res$interaction <- interaction(res$data_name, res$n, lex.order = FALSE)
-levels(res$interaction)
-
-
-### Absolute error
-
-error <- res[complete.cases(res), ]
-error$error <- abs(error$est - error$true)
-
-
-ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) + 
-  geom_violin(trim = TRUE, scale = "width", fill = "cadetblue4", colour = "cadetblue4") +
-  geom_boxplot(outlier.size = NA, alpha = 0, width = 0.5) +
-  theme_bw() +
-  ylab("Log10 of absolute error") +
-  xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(count_method ~ interaction)
-
-
-pdf(paste0(out_dir_plots, fig_name, "error_absolute_log_violin.pdf"), width = pdf_width, height = pdf_height)
-print(ggp)
-dev.off()
-
-
-### Estimates
-
-
-ggp <- ggplot(data = res, aes(y = log10(est), x = disp_prior_df)) + 
-  geom_violin(trim = TRUE, scale = "width", fill = "cadetblue4", colour = "cadetblue4") +
-  geom_boxplot(outlier.size = NA, alpha = 0, width = 0.5) +
-  theme_bw() +
-  ylab("Log10 of gamma_+") +
-  xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(count_method ~ interaction, scales = "free")
-
-
-pdf(paste0(out_dir_plots, fig_name, "est_log_violin.pdf"), width = pdf_width, height = pdf_height)
-print(ggp)
-dev.off()
 
 
 
@@ -264,10 +199,7 @@ dev.off()
 
 ### Adjust the order of the variables for plotting
 
-
-mse$disp_prior_df <- sprintf("%g", as.numeric(as.character(mse$disp_prior_df)))
-
-mse$disp_prior_df <- factor(mse$disp_prior_df, levels = disp_prior_df_levels)
+mse$disp_prior_df <- as.numeric(as.character(mse$disp_prior_df ))
 
 mse$data_name <- NA 
 for(i in 1:length(data_name))
@@ -280,21 +212,33 @@ for(i in 1:length(count_method))
 mse$count_method <- factor(mse$count_method, levels = unique(count_method))
 
 
-
 mse$n <- factor(mse$n, levels = n, labels = paste0("n=", n))
 
 mse$interaction <- interaction(mse$data_name, mse$n, lex.order = FALSE)
 levels(mse$interaction)
 
 
+## Calculate the median disp_prior_df
+mse$unique_interaction <- interaction(mse$interaction, mse$count_method)
+
+disp_prior_df_median <- by(mse, mse$unique_interaction, function(x){
+  median(x$disp_prior_df, na.rm = TRUE)
+  })
+
+mse$disp_prior_df_median <- mse$unique_interaction
+levels(mse$disp_prior_df_median) <- disp_prior_df_median
+
+mse$disp_prior_df_median <- as.numeric(as.character(mse$disp_prior_df_median))
+
+
 
 ### plot mean 
 
-ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df)) + 
-  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
+ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df_median)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.2, outlier.colour = NULL) +
   theme_bw() +
   ylab("Mean absolute error") +
-  xlab("Moderation") +
+  xlab("Median auto moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
@@ -305,11 +249,11 @@ dev.off()
 
 ### plot median 
 
-ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df)) + 
-  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
+ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df_median)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.2, outlier.colour = NULL) +
   theme_bw() +
   ylab("Median absolute error") +
-  xlab("Moderation") +
+  xlab("Median auto moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
@@ -319,32 +263,15 @@ dev.off()
 
 
 
-ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df)) + 
-  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
+ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df_median)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.2, outlier.colour = NULL) +
   theme_bw() +
   ylab("Log10 of median absolute error") +
-  xlab("Moderation") +
+  xlab("Median auto moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
-print(ggp)
-dev.off()
-
-
-
-### plot median of raw error
-
-ggp <- ggplot(data = mse, aes(y = median_error, x = disp_prior_df)) + 
-  geom_hline(yintercept = 0, color="black", linetype = 2, size = 0.2) +
-  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
-  theme_bw() +
-  ylab("Median error") +
-  xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(count_method ~ interaction, scales = "free")
-
-pdf(paste0(out_dir_plots, fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -355,9 +282,7 @@ dev.off()
 
 ### False positives
 
-fp$disp_prior_df <- sprintf("%g", as.numeric(as.character(fp$disp_prior_df)))
-
-fp$disp_prior_df <- factor(fp$disp_prior_df, levels = disp_prior_df_levels)
+fp$disp_prior_df <- as.numeric(as.character(fp$disp_prior_df))
 
 fp$data_name <- NA 
 for(i in 1:length(data_name))
@@ -376,16 +301,28 @@ fp$interaction <- interaction(fp$data_name, fp$n, lex.order = FALSE)
 levels(fp$interaction)
 
 
+## Calculate the median disp_prior_df
+fp$unique_interaction <- interaction(fp$interaction, fp$count_method)
+
+disp_prior_df_median <- by(fp, fp$unique_interaction, function(x){
+  median(x$disp_prior_df, na.rm = TRUE)
+})
+
+fp$disp_prior_df_median <- fp$unique_interaction
+levels(fp$disp_prior_df_median) <- disp_prior_df_median
+
+fp$disp_prior_df_median <- as.numeric(as.character(fp$disp_prior_df_median))
+
 
 ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
 
 
-ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df)) + 
-  geom_boxplot(outlier.size = 1, fill = "grey60") +
+ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df_median)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey60", width = 0.2) +
   geom_hline(yintercept = 0.05, color="black", linetype = 2, size = 0.3) +
   theme_bw() +
   ylab("FP rate") +
-  xlab("Moderation") +
+  xlab("Median auto moderation") +
   coord_cartesian(ylim = ylim) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(count_method ~ interaction)
@@ -397,70 +334,18 @@ dev.off()
 
 
 
+### Plot boxplot of estimated moderation
 
 
-#### Plot dispersion vesrus mean for different disp_prior_df
-for(k in 1:length(n)){
-  
-  for(i in 1:length(data_name)){
-    
-    for(j in 1:length(count_method)){
-      # i = 1; j = 1
-      
-      
-      # take only a subset of res
-      
-      res_sub <- res[res$run == 1 & res$data_name == data_name[i] & res$count_method == count_method[j] & res$n == paste0("n", n[k]), ]
-      
-      res_true <- res_sub[res_sub$disp_prior_df == 0, , drop = FALSE]
-      res_true$disp_prior_df = "true"
-      res_true$est <- res_true$true
-      
-      resgg <- rbind.fill(res_sub, res_true)
-      
-      mean_expression <- resgg$mean_expression
-      genewise_dispersion <- resgg$est
-      nr_features <- resgg$q
-      disp_prior_df <- factor(resgg$disp_prior_df, levels = c("true", disp_prior_df_levels))
-      
-      nlevels(disp_prior_df)
-      
-      
-      
-      df <- data.frame(mean_expression = log10(mean_expression + 1), dispersion = log10(genewise_dispersion), nr_features = nr_features, disp_prior_df = disp_prior_df)
-      
-      df_quant <- min(quantile(na.omit(df$nr_features), probs = 0.95), 30)
-      breaks <- seq(2, df_quant, ceiling(df_quant/10))
-      
-      
-      ggp <- ggplot(df, aes_string(x = "mean_expression", y = "dispersion", colour = "nr_features" )) +
-        theme_bw() +
-        xlab("Log10 of mean expression") +
-        ylab("Log10 of gamma_+") +
-        geom_point(size = 1.5, alpha = 0.7, na.rm = TRUE, shape = 1) +
-        theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), legend.title = element_text(size=16, face="bold"), legend.text = element_text(size = 14), legend.position = "top") +
-        guides(colour = guide_colorbar(barwidth = 20, barheight = 0.5)) +
-        scale_colour_gradient(limits = c(2, max(breaks)), breaks = breaks, low = "royalblue2", high="red2", name = "Number of features", na.value = "red2") +
-        facet_wrap(~ disp_prior_df, nrow = 3)
-      
-      
-      pdf(paste0(out_dir_plots, "dispersion_versus_mean_n", n[k], "_", data_name[i], "_", count_method[j],".pdf"), width = pdf_width, height = pdf_height)
-      print(ggp)
-      dev.off()
-      
-      
-      
-      
-    }
-    
-  }
-  
-}
+ggp <- ggplot(data = fp, aes(y = disp_prior_df, x = unique_interaction)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey60") +
+  theme_bw() +
+  ylab("Auto moderation") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
 
-
-
-
-
+pdf(paste0(out_dir_plots, fig_name, "auto_moderation_boxplot.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
 
 
 

@@ -183,7 +183,7 @@ if(dispersion_common){
   disp <- "common"
   out_name <- paste0(out_dir, "/drimseq_", disp, "_")
   
-  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.3, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
+  d <- dmDispersion(d, mean_expression = TRUE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 0.1, disp_span = 0.1, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
   
   common_disp <- common_dispersion(d)
   common_disp
@@ -231,7 +231,7 @@ for(i in 1:length(disp_mode_list)){
     out_name <- paste0(out_dir, "/drimseq_", disp, "_", disp_mode, "_")
   
   # genewise dispersion
-  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, disp_prior_df = disp_prior_df, verbose = TRUE, BPPARAM = BPPARAM)
+  d <- dmDispersion(d, common_dispersion = FALSE, genewise_dispersion = TRUE, disp_mode = disp_mode, disp_init = common_disp, disp_moderation = disp_moderation, disp_prior_df = disp_prior_df, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_span = 0.1, verbose = TRUE, BPPARAM = BPPARAM)
   common_dispersion(d) <- common_disp
   
   plotDispersion(d, out_dir = out_name)

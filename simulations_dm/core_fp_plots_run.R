@@ -3,6 +3,7 @@
 
 # BioC 3.2
 # Created 8 Mar 2016
+# Modified 15 Apr 2016
 
 ##############################################################################
 Sys.time()
@@ -21,14 +22,14 @@ library(plyr)
 
 # rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
 # sim_name=''
-# n=c(3,6,12)
-# nm=c(100,1000)
+# n=c(3)
+# nm=c(1000)
 # nd=0
-# prop=c('prop_q3_uniform','prop_q3_kim_kallisto_fcutoff','prop_q10_uniform','prop_q10_kim_kallisto_fcutoff')
+# prop=c('prop_q3_kim_kallisto_fcutoff','prop_q10_kim_kallisto_fcutoff')
 # disp=c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')
-# pdf_width=15
-# pdf_height=10
-# fig_name='all_'
+# pdf_width=7
+# pdf_height=7
+# fig_name='3_1000_'
 
 
 ##############################################################################
@@ -101,6 +102,7 @@ for(ix_n in 1:length(n)){
             res_tmp_list[[i]] <- rr
             
             # calculate mse
+            rr$error <- rr$est - rr$true
             rr$error_abs <- abs(rr$est - rr$true)
             rr$dispersion <- factor(rr$dispersion)
             rr$method <- factor(rr$method)
@@ -111,7 +113,12 @@ for(ix_n in 1:length(n)){
             out_median <- aggregate(. ~ dispersion + method, rr[, c("dispersion", "method", "error_abs")], median)
             colnames(out_median) <- c("dispersion", "method", "median_error_abs")
             
+            out_median_raw <- aggregate(. ~ dispersion + method, rr[, c("dispersion", "method", "error")], median)
+            colnames(out_median_raw) <- c("dispersion", "method", "median_error")
+            
+            
             out <- merge(out_mean, out_median, by = c("dispersion", "method"), sort = FALSE)
+            out <- merge(out, out_median_raw, by = c("dispersion", "method"), sort = FALSE)
             
             mse_tmp_list[[i]] <- out
             
@@ -216,7 +223,7 @@ ylim <- c(min(aggregate(. ~ all_interactions, error[, c("error", "all_interactio
 
 
 ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) + 
-  geom_boxplot(outlier.size = 0.3, outlier.colour = "grey") +
+  geom_boxplot(outlier.size = 0.1, outlier.colour = "black") +
   theme_bw() +
   ylab("Absolute error") +
   coord_cartesian(ylim = ylim) +
@@ -230,28 +237,6 @@ dev.off()
 png(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot.png"), width = 100*pdf_width, height = 100*pdf_height)
 print(ggp)
 dev.off()
-
-
-
-# ### Error as a ratio
-# 
-# error <- res
-# error$error <- res$est/res$true
-# 
-# 
-# ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
-#   geom_boxplot(outlier.size = 0.3, outlier.colour = "red") +
-#   theme_bw() +
-#   ylab("Log10 of error ratio") +
-#   coord_cartesian(ylim = c(-2, 2.5)) +
-#   geom_hline(yintercept = 0, color="grey70", linetype = 1, size = 0.3) +
-#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), panel.grid.major.x =element_blank()) +
-#   geom_vline(xintercept = c(1.5, 2.5), color = "grey90", size = 0.05) +
-#   facet_grid(prop ~ n_nm_simulation)
-# 
-# pdf(paste0(out_dir_plots, "/", fig_name, "error_ratio_log_boxplot.pdf"), width = pdf_width, height = pdf_height)
-# print(ggp)
-# dev.off()
 
 
 
@@ -312,7 +297,7 @@ levels(mse$n_nm_simulation)
 mse$all_interactions <- interaction(mse$dispersion, mse$method, mse$prop, mse$disp, mse$n_nm, drop = TRUE)
 
 
-### plot mean 
+### plot mean of absolute error
 
 ylim <- c(min(aggregate(. ~ all_interactions, mse[, c("mean_error_abs", "all_interactions")], whisker_lower)[, "mean_error_abs"]) - 1, max(aggregate(. ~ all_interactions, mse[, c("mean_error_abs", "all_interactions")], whisker_upper)[, "mean_error_abs"]) + 1)
 
@@ -331,7 +316,7 @@ dev.off()
 
 
 
-### plot median 
+### plot median of absolute error
 
 ylim <- c(min(aggregate(. ~ all_interactions, mse[, c("median_error_abs", "all_interactions")], whisker_lower)[, "median_error_abs"]) - 1, max(aggregate(. ~ all_interactions, mse[, c("median_error_abs", "all_interactions")], whisker_upper)[, "median_error_abs"]) + 1)
 
@@ -345,6 +330,27 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = dispersion, colour = met
   facet_grid(prop ~ n_nm_simulation)
 
 pdf(paste0(out_dir_plots, "/", fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+
+
+
+### plot median of raw error
+
+ylim <- c(min(aggregate(. ~ all_interactions, mse[, c("median_error", "all_interactions")], whisker_lower)[, "median_error"]) - 1, max(aggregate(. ~ all_interactions, mse[, c("median_error", "all_interactions")], whisker_upper)[, "median_error"]) + 1)
+
+
+ggp <- ggplot(data = mse, aes(y = median_error, x = dispersion, colour = method)) + 
+  geom_boxplot(outlier.size = 1) +
+  geom_hline(yintercept = 0, color="black", linetype = 2, size = 0.3) +
+  theme_bw() +
+  ylab("Median error") +
+  coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(prop ~ n_nm_simulation)
+
+pdf(paste0(out_dir_plots, "/", fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
