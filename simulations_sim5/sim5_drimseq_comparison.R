@@ -25,6 +25,9 @@ library(plyr)
 # count_method='kallisto'
 # filter_method="filter1"
 # CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_comparison'
+
 
 ##############################################################################
 # Read in the arguments
@@ -46,8 +49,7 @@ print(filter_method)
 
 setwd(paste0(rwd, "/", simulation))
 
-method_out <- "drimseq_0_3_3"
-comparison_out <- "drimseq_0_3_3_comparison"
+
 
 out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
 

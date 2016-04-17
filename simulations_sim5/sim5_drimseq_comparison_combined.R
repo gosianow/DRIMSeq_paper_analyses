@@ -18,16 +18,17 @@ library(plyr)
 # Test arguments
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_sim5'
-
-simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull')
-count_method_list=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5')
-filter_method="filter0"
-CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
-name=''
-legend_nrow=1
-pdf_width=14
-pdf_height=8
+# rwd='/home/gosia/multinomial_project/simulations_sim5'
+# simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull')
+# count_method_list=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5')
+# filter_method="filter0"
+# CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
+# name=''
+# legend_nrow=1
+# pdf_width=14
+# pdf_height=8
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_comparison'
 
 ##############################################################################
 # Read in the arguments
@@ -51,7 +52,7 @@ print(pdf_height)
 ##############################################################################
 
 setwd(rwd)
-method_out <- "drimseq_0_3_3"
+
 
 
 ### colors
@@ -64,7 +65,7 @@ colors_df$methods <- as.character(colors_df$methods)
 
 ### Plot
 
-out_dir_plots <- paste0("drimseq_0_3_3_comparison/", filter_method, "/")
+out_dir_plots <- paste0(comparison_out, "/", filter_method, "/")
 dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
 
 ##############################################################################
@@ -83,8 +84,8 @@ for(i in 1:length(simulation_list)){
     simulation <- simulation_list[i]
     count_method <- count_method_list[j]
     
-    comparison_out <- paste0(simulation, "/drimseq_0_3_3_comparison")
-    out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
+    comparison_out_tmp <- paste0(simulation, "/", comparison_out)
+    out_dir <- paste0(comparison_out_tmp, "/", filter_method, "/", count_method, "_")
     
     if(!file.exists(paste0(out_dir, "cobradata.Rdata")))
       next
@@ -341,6 +342,9 @@ for(i in 1:length(simulation_list)){
       results_dir <- "4_results/INCOMPLETE_KALLISTOEST/dexseq_kallisto_kallistoest_atleast5"
     
     results_dir
+    
+    if(!file.exists(paste0(simulation, "/", results_dir, ".txt")))
+      next
     
     rt <- read.table(paste0(simulation, "/", results_dir, ".txt"), header = TRUE, as.is = TRUE)
     head(rt)

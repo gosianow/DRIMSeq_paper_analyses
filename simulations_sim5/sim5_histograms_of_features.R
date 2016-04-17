@@ -23,6 +23,9 @@ library(plyr)
 # simulation='hsapiens_node_nonull'
 # count_method=c('htseq','kallisto','htseq_prefiltered15')[2]
 # filter_method='filter1'
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_comparison'
+
 
 ##############################################################################
 # Read in the arguments
@@ -44,8 +47,6 @@ print(filter_method)
 
 setwd(paste0(rwd, "/", simulation))
 
-method_out <- "drimseq_0_3_3"
-comparison_out <- "drimseq_0_3_3_comparison"
 out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
 
 dir.create(dirname(out_dir), recursive = TRUE, showWarnings = FALSE)

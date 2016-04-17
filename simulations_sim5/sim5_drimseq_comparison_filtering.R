@@ -18,7 +18,6 @@ library(plyr)
 ##############################################################################
 
 # rwd='/home/gosia/multinomial_project/simulations_sim5'
-# 
 # simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull')
 # count_method_list=c('kallisto','htseq')
 # filter_method_list=c('filter0','filter1','filter2','filter3')
@@ -27,6 +26,9 @@ library(plyr)
 # legend_nrow=2
 # pdf_width=9
 # pdf_height=7
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_comparison'
+
 
 ##############################################################################
 # Read in the arguments
@@ -52,8 +54,6 @@ print(pdf_height)
 ##############################################################################
 
 setwd(rwd)
-method_out <- "drimseq_0_3_3"
-
 
 ### colors
 
@@ -65,7 +65,7 @@ colors_df$methods <- as.character(colors_df$methods)
 
 ### Plot
 
-out_dir_plots <- paste0("drimseq_0_3_3_comparison/", "different_filtering", "/")
+out_dir_plots <- paste0(comparison_out, "/", "different_filtering", "/")
 dir.create(out_dir_plots, recursive = TRUE, showWarnings = FALSE)
 
 ##############################################################################
@@ -94,8 +94,8 @@ for(i in 1:length(simulation_list)){
       count_method <- count_method_list[j]
       filter_method <- filter_method_list[k]
       
-      comparison_out <- paste0(simulation, "/drimseq_0_3_3_comparison")
-      out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
+      comparison_out_tmp <- paste0(simulation, "/", comparison_out)
+      out_dir <- paste0(comparison_out_tmp, "/", filter_method, "/", count_method, "_")
       
       if(!file.exists(paste0(out_dir, "cobradata.Rdata")))
         next
@@ -176,8 +176,8 @@ if(!is.null(prefilter_method_list)){
         count_method <- count_method_list[j]
         filter_method <- filter_method_list[k]
         
-        comparison_out <- paste0(simulation, "/drimseq_0_3_3_comparison")
-        out_dir <- paste0(comparison_out, "/", filter_method, "/", count_method, "_")
+        comparison_out_tmp <- paste0(simulation, "/", comparison_out)
+        out_dir <- paste0(comparison_out_tmp, "/", filter_method, "/", count_method, "_")
         
         if(!file.exists(paste0(out_dir, "cobradata.Rdata")))
           next
