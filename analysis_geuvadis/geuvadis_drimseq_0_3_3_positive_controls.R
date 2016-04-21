@@ -30,10 +30,13 @@ library(limma)
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/Shared/data/seq/geuvadis'
-# population='CEU'
-# valid_path='data/validation/glimmps/glimmps_valid_pcr.txt'
-# plot_proportions=TRUE
+rwd='/home/Shared/data/seq/geuvadis'
+population='CEU'
+valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis.txt'
+plot_proportions=TRUE
+method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
+positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes'
 
 ##############################################################################
 # Read in the arguments
@@ -55,22 +58,23 @@ print(population)
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_3_analysis/"
 
-comparison_out <- paste0("drimseq_0_3_3_positive_controls/", basename(file_path_sans_ext(valid_path)), "/")
+positive_controls_out <- paste0(positive_controls_out, "/", basename(file_path_sans_ext(valid_path)), "/")
 
-dir.create(comparison_out, recursive = TRUE, showWarnings = FALSE)
+dir.create(positive_controls_out, recursive = TRUE, showWarnings = FALSE)
 
-out_dir <- comparison_out
+out_dir <- positive_controls_out
 
 dir.create(paste0(out_dir, "figures/"), recursive = TRUE, showWarnings = FALSE)
 
+comparison_out <- paste0(comparison_out, "/")
+method_out <- paste0(method_out, "/")
 
 ##############################################################################
 ### colors
 ##############################################################################
 
-load(paste0(rwd, "/", "drimseq_0_3_3_comparison/", "colors.Rdata"))
+load(paste0(rwd, "/", comparison_out, "colors.Rdata"))
 colors
 colors_df
 
@@ -82,8 +86,6 @@ colors_df$methods <- as.character(colors_df$methods)
 
 
 valid <- read.table(valid_path, header = TRUE, sep = "\t", as.is = TRUE) 
-
-
 
 
 ##############################################################################
@@ -98,60 +100,21 @@ results <- list()
 #####################################
 
 
-res_tmp <- read.table(paste0("sqtlseeker_2_1_analysis/results/", population, "_results_all.txt"), header = TRUE, as.is = TRUE)
-head(res_tmp)
-
-colnames(res_tmp) <- c("gene_id", "snp_id", "F", "nb.groups", "md", "tr.first", "tr.second", "nb.perms", "pvalue")
-res_tmp <- unique(res_tmp)
+res <- read.table(paste0(comparison_out, "results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
+head(res)
 
 
-res_tmp$gene_snp <- paste0(res_tmp$gene_id, ":", res_tmp$snp_id)
-
-res_tmp$adj_pvalue <- qvalue::qvalue(res_tmp$pvalue)$qvalues
-
-
-
-results[["sqtlseeker"]] <- res_tmp
-
-
-
-# dim(results[["sqtlseeker"]])
-# 
-# table(duplicated(results[["sqtlseeker"]][, "gene_snp"]))
-
-
+results[["sqtlseeker"]] <- res
 
 #####################################
-### DRIMSeq results + adjust p-value
+### DRIMSeq results
 #####################################
 
 
-res_list <- lapply(1:22, function(chr){
-  # chr = 1
-  
-  res <- read.table(paste0(method_out, population, "_chr",chr, "_results.txt"), header = TRUE, sep = "\t", as.is = TRUE)
-  
-  return(res)
-  
-})
-
-
-res <- rbind.fill(res_list)
-
-res <- res[!is.na(res$pvalue), ]
-
-res$gene_block <- paste0(res$gene_id, ":", res$block_id)
-res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
-
-
-res_uniq <- res[!duplicated(res$gene_block), ]
-res_uniq$adj_pvalue <- p.adjust(res_uniq$pvalue, method = "BH")
-mm <- match(res$gene_block, res_uniq$gene_block)
-res$adj_pvalue <- res_uniq$adj_pvalue[mm]
-
+res <- read.table(paste0(comparison_out, "results_drimseq.txt"), header = TRUE, as.is = TRUE)
+head(res)
 
 results[["drimseq"]] <- res
-
 
 
 #######################################################
@@ -187,22 +150,21 @@ colors_df <- colors_df[keep_methods, , drop = FALSE]
 # Check which validated sqtls are significant 
 ############################################################################
 
-all(valid$gene_snp %in% rownames(results_padj))
-
-valid_gene_snp <- valid$gene_snp[valid$gene_snp %in% rownames(results_padj)]
 
 results_padj_valid <- data.frame(matrix(NA, nrow = nrow(valid), ncol = ncol(results_padj)))
 rownames(results_padj_valid) <- valid$gene_snp
 colnames(results_padj_valid) <- colnames(results_padj)
 
-results_padj_valid[valid_gene_snp, ] <- results_padj[valid_gene_snp, ]
+mm <- match(rownames(results_padj_valid), rownames(results_padj))
+
+results_padj_valid[,] <- results_padj[mm, ]
 
 head(results_padj_valid)
 
 
 out <- data.frame(valid[, c("gene_id", "gene_name", "snp_id", "snp_name", "gene_snp")], results_padj_valid, stringsAsFactors = FALSE)
 
-write.table(out, file = paste0(comparison_out, "validation.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(out, file = paste0(positive_controls_out, "validation.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
@@ -214,7 +176,7 @@ colnames(number_sign_valid) <- colnames(results_padj_valid)
 out_summary <- data.frame(number_sign_valid, all = nrow(results_padj_valid))
 out_summary
 
-write.table(out_summary, file = paste0(comparison_out, "validation_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(out_summary, file = paste0(positive_controls_out, "validation_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 

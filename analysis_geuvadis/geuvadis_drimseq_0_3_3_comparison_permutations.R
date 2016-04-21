@@ -29,10 +29,10 @@ library(limma)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/Shared/data/seq/geuvadis'
-population='CEU'
-method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
+# rwd='/home/Shared/data/seq/geuvadis'
+# population='CEU'
+# method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
 
 ##############################################################################
 # Read in the arguments
@@ -175,9 +175,9 @@ res_uniq$pvalue_perm_new[!nas] <- pval_adj
 res_uniq$adj_pvalue_perm_new <- p.adjust(res_uniq$pvalue_perm_new, method = "BH")
 
 
-pdf(paste0(out_dir, "pvalues_perm_new.pdf"))
-smoothScatter(res_uniq$pvalue_perm, res_uniq$pvalue_perm_new)
-dev.off()
+# pdf(paste0(out_dir, "pvalues_perm_new.pdf"))
+# smoothScatter(res_uniq$pvalue_perm, res_uniq$pvalue_perm_new)
+# dev.off()
 
 
 

@@ -1,8 +1,8 @@
 ######################################################
-## ----- proportions_sim_f_plots_run
 ## <<proportions_sim_f_plots_run.R>>
 
 # Created 17 Feb 2015 
+# Modified 18 Apr 2016
 
 ##############################################################################
 
@@ -23,16 +23,16 @@ library(RColorBrewer)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
-sim_name=''
-n=c(3)
-nm=c(1000)
-nd=0
-disp='disp_common_kim_kallisto'
-out_suffix='proportions_decay'
-pdf_width=7
-pdf_height=7
-
+# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
+# sim_name=''
+# n=c(3)
+# nm=c(1000)
+# nd=0
+# disp='disp_common_kim_kallisto'
+# out_suffix='proportions_decay'
+# pdf_width=7
+# pdf_height=7
+# out_dir='proportions_f'
 
 ##############################################################################
 # Read in the arguments
@@ -59,8 +59,8 @@ print(out_suffix)
 
 setwd(rwd)
 
-out_dir_res <- "proportions_f/run/"
-out_dir_plots <- "proportions_f/"
+out_dir_res <- paste0(out_dir, "/run/")
+out_dir_plots <- paste0(out_dir, "/")
 
 strat_main <- "nr_features"
 strat_extra <- c("disp_estimator", "test")
@@ -109,6 +109,7 @@ for(ix_n in 1:length(n)){
           
           # calculate mse
           rr$error_abs <- abs(rr$est - rr$true)
+          rr$error <- rr$est - rr$true
           rr[, strat_main] <- factor(rr[, strat_main])
           for(s in 1:length(strat_extra))
             rr[, strat_extra[s]] <- factor(rr[, strat_extra[s]])
@@ -120,7 +121,13 @@ for(ix_n in 1:length(n)){
           out_median <- aggregate(as.formula(paste0(". ~ ", strat_main, " + ", paste0(strat_extra, collapse = " + "))), rr[, c(strat_main, strat_extra, "error_abs")], median)
           colnames(out_median) <- c(strat_main, strat_extra, "median_error_abs")
           
+          out_median_raw <- aggregate(as.formula(paste0(". ~ ", strat_main, " + ", paste0(strat_extra, collapse = " + "))), rr[, c(strat_main, strat_extra, "error")], median)
+          colnames(out_median_raw) <- c(strat_main, strat_extra, "median_error")
+          
+
           out <- merge(out_mean, out_median, by = c(strat_main, strat_extra), sort = FALSE)
+          out <- merge(out, out_median_raw, by = c(strat_main, strat_extra), sort = FALSE)
+          
           
           mse_tmp_list[[i]] <- out
           
@@ -215,6 +222,7 @@ levels(res$n_nm)
 
 
 
+res$all_interactions <- res$n_nm
 
 
 ### Absolute error
@@ -223,9 +231,32 @@ error <- res[res$disp_estimator != "true" & res$test == "lr", ]
 error$error <- abs(error$est - error$true)
 
 
+ylim <- c(min(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_lower)[, "error"]) - 1, max(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_upper)[, "error"]) + 1)
+
+
+ggp <- ggplot(data = error, aes(y = error, x = strat_main, fill = disp_estimator)) + 
+  geom_boxplot(outlier.size = 0.1, outlier.colour = "black") +
+  theme_bw() +
+  ylab("Absolute error") +
+  xlab(strat_main) +
+  coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(nm ~ n)
+
+
+pdf(paste0(out_dir_plots, out_suffix, "_error_absolute_boxplot.pdf"),width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+png(paste0(out_dir_plots, out_suffix, "_error_absolute_boxplot.png"),width = 70*pdf_width, height = 70*pdf_height)
+print(ggp)
+dev.off()
+
+
+
 ggp <- ggplot(data = error, aes(y = log10(error), x = strat_main, fill = disp_estimator)) + 
-  geom_violin(trim = FALSE, colour = NA, position = position_dodge(width = 0.8)) +
-  geom_boxplot(outlier.size = 0.4, width = 0.5, outlier.colour = NULL, position = position_dodge(width = 0.8)) +
+  geom_violin(trim = TRUE, aes(colour = disp_estimator), position = position_dodge(width = 0.8)) +
+  geom_boxplot(outlier.size = NA, alpha = 0, width = 0.5, position = position_dodge(width = 0.8)) +
   theme_bw() +
   ylab("Log10 of absolute error") +
   xlab(strat_main) +
@@ -244,8 +275,8 @@ dev.off()
 true_disp <- res$true[1]
 
 ggp <- ggplot(data = error, aes(y = log10(est), x = strat_main, fill = disp_estimator)) + 
-  geom_violin(trim = FALSE, colour = NA, position = position_dodge(width = 0.8)) +
-  geom_boxplot(outlier.size = 0.4, width = 0.5, outlier.colour = NULL, position = position_dodge(width = 0.8)) +
+  geom_violin(trim = TRUE, aes(colour = disp_estimator), position = position_dodge(width = 0.8)) +
+  geom_boxplot(outlier.size = NA, alpha = 0, width = 0.5, position = position_dodge(width = 0.8)) +
   geom_hline(yintercept = log10(true_disp), color="black", linetype = 2, size = 0.5) +
   theme_bw() +
   ylab("Log 10 of gamma_+") +
@@ -310,6 +341,21 @@ dev.off()
 
 
 
+### plot median of raw error
+
+ggp <- ggplot(data = mse, aes(y = median_error, x = strat_main, fill = disp_estimator)) + 
+  geom_boxplot(outlier.size = 1, width = 0.5, outlier.colour = NULL) +
+  geom_hline(yintercept = 0, color="black", linetype = 2, size = 0.3) +
+  theme_bw() +
+  ylab("Median error") +
+  xlab(strat_main) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(nm ~ n)
+
+pdf(paste0(out_dir_plots, out_suffix, "_error_median_raw_boxplot.pdf"),width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
 
 
 
@@ -337,6 +383,12 @@ levels(fp$test_disp_estimator)
 ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
 
 
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length=n+1)
+  hcl(h=hues, l=65, c=100)[1:n]
+}
+
+
 ggp <- ggplot(data = fp, aes(y = fp, x = strat_main, fill = test_disp_estimator)) + 
   geom_boxplot(outlier.size = 1) +
   geom_hline(yintercept = 0.05, color="black", linetype = 2, size = 0.3) +
@@ -344,12 +396,44 @@ ggp <- ggplot(data = fp, aes(y = fp, x = strat_main, fill = test_disp_estimator)
   ylab("FP rate") +
   xlab(strat_main) +
   coord_cartesian(ylim = ylim) +
+  scale_fill_manual(values = c("grey", gg_color_hue(nlevels(fp$test_disp_estimator) - 1))) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
   facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_fp_boxplot.pdf"),width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
+
+
+fp_orig <- fp
+
+
+for(i in levels(fp_orig$test)){
+  # i = "lr"
+  
+  fp <- fp_orig[fp_orig$test == i, ]
+
+  ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
+
+  
+  ggp <- ggplot(data = fp, aes(y = fp, x = strat_main, fill = disp_estimator)) + 
+    geom_boxplot(outlier.size = 1) +
+    geom_hline(yintercept = 0.05, color="black", linetype = 2, size = 0.3) +
+    theme_bw() +
+    ylab("FP rate") +
+    xlab(strat_main) +
+    coord_cartesian(ylim = ylim) +
+    scale_fill_manual(values = c("grey", gg_color_hue(nlevels(fp$disp_estimator) - 1))) +
+    theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+    facet_grid(nm ~ n)
+  
+  pdf(paste0(out_dir_plots, out_suffix, "_fp_boxplot_",i,".pdf"),width = pdf_width, height = pdf_height)
+  print(ggp)
+  dev.off()
+  
+  
+}
+
 
 
 
@@ -397,175 +481,175 @@ for(i in levels(res$test)){
 
 
 
-# Multiple plot function
-#
-# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
-# - cols:   Number of columns in layout
-# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
-#
-# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
-# then plot 1 will go in the upper left, 2 will go in the upper right, and
-# 3 will go all the way across the bottom.
-#
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  library(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-      ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  
-  if (numPlots==1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-        layout.pos.col = matchidx$col))
-    }
-  }
-}
-
-
-### QQ plots
-
-
-n <- 3
-nm <- 1000
-
-res <- res[res$n == paste0("n=", n) & res$nm == paste0("nm=", nm), ]
-
-
-
-for(i in 1:nlevels(res$test)){
-  
-  ggpl <- list()
-  
-  for(j in 1:nlevels(res$nr_features)){
-    # i = 2; j = 8
-    
-    test <- levels(res$test)[i]
-    nr_features <- levels(res$nr_features)[j]
-    
-    
-    switch(test, 
-      
-      f = {
-        
-        res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
-        
-        print(all.equal(res_tmp[, "df1"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
-        
-        ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
-          geom_point(stat = "qq", distribution = qf, dparams = list(df1 = as.numeric(nr_features) - 1, df2 = (n - 1) * (as.numeric(nr_features) - 1))) +
-          geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
-          theme_bw() +
-          theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
-          ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
-        
-        
-      },
-      
-      lr = {
-        
-        res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
-        
-        print(all.equal(res_tmp[, "df"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
-        
-        ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
-          geom_point(stat = "qq", distribution = qchisq, dparams = list(df = as.numeric(nr_features) - 1)) +
-          geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
-          theme_bw() +
-          theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
-          ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
-        
-      }
-      
-    )
-    
-  }
-  
-  
-  png(paste0(out_dir_plots, out_suffix, "_qqplot_", test, ".png"), width = 300 * pdf_width, height = 150 * pdf_height)
-  print(multiplot(plotlist = ggpl, cols = 4))
-  dev.off()
-  
-}
-
-
-
-
-
-### Plots of dispersion versus p-values
-
-n <- 3
-nm <- 1000
-
-res <- res[res$n == paste0("n=", n) & res$nm == paste0("nm=", nm), ]
-
-true_disp <- res$true[1]
-test <- "lr"
-
-res_tmp <- res[res$test == test & res$disp_estimator == "moderation_none", ]
-
-
-ggp <- ggplot(data = res_tmp, aes(x = pvalue, y = log10(est))) + 
-  geom_hex(binwidth = c(0.01, 0.01)) +
-  geom_hline(yintercept = log10(true_disp), color="black", linetype = 2, size = 0.5) +
-  theme_bw() +
-  ylab("gamma_+") +
-  xlab("P-values") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  scale_fill_gradientn("", colours = rev(rainbow(10, end = 4/6))) +
-  facet_wrap(~ nr_features, nrow = 2, scales = "fixed")
-
-
-
-
-pdf(paste0(out_dir_plots, out_suffix, "_est_vs_pvalues_", test, ".pdf"), width = 2 * pdf_width, height = pdf_height)
-print(ggp)
-dev.off()
-
-
-
-
-ggp <- ggplot(data = res_tmp, aes(x = pvalue, y = est)) + 
-  geom_hex(binwidth = c(0.01, 2)) +
-  geom_hline(yintercept = true_disp, color="black", linetype = 2, size = 0.5) +
-  theme_bw() +
-  ylab("gamma_+") +
-  xlab("P-values") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  scale_fill_gradientn("", colours = rev(rainbow(10, end = 4/6))) +
-  facet_wrap(~ nr_features, nrow = 2, scales = "fixed") +
-  coord_cartesian(ylim = c(0, 250)) 
-
-
-
-
-pdf(paste0(out_dir_plots, out_suffix, "_est_vs_pvalues2_", test, ".pdf"), width = 2 * pdf_width, height = pdf_height)
-print(ggp)
-dev.off()
-
-
-
+# # Multiple plot function
+# #
+# # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# # - cols:   Number of columns in layout
+# # - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+# #
+# # If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# # then plot 1 will go in the upper left, 2 will go in the upper right, and
+# # 3 will go all the way across the bottom.
+# #
+# multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+#   library(grid)
+#   
+#   # Make a list from the ... arguments and plotlist
+#   plots <- c(list(...), plotlist)
+#   
+#   numPlots = length(plots)
+#   
+#   # If layout is NULL, then use 'cols' to determine layout
+#   if (is.null(layout)) {
+#     # Make the panel
+#     # ncol: Number of columns of plots
+#     # nrow: Number of rows needed, calculated from # of cols
+#     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+#       ncol = cols, nrow = ceiling(numPlots/cols))
+#   }
+#   
+#   if (numPlots==1) {
+#     print(plots[[1]])
+#     
+#   } else {
+#     # Set up the page
+#     grid.newpage()
+#     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+#     
+#     # Make each plot, in the correct location
+#     for (i in 1:numPlots) {
+#       # Get the i,j matrix positions of the regions that contain this subplot
+#       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+#       
+#       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+#         layout.pos.col = matchidx$col))
+#     }
+#   }
+# }
+# 
+# 
+# ### QQ plots
+# 
+# 
+# n <- 3
+# nm <- 1000
+# 
+# res <- res[res$n == paste0("n=", n) & res$nm == paste0("nm=", nm), ]
+# 
+# 
+# 
+# for(i in 1:nlevels(res$test)){
+#   
+#   ggpl <- list()
+#   
+#   for(j in 1:nlevels(res$nr_features)){
+#     # i = 2; j = 8
+#     
+#     test <- levels(res$test)[i]
+#     nr_features <- levels(res$nr_features)[j]
+#     
+#     
+#     switch(test, 
+#       
+#       f = {
+#         
+#         res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
+#         
+#         print(all.equal(res_tmp[, "df1"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
+#         
+#         ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
+#           geom_point(stat = "qq", distribution = qf, dparams = list(df1 = as.numeric(nr_features) - 1, df2 = (n - 1) * (as.numeric(nr_features) - 1))) +
+#           geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
+#           theme_bw() +
+#           theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
+#           ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
+#         
+#         
+#       },
+#       
+#       lr = {
+#         
+#         res_tmp <- res[res$test == test & res$nr_features == nr_features, ]
+#         
+#         print(all.equal(res_tmp[, "df"], as.numeric(as.character(res_tmp[ , "nr_features"])) - 1 ))
+#         
+#         ggpl[[j]] <- ggplot(data = res_tmp, aes(sample = test_statistic, colour = disp_estimator)) + 
+#           geom_point(stat = "qq", distribution = qchisq, dparams = list(df = as.numeric(nr_features) - 1)) +
+#           geom_abline(intercept = 0, slope = 1, color="black", linetype = 2, size = 0.3) +
+#           theme_bw() +
+#           theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
+#           ggtitle(paste0("Q-Q plot for genes with ", nr_features, " features"))
+#         
+#       }
+#       
+#     )
+#     
+#   }
+#   
+#   
+#   png(paste0(out_dir_plots, out_suffix, "_qqplot_", test, ".png"), width = 300 * pdf_width, height = 150 * pdf_height)
+#   print(multiplot(plotlist = ggpl, cols = 4))
+#   dev.off()
+#   
+# }
+# 
+# 
+# 
+# 
+# 
+# ### Plots of dispersion versus p-values
+# 
+# n <- 3
+# nm <- 1000
+# 
+# res <- res[res$n == paste0("n=", n) & res$nm == paste0("nm=", nm), ]
+# 
+# true_disp <- res$true[1]
+# test <- "lr"
+# 
+# res_tmp <- res[res$test == test & res$disp_estimator == "moderation_none", ]
+# 
+# 
+# ggp <- ggplot(data = res_tmp, aes(x = pvalue, y = log10(est))) + 
+#   geom_hex(binwidth = c(0.01, 0.01)) +
+#   geom_hline(yintercept = log10(true_disp), color="black", linetype = 2, size = 0.5) +
+#   theme_bw() +
+#   ylab("gamma_+") +
+#   xlab("P-values") +
+#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+#   scale_fill_gradientn("", colours = rev(rainbow(10, end = 4/6))) +
+#   facet_wrap(~ nr_features, nrow = 2, scales = "fixed")
+# 
+# 
+# 
+# 
+# pdf(paste0(out_dir_plots, out_suffix, "_est_vs_pvalues_", test, ".pdf"), width = 2 * pdf_width, height = pdf_height)
+# print(ggp)
+# dev.off()
+# 
+# 
+# 
+# 
+# ggp <- ggplot(data = res_tmp, aes(x = pvalue, y = est)) + 
+#   geom_hex(binwidth = c(0.01, 2)) +
+#   geom_hline(yintercept = true_disp, color="black", linetype = 2, size = 0.5) +
+#   theme_bw() +
+#   ylab("gamma_+") +
+#   xlab("P-values") +
+#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "right", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+#   scale_fill_gradientn("", colours = rev(rainbow(10, end = 4/6))) +
+#   facet_wrap(~ nr_features, nrow = 2, scales = "fixed") +
+#   coord_cartesian(ylim = c(0, 250)) 
+# 
+# 
+# 
+# 
+# pdf(paste0(out_dir_plots, out_suffix, "_est_vs_pvalues2_", test, ".pdf"), width = 2 * pdf_width, height = pdf_height)
+# print(ggp)
+# dev.off()
+# 
+# 
+# 
 
 
 

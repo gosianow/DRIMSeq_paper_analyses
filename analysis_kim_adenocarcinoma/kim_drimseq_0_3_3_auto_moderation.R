@@ -1,8 +1,8 @@
 ######################################################
-## <<sim5_drimseq_auto_moderation.R>>
+## <<kim_drimseq_0_3_3_auto_moderation.R>>
 
 # BioC 3.2
-# Created 17 Apr 2016
+# Created 18 Apr 2016
 
 ##############################################################################
 Sys.time()
@@ -11,17 +11,15 @@ Sys.time()
 library(BiocParallel)
 library(DRIMSeq)
 library(limma)
-library(ggplot2)
 
 ##############################################################################
 # Test arguments
 ##############################################################################
 
-# rwd='/home/gosia/multinomial_project/simulations_sim5'
-# simulation='drosophila_node_nonull'
-# workers=10
-# count_method='kallisto'
-# filter_method='filter0'
+# rwd="/home/Shared/data/seq/kim_adenocarcinoma/"
+# workers=5
+# count_method=c("htseq", "kallisto")[1]
+# model=c("model_full", "model_null_normal1", "model_null_tumor1")[2]
 # method_out='drimseq_0_3_3'
 # dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_paper/help_functions/dmDS_auto_moderation_diagnostics.R'
 
@@ -29,23 +27,24 @@ library(ggplot2)
 # Read in the arguments
 ##############################################################################
 
+
+## Read input arguments
 args <- (commandArgs(trailingOnly = TRUE))
 for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
-print(args)
 
 print(rwd)
-print(simulation)
 print(workers)
 print(count_method)
-print(filter_method)
-print(method_out)
+print(model)
+
+
 
 ##############################################################################
 
-setwd(paste0(rwd, "/", simulation))
+setwd(rwd)
 
 if(workers > 1){
   BPPARAM <- MulticoreParam(workers = workers)
@@ -53,8 +52,9 @@ if(workers > 1){
   BPPARAM <- SerialParam()
 }
 
-out_dir <- paste0(method_out, "/", count_method, "/", filter_method, "/")
-dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+out_dir <- paste0(method_out, "/",  model, "/", count_method, "/")
+dir.create(out_dir, recursive = TRUE)
 
 out_dir_tmp <- paste0(out_dir, "auto_moderation/")
 dir.create(out_dir_tmp, recursive = TRUE)
@@ -68,8 +68,10 @@ dir.create(out_dir_tmp, recursive = TRUE)
 load(paste0(out_dir, "drimseq_genewise_grid_none_d.Rdata"))
 
 
+
 common_disp <- as.numeric(read.table(paste0(out_dir, "common_dispersion.txt")))
 common_disp
+
 
 
 ###########################################################################
@@ -81,6 +83,9 @@ source(dmDS_auto_moderation_diagnostics_function_path)
 x <- d
 
 dmDS_auto_moderation_diagnostics(x = x, common_disp = common_disp, out_dir_tmp = out_dir_tmp, BPPARAM = BPPARAM)
+
+
+
 
 
 

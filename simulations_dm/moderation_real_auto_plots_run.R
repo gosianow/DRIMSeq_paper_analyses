@@ -240,7 +240,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df_median)) +
   ylab("Mean absolute error") +
   xlab("Median auto moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(count_method ~ interaction, scales = "free")
+  facet_grid(count_method ~ interaction, scales = "free_y")
 
 pdf(paste0(out_dir_plots, fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
@@ -255,13 +255,13 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df_median)) +
   ylab("Median absolute error") +
   xlab("Median auto moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(count_method ~ interaction, scales = "free")
+  facet_grid(count_method ~ interaction, scales = "free_y")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
-
+### plot median log
 
 ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df_median)) + 
   geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.2, outlier.colour = NULL) +
@@ -269,13 +269,27 @@ ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df_med
   ylab("Log10 of median absolute error") +
   xlab("Median auto moderation") +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
-  facet_grid(count_method ~ interaction, scales = "free")
+  facet_grid(count_method ~ interaction, scales = "free_y")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
 
+### plot median of raw error
+
+ggp <- ggplot(data = mse, aes(y = median_error, x = disp_prior_df_median)) + 
+  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.2, outlier.colour = NULL) +
+  geom_hline(yintercept = 0, color="black", linetype = 2, size = 0.3) +
+  theme_bw() +
+  ylab("Median error") +
+  xlab("Median auto moderation") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(count_method ~ interaction, scales = "free_y")
+
+pdf(paste0(out_dir_plots, fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
 
 
 

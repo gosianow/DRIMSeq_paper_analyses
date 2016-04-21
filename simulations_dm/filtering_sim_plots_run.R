@@ -111,6 +111,7 @@ for(ix_n in 1:length(n)){
             
             # calculate mse
             rr$error_abs <- abs(rr$est - rr$true)
+            rr$error <- rr$est - rr$true
             rr$max_features <- factor(rr$max_features)
             
             out_mean <- aggregate(. ~ max_features, rr[, c("max_features", "error_abs")], mean)
@@ -119,7 +120,12 @@ for(ix_n in 1:length(n)){
             out_median <- aggregate(. ~ max_features, rr[, c("max_features", "error_abs")], median)
             colnames(out_median) <- c("max_features", "median_error_abs")
             
+            out_median_raw <- aggregate(. ~ max_features, rr[, c("max_features", "error")], median)
+            colnames(out_median_raw) <- c("max_features", "median_error")
+            
             out <- merge(out_mean, out_median, by = c("max_features"), sort = FALSE)
+            out <- merge(out, out_median_raw, by = c("max_features"), sort = FALSE)
+            
             
             mse_tmp_list[[i]] <- out
             
@@ -210,6 +216,13 @@ fp <- rbind.fill(fp_list)
 ### Panel plots
 ##############################################################################
 
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length=n+1)
+  hcl(h=hues, l=65, c=100)[1:n]
+}
+
+
 whisker_upper <- function(x) boxplot.stats(x)$stats[5]
 whisker_lower <- function(x) boxplot.stats(x)$stats[1]
 
@@ -230,16 +243,38 @@ res$nm <- factor(res$nm, levels = nm, labels = paste0("nm=", nm))
 res$n_nm <- interaction(res$n, res$nm, lex.order = TRUE)
 levels(res$n_nm)
 
+res$all_interactions <- res$n_nm
 
 ### Absolute error
 
 error <- res[complete.cases(res), ]
 error$error <- abs(error$est - error$true)
 
+ylim <- c(min(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_lower)[, "error"]) - 1, max(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_upper)[, "error"]) + 1)
+
+
+ggp <- ggplot(data = error, aes(y = error, x = max_features)) + 
+  geom_boxplot(outlier.size = 0.1, fill = gg_color_hue(1), outlier.colour = "black") +
+  theme_bw() +
+  ylab("Absolute error") +
+  xlab("Max features") +
+  coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(nm ~ n)
+
+
+pdf(paste0(out_dir_plots, out_suffix, "_error_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+png(paste0(out_dir_plots, out_suffix, "_error_absolute_boxplot.png"), width = 70*pdf_width, height = 70*pdf_height)
+print(ggp)
+dev.off()
+
 
 ggp <- ggplot(data = error, aes(y = log10(error), x = max_features)) + 
-  geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
-  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
+  geom_violin(trim = TRUE, fill = gg_color_hue(1), colour = gg_color_hue(1)) +
+  geom_boxplot(outlier.size = NA, alpha = 0, width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Log10 of absolute error") +
   xlab("Max features") +
@@ -257,8 +292,8 @@ dev.off()
 true_disp <- res$true[1]
 
 ggp <- ggplot(data = res, aes(y = log10(est), x = max_features)) + 
-  geom_violin(trim = FALSE, fill = "grey80", colour = "grey80") +
-  geom_boxplot(outlier.size = 1, fill = NA, width = 0.5, outlier.colour = NULL) +
+  geom_violin(trim = TRUE, fill = gg_color_hue(1), colour = gg_color_hue(1)) +
+  geom_boxplot(outlier.size = NA, alpha = 0, width = 0.5) +
   geom_hline(yintercept = log10(true_disp), color="black", linetype = 2, size = 0.5) +
   theme_bw() +
   ylab("Log 10 of gamma_+") +
@@ -291,7 +326,7 @@ levels(mse$n_nm)
 ### plot mean 
 
 ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = max_features)) + 
-  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
+  geom_boxplot(outlier.size = 1, fill = gg_color_hue(1), width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Mean absolute error") +
   xlab("Max features") +
@@ -309,7 +344,7 @@ dev.off()
 ### plot median 
 
 ggp <- ggplot(data = mse, aes(y = median_error_abs, x = max_features)) + 
-  geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.5, outlier.colour = NULL) +
+  geom_boxplot(outlier.size = 1, fill = gg_color_hue(1), width = 0.5, outlier.colour = NULL) +
   theme_bw() +
   ylab("Median absolute error") +
   xlab("Max features") +
@@ -321,6 +356,20 @@ print(ggp)
 dev.off()
 
 
+### plot median of raw error
+
+ggp <- ggplot(data = mse, aes(y = median_error, x = max_features)) + 
+  geom_boxplot(outlier.size = 1, fill = gg_color_hue(1), width = 0.5, outlier.colour = NULL) +
+  geom_hline(yintercept = 0, color="black", linetype = 2, size = 0.5) +
+  theme_bw() +
+  ylab("Median error") +
+  xlab("Max features") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(nm ~ n)
+
+pdf(paste0(out_dir_plots, out_suffix, "_error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
 
 
 
@@ -340,6 +389,10 @@ fp$n_nm <- interaction(fp$n, fp$nm, lex.order = TRUE)
 levels(fp$n_nm)
 
 
+fp$disp_estimator <- factor(fp$disp_estimator)
+fp$disp_estimator <- revalue(fp$disp_estimator, c("disp_est"="moderation_none", "disp_true"="true"))
+fp$disp_estimator <- relevel(fp$disp_estimator, ref = "true")
+
 
 ylim <- c(0, max(fp$fp, na.rm = TRUE) + 0.01)
 
@@ -352,6 +405,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = max_features, fill = disp_estimator)) +
   xlab("Max features") +
   coord_cartesian(ylim = ylim) +
   theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  scale_fill_manual(values = c("grey", gg_color_hue(nlevels(fp$disp_estimator) - 1))) +
   facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_fp_boxplot.pdf"), width = pdf_width, height = pdf_height)

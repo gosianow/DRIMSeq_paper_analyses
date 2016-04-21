@@ -83,9 +83,9 @@ disp='disp_common_kim_kallisto'
 out_suffix='filtering'
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 prop='${prop}' disp='${disp}' out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/filtering_sim_plots_run.R $ROUT/filtering_sim_plots_run.Rout
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 prop='${prop}' disp='${disp}' out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/filtering_sim_plots_run.R $ROUT/filtering_sim_plots_run.Rout
      
-
+tail $ROUT/filtering_sim_plots_run.Rout
 
 
 

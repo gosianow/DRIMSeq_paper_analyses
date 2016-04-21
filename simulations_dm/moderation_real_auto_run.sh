@@ -61,7 +61,7 @@ prop="c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kal
 disp="c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')"
 data_name="c('brooks','kim')"
 count_method="c('kallisto','htseq')"
-out_suffix='moderation_real'
+out_suffix='moderation_real_auto'
 
 
 R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} fig_name='all_' out_suffix='${out_suffix}' pdf_width=14 pdf_height=7" $RCODE/moderation_real_auto_plots_run.R $ROUT/moderation_real_auto_plots_run_n${n}.Rout
@@ -77,7 +77,7 @@ prop="c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kal
 disp="c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')"
 data_name="c('brooks','kim')"
 count_method="c('kallisto','htseq')"
-out_suffix='moderation_real'
+out_suffix='moderation_real_auto'
 
 
 R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} fig_name='n3_' out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/moderation_real_auto_plots_run.R $ROUT/moderation_real_auto_plots_run_n${n}.Rout

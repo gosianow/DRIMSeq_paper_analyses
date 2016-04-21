@@ -41,28 +41,6 @@ done
 ### Test
 ######################
 
-# workers=5
-# disp='disp_genewise_kim_kallisto_lognormal'
-# prop='prop_q20_kim_kallisto_fcutoff'
-
-# for n in 3
-# do
-
-#   for nm in 1000
-#   do
-    
-    
-#     for run in {2..2}
-#     do
-      
-#     echo "n${n}_nm${nm}_${prop}_${run}"
-
-#       R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='test_' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 param_pi_path='$DMPARAMS/kim_kallisto/${prop}.txt' param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' max_features=c(Inf,18,5)" $RCODE/filtering_and_moderation_sim_run.R $ROUT/filtering_and_moderation_sim_run_n${n}_nm${nm}_${prop}.Rout
-      
-#     done
-#   done
-# done
-
 
 ######################
 ### Individual run
@@ -83,9 +61,9 @@ disp='disp_genewise_kim_kallisto_lognormal'
 out_suffix='fam'
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 prop='${prop}' disp='${disp}' out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/filtering_and_moderation_sim_plots_run.R $ROUT/filtering_and_moderation_sim_plots_run.Rout
+R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 prop='${prop}' disp='${disp}' out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/filtering_and_moderation_sim_plots_run.R $ROUT/filtering_and_moderation_sim_plots_run.Rout
     
-
+tail $ROUT/filtering_and_moderation_sim_plots_run.Rout
 
 
 

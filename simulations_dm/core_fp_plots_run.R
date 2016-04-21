@@ -20,17 +20,18 @@ library(plyr)
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
-# sim_name=''
-# n=c(3)
-# nm=c(1000)
-# nd=0
-# prop=c('prop_q3_kim_kallisto_fcutoff','prop_q10_kim_kallisto_fcutoff')
-# disp=c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')
-# pdf_width=7
-# pdf_height=7
-# fig_name='3_1000_'
-
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
+sim_name=''
+n=c(3)
+nm=c(1000)
+nd=0
+prop=c('prop_q3_kim_kallisto_fcutoff','prop_q10_kim_kallisto_fcutoff')
+disp=c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')
+pdf_width=7
+pdf_height=7
+fig_name='3_1000_'
+out_dir='core_fp'
+out_suffix='core_fp'
 
 ##############################################################################
 # Read in the arguments
@@ -57,10 +58,8 @@ print(disp)
 
 setwd(rwd)
 
-out_dir_res <- "core_fp/run/"
-out_dir_plots <- "core_fp/"
-
-out_suffix <- "core_fp"
+out_dir_res <- paste0(out_dir, "/run/")
+out_dir_plots <- paste0(out_dir, "/")
 
 
 ##############################################################################
@@ -234,9 +233,58 @@ pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot.pdf"), width = 
 print(ggp)
 dev.off()
 
-png(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot.png"), width = 100*pdf_width, height = 100*pdf_height)
+png(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot.png"), width = 75*pdf_width, height = 75*pdf_height)
 print(ggp)
 dev.off()
+
+
+# ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) + 
+#   geom_violin(trim = TRUE, scale = "width", position = position_dodge(width = 0.9), width = 0.9) +
+#   geom_boxplot(outlier.size = NA, alpha = 0, position = position_dodge(width = 0.9), width = 0.45) +
+#   theme_bw() +
+#   ylab("Absolute error") +
+#   coord_cartesian(ylim = ylim) +
+#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+#   facet_grid(prop ~ n_nm_simulation)
+# 
+# pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_violin.pdf"), width = pdf_width, height = pdf_height)
+# print(ggp)
+# dev.off()
+
+
+ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
+  geom_boxplot(outlier.size = 0.2, outlier.colour = "black") +
+  theme_bw() +
+  ylab("Log10 of absolute error") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(prop ~ n_nm_simulation)
+
+pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot_log.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+png(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot_log.png"), width = 75*pdf_width, height = 75*pdf_height)
+print(ggp)
+dev.off()
+
+
+ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
+  geom_violin(trim = TRUE, aes(colour = method), scale = "width", position = position_dodge(width = 0.9), width = 0.9) +
+  geom_boxplot(outlier.size = NA, alpha = 0, position = position_dodge(width = 0.9), width = 0.45) +
+  theme_bw() +
+  ylab("Log10 of absolute error") +
+  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  facet_grid(prop ~ n_nm_simulation)
+
+pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_violin_log.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+
+
+
+
+
 
 
 
@@ -253,7 +301,7 @@ ggn <- sum(!grepl("true", levels(res$method)))
 
 
 ggp <- ggplot(data = res, aes(y = log10(est), x = dispersion, fill = method)) + 
-  geom_violin(trim = TRUE, scale = "width", position = position_dodge(width = 0.9), width = 0.9) +
+  geom_violin(trim = TRUE, aes(colour = method), scale = "width", position = position_dodge(width = 0.9), width = 0.9) +
   geom_boxplot(outlier.size = NA, outlier.colour = NULL, position = position_dodge(width = 0.9), width = 0.5) +
   theme_bw() +
   ylab("Log10 of gamma_+") +

@@ -39,7 +39,8 @@ library(tools)
 # param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/prop_q3_kim_kallisto_fcutoff.txt'
 # ### Genewise dispersion of feature proportions
 # param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/kim_kallisto/disp_common_kim_kallisto.txt'
-
+# out_dir='core_fp'
+# out_suffix='core_fp'
 
 ##############################################################################
 # Read in the arguments
@@ -110,10 +111,10 @@ if(ncol(params) == 2){
 dir.create(rwd, recursive = T, showWarnings = FALSE)
 setwd(rwd)
 
-out_dir <- "core_fp/run/"
-dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
-out_suffix <- "core_fp"
+out_dir <- paste0(out_dir, "/run/")
+
+dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 
 out_name <- paste0(sim_name, "n", n, "_nm", nm, "_nd", nd, "_", basename(file_path_sans_ext(param_pi_path)), "_",  basename(file_path_sans_ext(param_gamma_path)), "_")

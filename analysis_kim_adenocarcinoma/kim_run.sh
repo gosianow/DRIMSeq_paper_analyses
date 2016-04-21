@@ -152,6 +152,46 @@ done
 
 
 
+##############################################################################
+# Run auto moderation diagnostics
+##############################################################################
+
+
+for model in 'model_full'
+do 
+  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  do
+    
+    echo "${model}_${count_method}"
+
+    R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_paper/help_functions/dmDS_auto_moderation_diagnostics.R'" $RCODE/kim_drimseq_0_3_3_auto_moderation.R $ROUT/kim_drimseq_0_3_3_auto_moderation_${model}_${count_method}.Rout
+
+tail $ROUT/kim_drimseq_0_3_3_auto_moderation_${model}_${count_method}.Rout
+
+  done
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -33,7 +33,8 @@ library(limma)
 # population='CEU'
 # path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
 # valid_path='data/validation/glimmps/glimmps_valid_pcr.txt'
-# 
+# method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+# positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes'
 
 ##############################################################################
 # Read in the arguments
@@ -53,13 +54,13 @@ print(rwd)
 
 setwd(rwd)
 
-method_out <- "drimseq_0_3_3_analysis/"
+method_out <- paste0(method_out, "/")
 
-comparison_out <- paste0("drimseq_0_3_3_positive_controls/", basename(file_path_sans_ext(valid_path)), "/")
+positive_controls_out <- paste0(positive_controls_out, "/", basename(file_path_sans_ext(valid_path)), "/")
 
-dir.create(comparison_out, recursive = TRUE, showWarnings = FALSE)
+dir.create(positive_controls_out, recursive = TRUE, showWarnings = FALSE)
 
-out_dir <- comparison_out
+out_dir <- positive_controls_out
 
 dir.create(paste0(out_dir, "figures/"), recursive = TRUE, showWarnings = FALSE)
 
@@ -72,44 +73,6 @@ keep_methods <- c("drimseq", "sqtlseeker")
 valid <- read.table(valid_path, header = TRUE, sep = "\t", as.is = TRUE) 
 
 valid 
-
-
-##############################################################################
-# Plot tables with validated sQTLs
-##############################################################################
-
-
-files <- list.files(comparison_out, pattern = "validation.txt")
-files
-
-summary <- read.table(paste0(comparison_out, files[1]), header = TRUE, as.is = TRUE)
-
-summarym <- melt(summary, id.vars = c("gene_id", "gene_name", "snp_id", "snp_name", "gene_snp"))
-
-summarym$variable <- factor(summarym$variable, levels = keep_methods)
-summarym$status <- factor(summarym$value < 0.05)
-
-summarym$gene_snp_name <- factor(paste0(summarym$gene_name, " : ", summarym$snp_name), levels = paste0(summary$gene_name, " : ", summary$snp_name)[nrow(summary):1])
-
-
-ggp <- ggplot(summarym, aes(x = variable, y = gene_snp_name, fill = status)) + 
-  geom_tile() + 
-  geom_text(aes(label = sprintf( "%.02e", value)), color = "black", size = 4) + 
-  scale_x_discrete(expand = c(0, 0)) + 
-  scale_y_discrete(expand = c(0, 0)) + 
-  xlab("") + 
-  ylab("") + 
-  theme_bw() +
-  theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 0, vjust = 0, hjust = 0.5), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14)) +
-  scale_fill_manual(values = c("grey80", "grey50"), na.value = "grey90")
-
-
-pdf(paste0(comparison_out, "validation_summary.pdf"), 7, 7)
-print(ggp)
-dev.off()
-
-
-
 
 
 ##########################################################################
@@ -197,8 +160,6 @@ for(j in 1:nrow(valid)){
 
 
 
-sessionInfo()
-
 
 
 
@@ -226,4 +187,6 @@ sessionInfo()
 
 
 
+
+sessionInfo()
 

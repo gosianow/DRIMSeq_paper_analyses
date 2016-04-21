@@ -88,15 +88,16 @@ disp='disp_common_kim_kallisto'
 out_suffix='proportions_decay'
 
 
-R32dev CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 disp='${disp}' out_suffix='${out_suffix}' pdf_width=10 pdf_height=7" $RCODE/proportions_sim_f_plots_run.R $ROUT/proportions_sim_f_plots_run.Rout
-     
+R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 disp='${disp}' out_suffix='${out_suffix}' pdf_width=10 pdf_height=7 out_dir='proportions_f'" $RCODE/proportions_sim_f_plots_run.R $ROUT/proportions_sim_f_plots_run.Rout
+
+tail $ROUT/proportions_sim_f_plots_run.Rout
 
 out_suffix='proportions_uniform'
 
 
-R32dev CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 disp='${disp}' out_suffix='${out_suffix}' pdf_width=10 pdf_height=7" $RCODE/proportions_sim_f_plots_run.R $ROUT/proportions_sim_f_plots_run.Rout
+R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=0 disp='${disp}' out_suffix='${out_suffix}' pdf_width=10 pdf_height=7 out_dir='proportions_f'" $RCODE/proportions_sim_f_plots_run.R $ROUT/proportions_sim_f_plots_run.Rout
    
-
+tail $ROUT/proportions_sim_f_plots_run.Rout
 
 
 
