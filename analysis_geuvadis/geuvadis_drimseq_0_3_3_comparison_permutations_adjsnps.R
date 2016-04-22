@@ -1,9 +1,9 @@
 ##############################################################################
-# <<geuvadis_drimseq_0_3_3_comparison_permutations.R>>
+# <<geuvadis_drimseq_0_3_3_comparison_permutations_adjsnps.R>>
 
 # BioC 3.2
 # Created 29 Feb 2016 
-# Modified 12 Apr 2016
+# Modified 21 Apr 2016
 
 # For DRIMSeq merge results from all chromosomes; Calculate adjusted p-values for drimseq and sqtlseeker
 # Plot histograms of p-values
@@ -24,16 +24,16 @@ library(tools)
 library(rtracklayer)
 library(GenomicRanges)
 library(limma)
+library(matrixStats)
 
 ##############################################################################
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/Shared/data/seq/geuvadis'
-# population='CEU'
-# method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
-# FDR=0.05
+rwd='/home/Shared/data/seq/geuvadis'
+population='CEU'
+method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_adjsnps'
 
 ##############################################################################
 # Read in the arguments
@@ -131,26 +131,58 @@ res <- res[!is.na(res$pvalue), ]
 res$gene_block <- paste0(res$gene_id, ":", res$block_id)
 res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
 
-### Keep data for unique blocks
-res_uniq <- res[!duplicated(res$gene_block), ]
 
 ### Redo the permutation adjustment of p-values based on p-values from all the genes
 
-
-### Extract p-values from permutations
+# Extract p-values from permutations
 pval_perm_list <- lapply(1:22, function(chr){
   # chr = 1
   
   load(paste0(method_out, population, "_chr",chr, "_d.Rdata"))
   
-  return(d@pvalues_permutations)
+  ### Permuted p-values are for blocks
+  
+  pval_perm_block <- data.frame(d@pvalues_permutations)
+  pval_perm_block$block_id <- rownames(d@genotypes@unlistData)
+  pval_perm_block$gene_id <- rep(names(d@genotypes), times = width(d@genotypes))
+    
+  ### Repeat results for blocks with multiple SNPs 
+
+  pval_perm_block_spl <- split(pval_perm_block, factor(pval_perm_block$gene_id, levels = names(d@genotypes)))
+  inds <- 1:length(pval_perm_block_spl)
+  
+  pval_perm_snp <- lapply(inds, function(i){
+    # i = 1
+    
+    pval_perm_block_gene <- pval_perm_block_spl[[i]]
+    
+    blo <- d@blocks[[i]]
+    matching <- match(blo[, "block_id"], pval_perm_block_gene[, "block_id"])
+    
+    pval_perm_snp_gene <- pval_perm_block_gene[matching, ]
+    
+    return(pval_perm_snp_gene)
+    
+  })
+  
+  pval_perm_snp <- do.call(rbind, pval_perm_snp)
+  
+  pval_perm_snp <- pval_perm_snp[, -grep("gene_id|block_id", colnames(pval_perm_snp))]
+  
+  dim(pval_perm_snp)
+  dim(d@results)
+
+  return(pval_perm_snp)
   
 })
 
+
+
 pval_perm <- do.call(rbind, pval_perm_list)
 
+pval_perm <- as.matrix(pval_perm)
 
-pval <- res_uniq$pvalue
+pval <- res$pvalue
 nas <- is.na(pval)
 pval <- pval[!nas]
 pval <- factor(pval)
@@ -170,28 +202,22 @@ nr_perm_tot <- length(pval_perm)
 pval_adj <- (sum_sign_pval + 1) / (nr_perm_tot + 1)
 
 
-res_uniq$pvalue_perm_new <- NA
-res_uniq$pvalue_perm_new[!nas] <- pval_adj
+res$pvalue_perm_new <- NA
+res$pvalue_perm_new[!nas] <- pval_adj
 
-res_uniq$adj_pvalue_perm_new <- p.adjust(res_uniq$pvalue_perm_new, method = "BH")
+res$adj_pvalue_perm_new <- p.adjust(res$pvalue_perm_new, method = "BH")
 
 
-# pdf(paste0(out_dir, "pvalues_perm_new.pdf"))
-# smoothScatter(res_uniq$pvalue_perm, res_uniq$pvalue_perm_new)
-# dev.off()
+### Replace current p-values with one adjusted by permutations
 
+res$pvalue <- res$pvalue_perm_new
+res$adj_pvalue <- res$adj_pvalue_perm_new
 
 
 ### Remove the permutation columns
 
 res <- res[, -grep("perm", colnames(res))]
 
-
-### Replace current p-values with one adjusted by permutations
-
-mm <- match(res$gene_block, res_uniq$gene_block)
-res$pvalue <- res_uniq$pvalue_perm_new[mm]
-res$adj_pvalue <- res_uniq$adj_pvalue_perm_new[mm]
 
 
 write.table(res, paste0(out_dir, "results_drimseq.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
@@ -331,8 +357,6 @@ colors_df <- colors_df[keep_methods, , drop = FALSE]
 ##########################################################################
 
 
-
-
 summary <- data.frame(method = c("drimseq", "sqtlseeker", "overlap"))
 
 
@@ -343,7 +367,7 @@ summary <- data.frame(method = c("drimseq", "sqtlseeker", "overlap"))
 
 cobradata <- COBRAData(padj = results_padj)
 
-cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = FDR)
+cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 0.05)
 
 basemethods(cobraperf)
 
@@ -372,8 +396,6 @@ summary$gene_snp_sign <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
 ### Significant genes
 
 # Keep minimal p-value per gene
-library(matrixStats)
-
 gene_ids <- factor(strsplit2(rownames(results_padj), ":")[, 1])
 
 results_padj_split <- by(results_padj, gene_ids, function(x){
@@ -389,7 +411,7 @@ colnames(results_padj_gene) <- colnames(results_padj)
 # Use iCOBRA
 cobradata <- COBRAData(padj = results_padj_gene)
 
-cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = FDR)
+cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 0.05)
 
 basemethods(cobraperf)
 

@@ -16,6 +16,7 @@ Sys.time()
 ##############################################################################
 
 library(DRIMSeq)
+library(reshape2)
 library(ggplot2)
 library(iCOBRA)
 library(plyr)
@@ -32,11 +33,14 @@ library(limma)
 
 rwd='/home/Shared/data/seq/geuvadis'
 population='CEU'
-valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis.txt'
+valid_path='data/validation/glimmps/glimmps_valid_pcr.txt'
 plot_proportions=TRUE
+plot_tables=TRUE
 method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
-positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes'
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_fdr010'
+positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes_fdr010'
+FDR=0.1
+
 
 ##############################################################################
 # Read in the arguments
@@ -69,6 +73,8 @@ dir.create(paste0(out_dir, "figures/"), recursive = TRUE, showWarnings = FALSE)
 
 comparison_out <- paste0(comparison_out, "/")
 method_out <- paste0(method_out, "/")
+
+
 
 ##############################################################################
 ### colors
@@ -169,15 +175,53 @@ write.table(out, file = paste0(positive_controls_out, "validation.txt"), quote =
 
 
 
-number_sign_valid <- matrix(colSums(results_padj_valid < 0.05, na.rm = TRUE), nrow = 1)
+number_sign_valid <- matrix(colSums(results_padj_valid < FDR, na.rm = TRUE), nrow = 1)
 colnames(number_sign_valid) <- colnames(results_padj_valid)
 
 
-out_summary <- data.frame(number_sign_valid, all = nrow(results_padj_valid))
+out_summary <- data.frame(number_sign_valid, validated_tested = sum(!is.na(mm)), validated = nrow(results_padj_valid))
 out_summary
 
 write.table(out_summary, file = paste0(positive_controls_out, "validation_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
+
+
+##############################################################################
+# Plot tables with validated sQTLs
+##############################################################################
+
+keep_methods <- colors_df$methods
+
+if(plot_tables){
+  
+  summary <- read.table(paste0(positive_controls_out, "validation.txt"), header = TRUE)
+  
+  summarym <- melt(summary, id.vars = c("gene_id", "gene_name", "snp_id", "snp_name", "gene_snp"))
+  
+  summarym$variable <- factor(summarym$variable, levels = keep_methods)
+  summarym$status <- factor(summarym$value < FDR)
+  
+  summarym$gene_snp_name <- factor(paste0(summarym$gene_name, " : ", summarym$snp_name), levels = paste0(summary$gene_name, " : ", summary$snp_name)[nrow(summary):1])
+  
+  
+  ggp <- ggplot(summarym, aes(x = variable, y = gene_snp_name, fill = status)) + 
+    geom_tile() + 
+    geom_text(aes(label = sprintf( "%.02e", value)), color = "black", size = 4) + 
+    scale_x_discrete(expand = c(0, 0)) + 
+    scale_y_discrete(expand = c(0, 0)) + 
+    xlab("") + 
+    ylab("") + 
+    theme_bw() +
+    theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 0, vjust = 0, hjust = 0.5), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14)) +
+    scale_fill_manual(values = c("grey80", "grey50"), na.value = "grey90")
+  
+  
+  pdf(paste0(positive_controls_out, "validation.pdf"), 7, 7)
+  print(ggp)
+  dev.off()
+  
+  
+}
 
 
 ##########################################################################

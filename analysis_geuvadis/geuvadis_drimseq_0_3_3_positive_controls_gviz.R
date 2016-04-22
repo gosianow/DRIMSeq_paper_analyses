@@ -1,10 +1,9 @@
 ######################################################
-## <<geuvadis_drimseq_0_3_3_positive_controls_summary.R>>
+## <<geuvadis_drimseq_0_3_3_positive_controls_gviz.R>>
 
 # BioC 3.2
 # Created 2 Mar 2016
 
-# Plot tables with validated sQTLs
 # Plot gene structure validated sQTLs
 
 ##############################################################################
@@ -33,7 +32,6 @@ library(limma)
 # population='CEU'
 # path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
 # valid_path='data/validation/glimmps/glimmps_valid_pcr.txt'
-# method_out='drimseq_0_3_3_analysis_permutations_all_genes'
 # positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes'
 
 ##############################################################################
@@ -54,7 +52,6 @@ print(rwd)
 
 setwd(rwd)
 
-method_out <- paste0(method_out, "/")
 
 positive_controls_out <- paste0(positive_controls_out, "/", basename(file_path_sans_ext(valid_path)), "/")
 
@@ -64,7 +61,6 @@ out_dir <- positive_controls_out
 
 dir.create(paste0(out_dir, "figures/"), recursive = TRUE, showWarnings = FALSE)
 
-keep_methods <- c("drimseq", "sqtlseeker")
 
 ##############################################################################
 # validated genes

@@ -1,5 +1,5 @@
 
-calculateCAT <- function(results1, results2, by = 1, maxrank = min(nrow(results1), nrow(results1))){
+calculateCAT <- function(results1, results2, by = 1, maxrank = min(nrow(results1), nrow(results1)), FDR = 0.05){
   
   
   results1 <- results1[order(results1$pvalue, decreasing = FALSE), , drop = FALSE]
@@ -8,8 +8,8 @@ calculateCAT <- function(results1, results2, by = 1, maxrank = min(nrow(results1
   results1 <- results1[complete.cases(results1), , drop = FALSE]
   results2 <- results2[complete.cases(results2), , drop = FALSE]
   
-  x1 <- min(which(!results1$adj_pvalue < 0.05))
-  x2 <- min(which(!results2$adj_pvalue < 0.05))
+  x1 <- min(which(!results1$adj_pvalue < FDR))
+  x2 <- min(which(!results2$adj_pvalue < FDR))
   
   
   top_ds_genes <- sort(unique(c(seq(1, maxrank, by = by), x1, x2)), decreasing = FALSE)
@@ -95,17 +95,17 @@ plotCAT <- function(data_CAT, metadata, plot_var, facet_var = NULL, plot_colors 
   
   ggp <- ggplot(data = overlaps, aes(x = top_ds_genes, y = overlap, group = plot_var, colour = plot_var)) +
     theme_bw() +
-    geom_line(size = 1.5, na.rm=TRUE) +
+    geom_line(size = 2, na.rm=TRUE) +
     xlab("Number of top ranked genes") +
     ylab("Percentage overlap") +
     theme(axis.text=element_text(size = 16), axis.title = element_text(size = 18, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 12), strip.text = element_text(size = 12)) +
     guides(colour = guide_legend(override.aes = list(size = 1.5, shape = NA), ncol = 3)) 
   
   if(plotx)
-    ggp <- ggp + geom_point(data = X2, aes(x = top_ds_genes, y = overlap, colour = plot_var), size = 8, shape = "X", na.rm=TRUE) 
+    ggp <- ggp + geom_point(data = X2, aes(x = top_ds_genes, y = overlap, colour = plot_var), size = 10, shape = "X", na.rm=TRUE) 
   
   if(plotx)
-    ggp <- ggp + geom_point(data = X1, aes(x = top_ds_genes, y = overlap), colour = reference_color, size = 6, shape = "X", na.rm=TRUE) 
+    ggp <- ggp + geom_point(data = X1, aes(x = top_ds_genes, y = overlap), colour = reference_color, size = 8, shape = "X", na.rm=TRUE) 
   
   if(!is.null(plot_colors))
     ggp <- ggp + scale_color_manual(values = plot_colors)

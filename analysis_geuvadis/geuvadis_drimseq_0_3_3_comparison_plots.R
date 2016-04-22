@@ -17,7 +17,6 @@ Sys.time()
 
 library(ggplot2)
 library(plyr)
-library(ffpe)
 
 
 ##############################################################################
@@ -26,10 +25,10 @@ library(ffpe)
 
 # rwd='/home/Shared/data/seq/geuvadis'
 # population='CEU'
-# method_out='drimseq_0_3_3_analysis_permutations'
 # comparison_out='drimseq_0_3_3_comparison_permutations'
 # Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R'
 # CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
+# FDR=0.05
 
 ##############################################################################
 # Read in the arguments
@@ -52,7 +51,6 @@ print(CAT_function_path)
 
 setwd(rwd)
 
-method_out <- paste0(method_out, "/")
 comparison_out <- paste0(comparison_out, "/")
 
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
@@ -131,7 +129,7 @@ results <- lapply(results, function(x){
 # 
 # data_Overlaps <- list()
 # 
-# data_Overlaps[[1]] <- calculateOverlaps(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100)
+# data_Overlaps[[1]] <- calculateOverlaps(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100, FDR = FDR)
 # 
 # 
 # 
@@ -177,7 +175,7 @@ source(CAT_function_path)
 
 data_CAT <- list()
 
-data_CAT[[1]] <- calculateCAT(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100)
+data_CAT[[1]] <- calculateCAT(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100, FDR = FDR)
 
 save(data_CAT, file = paste0(comparison_out, "data_CAT.Rdata"))
 
@@ -213,21 +211,33 @@ pdf(paste0(comparison_out, "cat_zoom.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
 
+
+ggp <- ggp + 
+  coord_cartesian(xlim = c(0, 6000), ylim = c(0, 1)) +
+  ylab("Percentage overlap with sqtlseeker") +
+  xlab("Number of top ranked sQTLs")
+
+
+pdf(paste0(comparison_out, "cat_zoom2.pdf"), width = 7, height = 7)
+print(ggp)
+dev.off()
+
 save(ggp, file = paste0(comparison_out, "cat.Rdata"))
 
 ############################################################################
 # CAT plots with CATplot from ffpe
 ############################################################################
+# library(ffpe)
 
-vec1 <- results[["sqtlseeker"]]
-vec1 <- vec1[order(vec1$pvalue, decreasing = FALSE), "gene_snp"]
-
-vec2 <- results[["drimseq"]]
-vec2 <- vec2[order(vec2$pvalue, decreasing = FALSE), "gene_snp"]
-
-pdf(paste0(comparison_out, "cat_ffpe.pdf"), width = 7, height = 7)
-CATplot(vec1, vec2, maxrank = 10000, make.plot = TRUE)
-dev.off()
+# vec1 <- results[["sqtlseeker"]]
+# vec1 <- vec1[order(vec1$pvalue, decreasing = FALSE), "gene_snp"]
+# 
+# vec2 <- results[["drimseq"]]
+# vec2 <- vec2[order(vec2$pvalue, decreasing = FALSE), "gene_snp"]
+# 
+# pdf(paste0(comparison_out, "cat_ffpe.pdf"), width = 7, height = 7)
+# CATplot(vec1, vec2, maxrank = 10000, make.plot = TRUE)
+# dev.off()
 
 
 

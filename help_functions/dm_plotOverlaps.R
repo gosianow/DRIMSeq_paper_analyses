@@ -1,5 +1,5 @@
 
-calculateOverlaps <- function(results1, results2, by = 1){
+calculateOverlaps <- function(results1, results2, by = 1, FDR = 0.05){
   
   
   results1 <- results1[order(results1$pvalue, decreasing = FALSE), ]
@@ -8,8 +8,8 @@ calculateOverlaps <- function(results1, results2, by = 1){
   results1 <- results1[complete.cases(results1), , drop = FALSE]
   results2 <- results2[complete.cases(results2), , drop = FALSE]
   
-  x1 <- min(which(!results1$adj_pvalue < 0.05))
-  x2 <- min(which(!results2$adj_pvalue < 0.05))
+  x1 <- min(which(!results1$adj_pvalue < FDR))
+  x2 <- min(which(!results2$adj_pvalue < FDR))
   
   
   top_ds_genes <- sort(unique(c(seq(1, min(nrow(results1), nrow(results2)), by = by), x1, x2)), decreasing = FALSE)
