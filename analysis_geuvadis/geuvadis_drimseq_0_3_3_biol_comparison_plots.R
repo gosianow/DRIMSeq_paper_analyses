@@ -24,12 +24,12 @@ library(BiocParallel)
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/geuvadis'
-population='CEU'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
-FDR=0.05
-path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
-workers=10
+# rwd='/home/Shared/data/seq/geuvadis'
+# population='CEU'
+# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
+# FDR=0.05
+# path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
+# workers=10
 
 ##############################################################################
 # Read in the arguments
@@ -206,7 +206,7 @@ print(ggp)
 dev.off()
 
 
-### calculate the number of transcripts per gene 
+### calculate the number of expressed transcripts per gene 
 nr_trans <- by(counts, factor(counts_raw$geneId), function(x){
   
   x <- as.matrix(x)

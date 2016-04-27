@@ -267,6 +267,7 @@ keep_methods <- colors_df$methods %in% colnames(results_padj)
 colors <- colors[keep_methods]
 colors_df <- colors_df[keep_methods, , drop = FALSE]
 
+results_padj <- results_padj[, colors_df$methods, drop = FALSE]
 
 
 
@@ -275,7 +276,7 @@ colors_df <- colors_df[keep_methods, , drop = FALSE]
 ##########################################################################
 
 
-summary <- data.frame(method = c("drimseq", "sqtlseeker", "overlap"))
+summary <- data.frame(method = c(colors_df$methods, "overlap"))
 
 
 # All tested cases

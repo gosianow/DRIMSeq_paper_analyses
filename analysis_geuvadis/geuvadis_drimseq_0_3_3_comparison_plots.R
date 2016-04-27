@@ -170,14 +170,24 @@ results <- lapply(results, function(x){
 # CAT plots - percentage overlap versus top x DS genes
 ############################################################################
 
-
 source(CAT_function_path)
 
-data_CAT <- list()
 
-data_CAT[[1]] <- calculateCAT(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100, FDR = FDR)
+if(!file.exists(paste0(comparison_out, "data_CAT.Rdata"))){
+  
+  data_CAT <- list()
+  
+  data_CAT[[1]] <- calculateCAT(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100, FDR = FDR)
+  
+  save(data_CAT, file = paste0(comparison_out, "data_CAT.Rdata"))
+  
+  
+}else{
+  
+  load(paste0(comparison_out, "data_CAT.Rdata"))  
+  
+}
 
-save(data_CAT, file = paste0(comparison_out, "data_CAT.Rdata"))
 
 
 reference_method <- "sqtlseeker"
@@ -222,7 +232,6 @@ pdf(paste0(comparison_out, "cat_zoom2.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
 
-save(ggp, file = paste0(comparison_out, "cat.Rdata"))
 
 ############################################################################
 # CAT plots with CATplot from ffpe

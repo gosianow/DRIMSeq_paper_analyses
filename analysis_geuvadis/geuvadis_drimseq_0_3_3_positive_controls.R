@@ -31,15 +31,16 @@ library(limma)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/Shared/data/seq/geuvadis'
-population='CEU'
-valid_path='data/validation/glimmps/glimmps_valid_pcr.txt'
-plot_proportions=TRUE
-plot_tables=TRUE
-method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_fdr010'
-positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes_fdr010'
-FDR=0.1
+# rwd='/home/Shared/data/seq/geuvadis'
+# population='CEU'
+# valid_path='data/validation/glimmps/glimmps_valid_pcr.txt'
+# plot_proportions=TRUE
+# plot_tables=TRUE
+# method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_fdr010'
+# positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes_fdr010'
+# sqtlseeker_results='sqtlseeker_2_1_analysis'
+# FDR=0.1
 
 
 ##############################################################################
@@ -54,14 +55,9 @@ for (i in 1:length(args)) {
 
 print(args)
 
-print(rwd)
-print(population)
-
-
 ##############################################################################
 
 setwd(rwd)
-
 
 positive_controls_out <- paste0(positive_controls_out, "/", basename(file_path_sans_ext(valid_path)), "/")
 
@@ -212,7 +208,7 @@ if(plot_tables){
     xlab("") + 
     ylab("") + 
     theme_bw() +
-    theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 0, vjust = 0, hjust = 0.5), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14)) +
+    theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 0, vjust = 0, hjust = 0.5), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14), legend.position = "none") +
     scale_fill_manual(values = c("grey80", "grey50"), na.value = "grey90")
   
   
@@ -228,6 +224,7 @@ if(plot_tables){
 ### Proportion plots of validated sQTLs
 ##########################################################################
 
+
 if(plot_proportions){
   
   
@@ -239,18 +236,21 @@ if(plot_proportions){
   
   
   for(i in which(valid$gene_snp %in% results[["drimseq"]]$gene_snp)){
-    # i = 1
+    # i = 2
     
     load(paste0(method_out, population, "_chr",valid$chr[i], "_d.Rdata"))
     
-    plot_main <- paste0(valid$gene_name[i], " - ", valid$snp_name[i], "\n FDR = ", sprintf( "%.02e",results[["drimseq"]][which(results[["drimseq"]]$gene_snp == valid$gene_snp[i]), "adj_pvalue"]))
+    mean_expression <- round(d@mean_expression[valid$gene_id[i]], 1)
+    adj_pvalue <- sprintf( "%.02e",results[["drimseq"]][which(results[["drimseq"]]$gene_snp == valid$gene_snp[i]), "adj_pvalue"])
+    
+    plot_main <- paste0(valid$gene_name[i], " - ", valid$snp_name[i], "\n mean gene expression = ", mean_expression, " / FDR = ", adj_pvalue)
     
     
     ggp <- plotFit(d, gene_id = valid$gene_id[i], snp_id = valid$snp_id[i], plot_type = "boxplot1", order = FALSE)
     
     ggp <- ggp + ggtitle(plot_main)
     
-    pdf(paste0(out_dir, "figures/drimseq_boxplot1_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 12, height = 7)
+    pdf(paste0(out_dir, "figures/drimseq_boxplot1_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
     print(ggp)
     dev.off()
     
@@ -259,9 +259,19 @@ if(plot_proportions){
     
     ggp <- ggp + ggtitle(plot_main)
     
-    pdf(paste0(out_dir, "figures/drimseq_boxplot1order_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 12, height = 7)
+    pdf(paste0(out_dir, "figures/drimseq_boxplot1order_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
     print(ggp)
     dev.off()
+    
+    
+    ggp <- plotFit(d, gene_id = valid$gene_id[i], snp_id = valid$snp_id[i], plot_type = "boxplot3", order = TRUE)
+    
+    ggp <- ggp + ggtitle(plot_main)
+    
+    pdf(paste0(out_dir, "figures/drimseq_boxplot3order_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
+    print(ggp)
+    dev.off()
+    
     
     
   }
@@ -275,7 +285,7 @@ if(plot_proportions){
   results[["sqtlseeker"]][which(results[["sqtlseeker"]]$gene_snp %in% valid$gene_snp), ]
   
   
-  sqtlseeker_counts <- read.table("sqtlseeker_2_1_analysis/data/trExpCount_CEU_sqtlseeker_ratios.tsv", header = TRUE, sep = "\t", as.is = TRUE)
+  sqtlseeker_counts <- read.table(paste0(sqtlseeker_results, "/data/trExpCount_CEU_sqtlseeker_ratios.tsv"), header = TRUE, sep = "\t", as.is = TRUE)
   
   
   for(i in which(valid$gene_snp %in% results[["sqtlseeker"]]$gene_snp)){
@@ -299,7 +309,7 @@ if(plot_proportions){
     ggp <- DRIMSeq:::dm_plotProportions(counts, group, pi_full = NULL, pi_null = NULL, main = plot_main, plot_type = "boxplot1", order = FALSE)
     
     
-    pdf(paste0(out_dir, "figures/sqtlseeker_boxplot1_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 12, height = 7)
+    pdf(paste0(out_dir, "figures/sqtlseeker_boxplot1_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
     print(ggp)
     dev.off()
     

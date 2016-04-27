@@ -187,9 +187,9 @@ do
 done
 
 
-### Plot tables with adj p-values for validated genes - validation_summary.pdf; Plot coverage and annotations for the validated genes
+### Plot tables with adj p-values for validated genes - validation_summary.pdf
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' path_gtf='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70.gtf' path_gtf_filtered='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf' valid_path='5_validation/brooks_validated_genes.txt' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_positive_controls' keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended')" $RCODE/brooks_drimseq_0_3_3_positive_controls_summary.R $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_positive_controls' keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended')" $RCODE/brooks_drimseq_0_3_3_positive_controls_summary.R $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
 
 tail $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
 
@@ -199,6 +199,14 @@ tail $ROUT/brooks_drimseq_0_3_3_positive_controls_summary.Rout
 R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' valid_path='5_validation/brooks_validated_genes.txt' count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full','model_full_paired','model_full_glm') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_positive_controls' ROC_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotROCx.R'" $RCODE/brooks_drimseq_0_3_3_positive_controls_plots.R $ROUT/brooks_drimseq_0_3_3_positive_controls_plots.Rout
 
 tail $ROUT/brooks_drimseq_0_3_3_positive_controls_plots.Rout
+
+
+
+### Plot coverage and annotations for the validated genes with gviz
+
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' path_gtf='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70.gtf' path_gtf_filtered='$ANNOTATION/gtf/Drosophila_melanogaster.BDGP5.70_kallistoest_atleast5.gtf' valid_path='5_validation/brooks_validated_genes.txt' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_positive_controls'" $RCODE/brooks_drimseq_0_3_3_positive_controls_gviz.R $ROUT/brooks_drimseq_0_3_3_positive_controls_gviz.Rout
+
+tail $ROUT/brooks_drimseq_0_3_3_positive_controls_gviz.Rout
 
 
 

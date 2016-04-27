@@ -3,8 +3,9 @@
 
 # BioC 3.2
 # Created 2 Mar 2016
+# Modified 27 Apr 2016
 
-# Plot gene structure validated sQTLs
+# Plot gene structure for validated sQTLs
 
 ##############################################################################
 
@@ -45,8 +46,6 @@ for (i in 1:length(args)) {
 }
 
 print(args)
-
-print(rwd)
 
 ##############################################################################
 

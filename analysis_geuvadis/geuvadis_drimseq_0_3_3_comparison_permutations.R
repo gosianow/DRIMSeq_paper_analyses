@@ -29,11 +29,12 @@ library(limma)
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/Shared/data/seq/geuvadis'
-# population='CEU'
-# method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
-# FDR=0.05
+rwd='/home/Shared/data/seq/geuvadis'
+population='CEU'
+method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
+sqtlseeker_results='sqtlseeker_2_1_analysis'
+FDR=0.05
 
 ##############################################################################
 # Read in the arguments
@@ -46,11 +47,6 @@ for (i in 1:length(args)) {
 }
 
 print(args)
-
-print(rwd)
-print(population)
-print(method_out)
-print(comparison_out)
 
 ##############################################################################
 
@@ -82,24 +78,24 @@ results <- list()
 #####################################
 
 
-res_tmp <- read.table(paste0("sqtlseeker_2_1_analysis/results/", population, "_results_all.txt"), header = TRUE, as.is = TRUE)
-head(res_tmp)
+res <- read.table(paste0(sqtlseeker_results, "/results/", population, "_results_all.txt"), header = TRUE, as.is = TRUE)
+head(res)
 
-colnames(res_tmp) <- c("gene_id", "snp_id", "F", "nb.groups", "md", "tr.first", "tr.second", "nb.perms", "pvalue")
-res_tmp <- unique(res_tmp)
-
-
-res_tmp$gene_snp <- paste0(res_tmp$gene_id, ":", res_tmp$snp_id)
-
-# res_tmp$adj_pvalue <- qvalue::qvalue(res_tmp$pvalue)$qvalues
-
-res_tmp$adj_pvalue <- p.adjust(res_tmp$pvalue, method = "BH")
+colnames(res) <- c("gene_id", "snp_id", "F", "nb.groups", "md", "tr.first", "tr.second", "nb.perms", "pvalue")
+res <- unique(res)
 
 
-write.table(res_tmp, paste0(out_dir, "results_sqtlseeker.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
+
+# res$adj_pvalue <- qvalue::qvalue(res$pvalue)$qvalues
+
+res$adj_pvalue <- p.adjust(res$pvalue, method = "BH")
 
 
-results[["sqtlseeker"]] <- res_tmp
+write.table(res, paste0(out_dir, "results_sqtlseeker.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+results[["sqtlseeker"]] <- res
 
 
 
@@ -107,6 +103,10 @@ results[["sqtlseeker"]] <- res_tmp
 # 
 # table(duplicated(results[["sqtlseeker"]][, "gene_snp"]))
 
+
+### See how many genes were tested
+
+length(unique(res$gene_id))
 
 
 #####################################
@@ -200,6 +200,123 @@ write.table(res, paste0(out_dir, "results_drimseq.txt"), quote = FALSE, sep = "\
 results[["drimseq"]] <- res
 
 
+##########################################################################
+### histograms of number of transcripts per gene (for genes that were returned in the results)
+##########################################################################
+
+### sqtlseeker
+
+data <- read.table(paste0(sqtlseeker_results, "/data/trExpCount_", population, "_sqtlseeker_ratios.tsv"), header = TRUE, as.is = TRUE)
+
+
+data <- data[data$geneId %in% results[["sqtlseeker"]]$gene_id, , drop = FALSE]
+
+
+nr_transcripts_sqtlseeker <- as.numeric(table(data$geneId))
+
+df <- data.frame(tt = nr_transcripts_sqtlseeker)
+
+ggp <- ggplot(df, aes_string(x = "tt")) +
+  geom_histogram(fill = colors["sqtlseeker"], breaks = seq(0, max(df$tt), by = 1)) +
+  geom_text(data = data.frame(x = Inf, y = Inf, label = paste0(length(df$tt), " genes   \n ", sum(df$tt) , " features   ")), aes_string(x = "x", y = "y", label = "label"), hjust = 1, vjust = 2, size = 6) +
+  xlab("Number of features per gene") +
+  ylab("Frequency") +
+  theme_bw() +
+  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=18, face="bold")) +
+  coord_cartesian(xlim = c(0, max(df$tt) + 2)) 
+ 
+
+pdf(paste0(out_dir, "sqtlseeker_hist_features.pdf"))
+print(ggp)
+dev.off()
+
+
+
+### drimseq
+
+
+nr_transcripts <- lapply(1:22, function(chr){
+  # chr = 1
+  
+  load(paste0(method_out, population, "_chr",chr, "_d.Rdata"))
+  
+  tt <- width(d@counts)
+  
+  return(tt)
+  
+})
+
+nr_transcripts_drimseq <-  unlist(nr_transcripts)
+
+
+
+df <- data.frame(tt = nr_transcripts_drimseq)
+
+ggp <- ggplot(df, aes_string(x = "tt")) +
+  geom_histogram(fill = colors["drimseq"], breaks = seq(0, max(df$tt), by = 1)) +
+  geom_text(data = data.frame(x = Inf, y = Inf, label = paste0(length(df$tt), " genes   \n ", sum(df$tt) , " features   ")), aes_string(x = "x", y = "y", label = "label"), hjust = 1, vjust = 2, size = 6) +
+  xlab("Number of features per gene") +
+  ylab("Frequency") +
+  theme_bw() +
+  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=18, face="bold")) +
+  coord_cartesian(xlim = c(0, max(df$tt) + 2)) 
+
+
+pdf(paste0(out_dir, "drimseq_hist_features.pdf"))
+print(ggp)
+dev.off()
+
+
+
+### both at one plot
+
+
+df <- data.frame(tt = c(nr_transcripts_drimseq, nr_transcripts_sqtlseeker), method = c(rep("drimseq", length(nr_transcripts_drimseq)), rep("sqtlseeker", length(nr_transcripts_sqtlseeker))))
+
+
+ggp <- ggplot(df, aes(x = tt, fill = method)) +
+  geom_histogram(breaks = seq(0, max(df$tt), by = 1), alpha = 0.5, position="identity") +
+  xlab("Number of features per gene") +
+  ylab("Frequency") +
+  theme_bw() +
+  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=18, face="bold"),  legend.title = element_blank(), legend.position = "bottom") +
+  scale_fill_manual(values = colors[order(colors, decreasing = TRUE)])
+
+pdf(paste0(out_dir, "hist_features.pdf"))
+print(ggp)
+dev.off()
+
+
+##########################################################################
+### dispersion versus mean plot for drimseq
+##########################################################################
+
+dips_mean <- lapply(1:22, function(chr){
+  # chr = 1
+  
+  load(paste0(method_out, population, "_chr",chr, "_d.Rdata"))
+  
+  w <- sapply(d@genewise_dispersion, length)
+  
+  mean_expression <- rep(d@mean_expression, w)
+  nr_features <- rep(width(d@counts), w)
+  
+  genewise_dispersion <- unlist(d@genewise_dispersion)
+  
+  return(data.frame(mean_expression = mean_expression, genewise_dispersion = genewise_dispersion, nr_features = nr_features))
+  
+})
+
+dips_mean <- rbind.fill(dips_mean)
+
+dips_mean <- unique(dips_mean)
+
+ggp <- DRIMSeq:::dm_plotDispersion(genewise_dispersion = dips_mean$genewise_dispersion, mean_expression = dips_mean$mean_expression, nr_features = dips_mean$nr_features, common_dispersion = NULL)
+
+
+pdf(paste0(out_dir, "drimseq_disversion_versus_mean.pdf"))
+print(ggp)
+dev.off()
 
 
 
@@ -223,6 +340,26 @@ ggp <- DRIMSeq:::dm_plotPvalues(pvalues = results[["drimseq"]][, "pvalue"]) +
 pdf(paste0(out_dir, "drimseq_hist_pvalues.pdf"))
 print(ggp)
 dev.off()
+
+
+### both
+
+df <- data.frame(pvalues = c(results[["drimseq"]][, "pvalue"], results[["sqtlseeker"]][, "pvalue"]), method = c(rep("drimseq", length(results[["drimseq"]][, "pvalue"])), rep("sqtlseeker", length(results[["sqtlseeker"]][, "pvalue"]))))
+
+
+ggp <- ggplot(df, aes(x = pvalues, fill = method)) +
+  theme_bw() +
+  xlab("p-values") +
+  ylab("Frequency") +
+  geom_histogram(breaks = seq(0, 1, by = 0.01), alpha = 0.5, position="identity") +
+  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=16, face="bold"), legend.title = element_blank(), legend.position = "bottom") +
+  coord_cartesian(xlim = c(0, 1)) +
+  scale_fill_manual(values = colors[order(colors, decreasing = TRUE)])
+
+pdf(paste0(out_dir, "hist_pvalues.pdf"))
+print(ggp)
+dev.off()
+
 
 
 
@@ -324,6 +461,7 @@ colors <- colors[keep_methods]
 colors_df <- colors_df[keep_methods, , drop = FALSE]
 
 
+results_padj <- results_padj[, colors_df$methods, drop = FALSE]
 
 
 ##########################################################################
@@ -331,10 +469,7 @@ colors_df <- colors_df[keep_methods, , drop = FALSE]
 ##########################################################################
 
 
-
-
-summary <- data.frame(method = c("drimseq", "sqtlseeker", "overlap"))
-
+summary <- data.frame(method = c(colors_df$methods, "overlap"))
 
 
 
@@ -358,12 +493,13 @@ dev.off()
 
 
 pdf(paste0(out_dir, "/upset_gene_snp_sign.pdf"))
-plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 15)
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
 
 
 overlap <- cobraplot@overlap
+
 
 summary$gene_snp_sign <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
 
@@ -404,7 +540,7 @@ dev.off()
 
 
 pdf(paste0(out_dir, "/upset_gene_sign.pdf"))
-plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 15)
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
 
@@ -435,7 +571,7 @@ dev.off()
 
 
 pdf(paste0(out_dir, "/upset_gene_snp_all.pdf"))
-plot_upset(cobraplot, order.by = "degree", empty.intersections = "on")
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
 
@@ -465,7 +601,7 @@ dev.off()
 
 
 pdf(paste0(out_dir, "/upset_gene_all.pdf"))
-plot_upset(cobraplot, order.by = "degree", empty.intersections = "on")
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
 
