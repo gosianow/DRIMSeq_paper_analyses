@@ -24,12 +24,12 @@ library(BiocParallel)
 # Test arguments
 ##############################################################################
 
-# rwd='/home/Shared/data/seq/geuvadis'
-# population='CEU'
-# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts'
-# FDR=0.05
-# path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
-# workers=10
+rwd='/home/Shared/data/seq/geuvadis'
+population='CEU'
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts'
+FDR=0.05
+path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
+workers=10
 
 ##############################################################################
 # Read in the arguments
@@ -87,7 +87,7 @@ metadata <- list()
 #####################################
 
 
-res <- read.table(paste0(comparison_out, "results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
+res <- read.table(paste0(comparison_out, population, "_results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
 head(res)
 
 res <- res[!is.na(res$adj_pvalue), , drop = FALSE]
@@ -100,7 +100,7 @@ metadata[["sqtlseeker"]] <- data.frame(method_name = "sqtlseeker", stringsAsFact
 ### DRIMSeq results 
 #####################################
 
-res <- read.table(paste0(comparison_out, "results_drimseq.txt"), header = TRUE, as.is = TRUE)
+res <- read.table(paste0(comparison_out, population, "_results_drimseq.txt"), header = TRUE, as.is = TRUE)
 head(res)
 
 res <- res[!is.na(res$adj_pvalue), , drop = FALSE]
@@ -204,7 +204,7 @@ ggp <- ggplot(ggdf, aes(x = log10(mean_expression), color = group, group = group
   theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
   scale_color_manual(values = as.character(c("grey", "black", colors[c("sqtlseeker", "drimseq")])))
 
-pdf(paste0(out_dir, "sign_sqtls_mean_expr.pdf"))
+pdf(paste0(out_dir, population, "_sign_sqtls_mean_expr.pdf"))
 print(ggp)
 dev.off()
 
@@ -235,9 +235,33 @@ ggp <- ggplot(ggdf, aes(x = nr_trans, color = group, group = group)) +
   theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
   scale_color_manual(values = as.character(c("grey", "black", colors[c("sqtlseeker", "drimseq")])))
 
-pdf(paste0(out_dir, "sign_sqtls_nr_trans.pdf"))
+pdf(paste0(out_dir, population, "_sign_sqtls_nr_trans.pdf"))
 print(ggp)
 dev.off()
+
+
+### Plot a scatter of nr of transcripts versus mean gene expression
+
+
+ggdf <- data.frame(mean_expression = c(mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]), 
+  nr_trans = c(nr_trans[genes_sign_sqtlseeker_unique], nr_trans[genes_sign_drimseq_unique], nr_trans[genes_sign_overlap]),
+  group = c(rep("sqtlseeker", length(genes_sign_sqtlseeker_unique)), rep("drimseq", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
+
+ggdf$group <- factor(ggdf$group, levels = c("overlap", "sqtlseeker", "drimseq"))
+
+
+ggp <- ggplot(ggdf, aes(x = log10(mean_expression), y = nr_trans, color = group)) +
+  geom_point(size = 3, alpha = 0.8) +
+  theme_bw() +
+  xlab("Log10 of mean gene expression ") +
+  ylab("Number of expressed transcripts") +
+  theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("black", colors[c("sqtlseeker", "drimseq")])))
+
+pdf(paste0(out_dir, population, "_sign_sqtls_scatter.pdf"))
+print(ggp)
+dev.off()
+
 
 
 ############################################################################
@@ -294,7 +318,7 @@ freq_sqtls_sign_drimseq_unique <- freq_within_exons(sqlt_list = sqtls_sign_drims
 
 freq_summary <- data.frame(set = c("non_sqtl", "overlap", "sqtlseeker", "drimseq"), freq_within_exon = c(freq_non_sqtl, freq_sqtls_sign_overlap, freq_sqtls_sign_sqtlseeker_unique, freq_sqtls_sign_drimseq_unique))
 
-write.table(freq_summary, paste0(out_dir, "sign_sqtls_freq_within_exon.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(freq_summary, paste0(out_dir, population, "_sign_sqtls_freq_within_exon.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 ############################################################################
@@ -368,7 +392,7 @@ ggp <- ggplot(ggdf, aes(x = dist, color = group, group = group)) +
   theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
   scale_color_manual(values = as.character(c("grey", "black", colors[c("sqtlseeker", "drimseq")])))
 
-pdf(paste0(out_dir, "sign_sqtls_dist_closest_exon_cdf.pdf"))
+pdf(paste0(out_dir, population, "_sign_sqtls_dist_closest_exon_cdf.pdf"))
 print(ggp)
 dev.off()
 

@@ -79,7 +79,7 @@ metadata <- list()
 #####################################
 
 
-res <- read.table(paste0(comparison_out, "results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
+res <- read.table(paste0(comparison_out, population, "_results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
 head(res)
 
 
@@ -91,7 +91,7 @@ metadata[["sqtlseeker"]] <- data.frame(method_name = "sqtlseeker", stringsAsFact
 ### DRIMSeq results 
 #####################################
 
-res <- read.table(paste0(comparison_out, "results_drimseq.txt"), header = TRUE, as.is = TRUE)
+res <- read.table(paste0(comparison_out, population, "_results_drimseq.txt"), header = TRUE, as.is = TRUE)
 head(res)
 
 results[["drimseq"]] <- res
@@ -149,7 +149,7 @@ results <- lapply(results, function(x){
 #   xlab("Number of top ranked sQTLs")
 # 
 # 
-# pdf(paste0(comparison_out, "overlap_top_ranked_genes.pdf"), width = 7, height = 7)
+# pdf(paste0(comparison_out, population, "_overlap_top_ranked_genes.pdf"), width = 7, height = 7)
 # print(ggp)
 # dev.off()
 # 
@@ -160,7 +160,7 @@ results <- lapply(results, function(x){
 #   xlab("Number of top ranked sQTLs")
 # 
 # 
-# pdf(paste0(comparison_out, "overlap_top_ranked_genes_zoom.pdf"), width = 7, height = 7)
+# pdf(paste0(comparison_out, population, "_overlap_top_ranked_genes_zoom.pdf"), width = 7, height = 7)
 # print(ggp)
 # dev.off()
 # 
@@ -173,18 +173,18 @@ results <- lapply(results, function(x){
 source(CAT_function_path)
 
 
-if(!file.exists(paste0(comparison_out, "data_CAT.Rdata"))){
+if(!file.exists(paste0(comparison_out, population, "_data_CAT.Rdata"))){
   
   data_CAT <- list()
   
   data_CAT[[1]] <- calculateCAT(results1 = results[["sqtlseeker"]], results2 = results[["drimseq"]], by = 100, FDR = FDR)
   
-  save(data_CAT, file = paste0(comparison_out, "data_CAT.Rdata"))
+  save(data_CAT, file = paste0(comparison_out, population, "_data_CAT.Rdata"))
   
   
 }else{
   
-  load(paste0(comparison_out, "data_CAT.Rdata"))  
+  load(paste0(comparison_out, population, "_data_CAT.Rdata"))  
   
 }
 
@@ -206,7 +206,7 @@ ggp <- ggp +
   xlab("Number of top ranked sQTLs")
 
 
-pdf(paste0(comparison_out, "cat.pdf"), width = 7, height = 7)
+pdf(paste0(comparison_out, population, "_cat.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
 
@@ -217,7 +217,7 @@ ggp <- ggp +
   xlab("Number of top ranked sQTLs")
 
 
-pdf(paste0(comparison_out, "cat_zoom.pdf"), width = 7, height = 7)
+pdf(paste0(comparison_out, population, "_cat_zoom.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
 
@@ -228,7 +228,7 @@ ggp <- ggp +
   xlab("Number of top ranked sQTLs")
 
 
-pdf(paste0(comparison_out, "cat_zoom2.pdf"), width = 7, height = 7)
+pdf(paste0(comparison_out, population, "_cat_zoom2.pdf"), width = 7, height = 7)
 print(ggp)
 dev.off()
 
@@ -244,7 +244,7 @@ dev.off()
 # vec2 <- results[["drimseq"]]
 # vec2 <- vec2[order(vec2$pvalue, decreasing = FALSE), "gene_snp"]
 # 
-# pdf(paste0(comparison_out, "cat_ffpe.pdf"), width = 7, height = 7)
+# pdf(paste0(comparison_out, population, "_cat_ffpe.pdf"), width = 7, height = 7)
 # CATplot(vec1, vec2, maxrank = 10000, make.plot = TRUE)
 # dev.off()
 

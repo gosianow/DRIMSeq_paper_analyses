@@ -102,7 +102,7 @@ d <- dmSQTLdataFromRanges(counts = counts_raw[, -c(1:2)], gene_id = counts_raw$g
 rm("counts_raw", "genotypes_raw", "gene_ranges", "snp_ranges", "gtf0")
 
 
-d <- dmFilter(d, min_samps_gene_expr = 70, min_samps_feature_expr = 5, min_samps_feature_prop = 0, minor_allele_freq = 5, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0, max_features = Inf, BPPARAM = BPPARAM)
+d <- dmFilter(d, min_samps_gene_expr = 70, min_samps_feature_expr = 5, min_samps_feature_prop = 5, minor_allele_freq = 5, min_gene_expr = 10, min_feature_expr = 10, min_feature_prop = 0.05, max_features = Inf, BPPARAM = BPPARAM)
 
 
 plotData(d, out_dir = out_name)

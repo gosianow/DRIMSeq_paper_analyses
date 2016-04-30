@@ -102,7 +102,7 @@ results <- list()
 #####################################
 
 
-res <- read.table(paste0(comparison_out, "results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
+res <- read.table(paste0(comparison_out, population, "_results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
 head(res)
 
 
@@ -113,7 +113,7 @@ results[["sqtlseeker"]] <- res
 #####################################
 
 
-res <- read.table(paste0(comparison_out, "results_drimseq.txt"), header = TRUE, as.is = TRUE)
+res <- read.table(paste0(comparison_out, population, "_results_drimseq.txt"), header = TRUE, as.is = TRUE)
 head(res)
 
 results[["drimseq"]] <- res
@@ -166,7 +166,7 @@ head(results_padj_valid)
 
 out <- data.frame(valid[, c("gene_id", "gene_name", "snp_id", "snp_name", "gene_snp")], results_padj_valid, stringsAsFactors = FALSE)
 
-write.table(out, file = paste0(positive_controls_out, "validation.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(out, file = paste0(positive_controls_out, population, "_validation.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
@@ -178,7 +178,7 @@ colnames(number_sign_valid) <- colnames(results_padj_valid)
 out_summary <- data.frame(number_sign_valid, validated_tested = sum(!is.na(mm)), validated = nrow(results_padj_valid))
 out_summary
 
-write.table(out_summary, file = paste0(positive_controls_out, "validation_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(out_summary, file = paste0(positive_controls_out, population, "_validation_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
@@ -212,7 +212,7 @@ if(plot_tables){
     scale_fill_manual(values = c("grey80", "grey50"), na.value = "grey90")
   
   
-  pdf(paste0(positive_controls_out, "validation.pdf"), 7, 7)
+  pdf(paste0(positive_controls_out, population, "_validation.pdf"), 7, 7)
   print(ggp)
   dev.off()
   
@@ -250,7 +250,7 @@ if(plot_proportions){
     
     ggp <- ggp + ggtitle(plot_main)
     
-    pdf(paste0(out_dir, "figures/drimseq_boxplot1_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
+    pdf(paste0(out_dir, "figures/", population, "_drimseq_boxplot1_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
     print(ggp)
     dev.off()
     
@@ -259,7 +259,7 @@ if(plot_proportions){
     
     ggp <- ggp + ggtitle(plot_main)
     
-    pdf(paste0(out_dir, "figures/drimseq_boxplot1order_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
+    pdf(paste0(out_dir, "figures/", population, "_drimseq_boxplot1order_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
     print(ggp)
     dev.off()
     
@@ -268,7 +268,7 @@ if(plot_proportions){
     
     ggp <- ggp + ggtitle(plot_main)
     
-    pdf(paste0(out_dir, "figures/drimseq_boxplot3order_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
+    pdf(paste0(out_dir, "figures/", population, "_drimseq_boxplot3order_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
     print(ggp)
     dev.off()
     

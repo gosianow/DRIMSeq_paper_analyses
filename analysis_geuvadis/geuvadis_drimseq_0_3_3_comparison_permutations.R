@@ -94,7 +94,7 @@ res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
 res$adj_pvalue <- p.adjust(res$pvalue, method = "BH")
 
 
-write.table(res, paste0(out_dir, "results_sqtlseeker.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(res, paste0(out_dir, population, "_results_sqtlseeker.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 results[["sqtlseeker"]] <- res
@@ -178,12 +178,6 @@ res_uniq$pvalue_perm_new[!nas] <- pval_adj
 res_uniq$adj_pvalue_perm_new <- p.adjust(res_uniq$pvalue_perm_new, method = "BH")
 
 
-# pdf(paste0(out_dir, "pvalues_perm_new.pdf"))
-# smoothScatter(res_uniq$pvalue_perm, res_uniq$pvalue_perm_new)
-# dev.off()
-
-
-
 ### Remove the permutation columns
 
 res <- res[, -grep("perm", colnames(res))]
@@ -196,7 +190,7 @@ res$pvalue <- res_uniq$pvalue_perm_new[mm]
 res$adj_pvalue <- res_uniq$adj_pvalue_perm_new[mm]
 
 
-write.table(res, paste0(out_dir, "results_drimseq.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(res, paste0(out_dir, population, "_results_drimseq.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 results[["drimseq"]] <- res
@@ -228,7 +222,7 @@ ggp <- ggplot(df, aes_string(x = "tt")) +
   coord_cartesian(xlim = c(0, max(df$tt) + 2)) 
  
 
-pdf(paste0(out_dir, "sqtlseeker_hist_features.pdf"))
+pdf(paste0(out_dir, population, "_sqtlseeker_hist_features.pdf"))
 print(ggp)
 dev.off()
 
@@ -264,7 +258,7 @@ ggp <- ggplot(df, aes_string(x = "tt")) +
   coord_cartesian(xlim = c(0, max(df$tt) + 2)) 
 
 
-pdf(paste0(out_dir, "drimseq_hist_features.pdf"))
+pdf(paste0(out_dir, population, "_drimseq_hist_features.pdf"))
 print(ggp)
 dev.off()
 
@@ -284,7 +278,7 @@ ggp <- ggplot(df, aes(x = tt, fill = method)) +
   theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=18, face="bold"),  legend.title = element_blank(), legend.position = "bottom") +
   scale_fill_manual(values = colors[order(colors, decreasing = TRUE)])
 
-pdf(paste0(out_dir, "hist_features.pdf"))
+pdf(paste0(out_dir, population, "_hist_features.pdf"))
 print(ggp)
 dev.off()
 
@@ -316,7 +310,7 @@ dips_mean <- unique(dips_mean)
 ggp <- DRIMSeq:::dm_plotDispersion(genewise_dispersion = dips_mean$genewise_dispersion, mean_expression = dips_mean$mean_expression, nr_features = dips_mean$nr_features, common_dispersion = NULL)
 
 
-pdf(paste0(out_dir, "drimseq_disversion_versus_mean.pdf"))
+pdf(paste0(out_dir, population, "_drimseq_disversion_versus_mean.pdf"))
 print(ggp)
 dev.off()
 
@@ -331,7 +325,7 @@ dev.off()
 ggp <- DRIMSeq:::dm_plotPvalues(pvalues = results[["sqtlseeker"]][, "pvalue"]) +
   geom_histogram(breaks = seq(0,1, by = 0.01), fill = colors["sqtlseeker"])
 
-pdf(paste0(out_dir, "sqtlseeker_hist_pvalues.pdf"))
+pdf(paste0(out_dir, population, "_sqtlseeker_hist_pvalues.pdf"))
 print(ggp)
 dev.off()
 
@@ -339,7 +333,7 @@ dev.off()
 ggp <- DRIMSeq:::dm_plotPvalues(pvalues = results[["drimseq"]][, "pvalue"]) +
   geom_histogram(breaks = seq(0,1, by = 0.01), fill = colors["drimseq"])
 
-pdf(paste0(out_dir, "drimseq_hist_pvalues.pdf"))
+pdf(paste0(out_dir, population, "_drimseq_hist_pvalues.pdf"))
 print(ggp)
 dev.off()
 
@@ -358,7 +352,7 @@ ggp <- ggplot(df, aes(x = pvalues, fill = method)) +
   coord_cartesian(xlim = c(0, 1)) +
   scale_fill_manual(values = colors[order(colors, decreasing = TRUE)])
 
-pdf(paste0(out_dir, "hist_pvalues.pdf"))
+pdf(paste0(out_dir, population, "_hist_pvalues.pdf"))
 print(ggp)
 dev.off()
 
@@ -389,15 +383,15 @@ results_pval_log <- -log10(results_pval)
 
 
 
-pdf(paste0(out_dir, "scatter_pvalues.pdf"))
+pdf(paste0(out_dir, population, "_scatter_pvalues.pdf"))
 smoothScatter(results_pval[, "drimseq"], results_pval[, "sqtlseeker"], xlab = "p-value DRIMSeq", ylab = "p-value sQTLseekeR")
 dev.off()
 
-pdf(paste0(out_dir, "scatter_pvalues_log.pdf"))
+pdf(paste0(out_dir, population, "_scatter_pvalues_log.pdf"))
 smoothScatter(results_pval_log[, "drimseq"], results_pval_log[, "sqtlseeker"], xlab = "-log10(p-value) DRIMSeq", ylab = "-log10(p-value) sQTLseekeR")
 dev.off()
 
-png(paste0(out_dir, "scatter_pvalues_log.png"))
+png(paste0(out_dir, population, "_scatter_pvalues_log.png"))
 smoothScatter(results_pval_log[, "drimseq"], results_pval_log[, "sqtlseeker"], xlab = "-log10(p-value) DRIMSeq", ylab = "-log10(p-value) sQTLseekeR", nrpoints = nrow(results_pval_log))
 dev.off()
 
@@ -405,7 +399,7 @@ dev.off()
 # ggp <- ggplot(results_pval_log, aes(x = drimseq, y = sqtlseeker)) +
 #   stat_binhex(bins = 100) 
 # 
-# pdf(paste0(out_dir, "binhex_pvalues.pdf"))
+# pdf(paste0(out_dir, population, "_binhex_pvalues.pdf"))
 # print(ggp)
 # dev.off()
 
@@ -417,7 +411,7 @@ dev.off()
 #   xlab("p-value DRIMSeq") +
 #   ylab("p-value sQTLseekeR")
 # 
-# png(paste0(out_dir, "scatter_pvalues.png"))
+# png(paste0(out_dir, population, "_scatter_pvalues.png"))
 # print(ggp)
 # dev.off()
 # 
@@ -429,7 +423,7 @@ dev.off()
 #   xlab("-log10(p-value) DRIMSeq") +
 #   ylab("-log10(p-value) sQTLseekeR")
 # 
-# png(paste0(out_dir, "scatter_pvalues_log.png"))
+# png(paste0(out_dir, population, "_scatter_pvalues_log.png"))
 # print(ggp)
 # dev.off()
 
@@ -489,12 +483,12 @@ colorscheme <- colors[basemethods(cobraperf)]
 cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colorscheme, incltruth = FALSE)
 
 
-pdf(paste0(out_dir, "/venn_gene_snp_sign.pdf"))
+pdf(paste0(out_dir, population, "_venn_gene_snp_sign.pdf"))
 plot_overlap(cobraplot, cex=c(1.2,1,0.7))
 dev.off()
 
 
-pdf(paste0(out_dir, "/upset_gene_snp_sign.pdf"))
+pdf(paste0(out_dir, population, "_upset_gene_snp_sign.pdf"))
 plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
@@ -536,12 +530,12 @@ colorscheme <- colors[basemethods(cobraperf)]
 cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colorscheme, incltruth = FALSE)
 
 
-pdf(paste0(out_dir, "/venn_gene_sign.pdf"))
+pdf(paste0(out_dir, population, "_venn_gene_sign.pdf"))
 plot_overlap(cobraplot, cex=c(1.2,1,0.7))
 dev.off()
 
 
-pdf(paste0(out_dir, "/upset_gene_sign.pdf"))
+pdf(paste0(out_dir, population, "_upset_gene_sign.pdf"))
 plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
@@ -567,12 +561,12 @@ colorscheme <- colors[basemethods(cobraperf)]
 cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colorscheme, incltruth = FALSE)
 
 
-pdf(paste0(out_dir, "/venn_gene_snp_all.pdf"))
+pdf(paste0(out_dir, population, "_venn_gene_snp_all.pdf"))
 plot_overlap(cobraplot, cex=c(1.2,1,0.7))
 dev.off()
 
 
-pdf(paste0(out_dir, "/upset_gene_snp_all.pdf"))
+pdf(paste0(out_dir, population, "_upset_gene_snp_all.pdf"))
 plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
@@ -597,12 +591,12 @@ colorscheme <- colors[basemethods(cobraperf)]
 cobraplot <- prepare_data_for_plot(cobraperf, colorscheme = colorscheme, incltruth = FALSE)
 
 
-pdf(paste0(out_dir, "/venn_gene_all.pdf"))
+pdf(paste0(out_dir, population, "_venn_gene_all.pdf"))
 plot_overlap(cobraplot, cex=c(1.2,1,0.7))
 dev.off()
 
 
-pdf(paste0(out_dir, "/upset_gene_all.pdf"))
+pdf(paste0(out_dir, population, "_upset_gene_all.pdf"))
 plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = basemethods(cobraperf), sets.bar.color = colors[basemethods(cobraperf)])
 dev.off()
 
@@ -614,7 +608,7 @@ summary$gene_all <- c(colSums(overlap), sum(rowSums(overlap == 1) == 2))
 
 
 
-write.table(summary, paste0(out_dir, "/summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(summary, paste0(out_dir, population, "_summary.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
