@@ -26,7 +26,7 @@ library(BiocParallel)
 
 # rwd='/home/Shared/data/seq/geuvadis'
 # population='CEU'
-# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
+# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts'
 # FDR=0.05
 # path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
 # workers=10
@@ -90,6 +90,7 @@ metadata <- list()
 res <- read.table(paste0(comparison_out, "results_sqtlseeker.txt"), header = TRUE, as.is = TRUE)
 head(res)
 
+res <- res[!is.na(res$adj_pvalue), , drop = FALSE]
 
 results[["sqtlseeker"]] <- res
 metadata[["sqtlseeker"]] <- data.frame(method_name = "sqtlseeker", stringsAsFactors = FALSE)
@@ -101,6 +102,8 @@ metadata[["sqtlseeker"]] <- data.frame(method_name = "sqtlseeker", stringsAsFact
 
 res <- read.table(paste0(comparison_out, "results_drimseq.txt"), header = TRUE, as.is = TRUE)
 head(res)
+
+res <- res[!is.na(res$adj_pvalue), , drop = FALSE]
 
 results[["drimseq"]] <- res
 metadata[["drimseq"]] <- data.frame(method_name = "drimseq", stringsAsFactors = FALSE)
@@ -295,7 +298,7 @@ write.table(freq_summary, paste0(out_dir, "sign_sqtls_freq_within_exon.txt"), qu
 
 
 ############################################################################
-# Check how many sQTLs is within exons
+# Check the distance of nonexonic sQTLs to the closest exon
 ############################################################################
 
 

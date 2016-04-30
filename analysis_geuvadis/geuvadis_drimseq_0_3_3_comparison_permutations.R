@@ -29,12 +29,12 @@ library(limma)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/Shared/data/seq/geuvadis'
-population='CEU'
-method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
-sqtlseeker_results='sqtlseeker_2_1_analysis'
-FDR=0.05
+# rwd='/home/Shared/data/seq/geuvadis'
+# population='CEU'
+# method_out='drimseq_0_3_3_analysis_permutations_all_genes'
+# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
+# sqtlseeker_results='sqtlseeker_2_1_analysis'
+# FDR=0.05
 
 ##############################################################################
 # Read in the arguments
@@ -84,6 +84,8 @@ head(res)
 colnames(res) <- c("gene_id", "snp_id", "F", "nb.groups", "md", "tr.first", "tr.second", "nb.perms", "pvalue")
 res <- unique(res)
 
+res <- res[!is.na(res$pvalue), , drop = FALSE]
+
 
 res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
 
@@ -126,7 +128,7 @@ res_list <- lapply(1:22, function(chr){
 
 res <- rbind.fill(res_list)
 
-res <- res[!is.na(res$pvalue), ]
+res <- res[!is.na(res$pvalue), , drop = FALSE]
 
 res$gene_block <- paste0(res$gene_id, ":", res$block_id)
 res$gene_snp <- paste0(res$gene_id, ":", res$snp_id)
@@ -201,7 +203,7 @@ results[["drimseq"]] <- res
 
 
 ##########################################################################
-### histograms of number of transcripts per gene (for genes that were returned in the results)
+### histograms of number of transcripts per gene (for genes that were returned in the results with p-value different than NA)
 ##########################################################################
 
 ### sqtlseeker
@@ -209,7 +211,7 @@ results[["drimseq"]] <- res
 data <- read.table(paste0(sqtlseeker_results, "/data/trExpCount_", population, "_sqtlseeker_ratios.tsv"), header = TRUE, as.is = TRUE)
 
 
-data <- data[data$geneId %in% results[["sqtlseeker"]]$gene_id, , drop = FALSE]
+data <- data[data$geneId %in% results[["sqtlseeker"]][, "gene_id"], , drop = FALSE]
 
 
 nr_transcripts_sqtlseeker <- as.numeric(table(data$geneId))
@@ -247,7 +249,7 @@ nr_transcripts <- lapply(1:22, function(chr){
 })
 
 nr_transcripts_drimseq <-  unlist(nr_transcripts)
-
+nr_transcripts_drimseq <- nr_transcripts_drimseq[unique(results[["drimseq"]]$gene_id)]
 
 
 df <- data.frame(tt = nr_transcripts_drimseq)

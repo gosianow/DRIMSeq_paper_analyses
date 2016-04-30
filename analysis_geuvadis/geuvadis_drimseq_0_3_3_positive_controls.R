@@ -37,10 +37,10 @@ library(limma)
 # plot_proportions=TRUE
 # plot_tables=TRUE
 # method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_fdr010'
-# positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes_fdr010'
+# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes'
+# positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes'
 # sqtlseeker_results='sqtlseeker_2_1_analysis'
-# FDR=0.1
+# FDR=0.05
 
 
 ##############################################################################
@@ -224,28 +224,28 @@ if(plot_tables){
 ### Proportion plots of validated sQTLs
 ##########################################################################
 
+# library(devtools)
+# load_all("/home/gosia/R/package_devel/DRIMSeq")
 
 if(plot_proportions){
   
   
   ### drimseq plots
   
-  table(valid$gene_snp %in% results[["drimseq"]]$gene_snp)
-  
-  results[["drimseq"]][which(results[["drimseq"]]$gene_snp %in% valid$gene_snp), ]
-  
-  
-  for(i in which(valid$gene_snp %in% results[["drimseq"]]$gene_snp)){
-    # i = 2
+  for(i in 1:length(valid$gene_snp)){
+    # i = 8
     
     load(paste0(method_out, population, "_chr",valid$chr[i], "_d.Rdata"))
     
+    if(!valid$gene_snp %in% d@results$gene_snp)
+      next
+    
     mean_expression <- round(d@mean_expression[valid$gene_id[i]], 1)
-    adj_pvalue <- sprintf( "%.02e",results[["drimseq"]][which(results[["drimseq"]]$gene_snp == valid$gene_snp[i]), "adj_pvalue"])
+    adj_pvalue <- results[["drimseq"]][which(results[["drimseq"]]$gene_snp == valid$gene_snp[i]), "adj_pvalue"]
     
-    plot_main <- paste0(valid$gene_name[i], " - ", valid$snp_name[i], "\n mean gene expression = ", mean_expression, " / FDR = ", adj_pvalue)
+    plot_main <- paste0(valid$gene_name[i], " - ", valid$snp_name[i], "\n mean gene expression = ", mean_expression, " / FDR = ", sprintf( "%.02e", adj_pvalue))
     
-    
+
     ggp <- plotFit(d, gene_id = valid$gene_id[i], snp_id = valid$snp_id[i], plot_type = "boxplot1", order = FALSE)
     
     ggp <- ggp + ggtitle(plot_main)
@@ -275,48 +275,6 @@ if(plot_proportions){
     
     
   }
-  
-  
-  
-  ### sqtlseeker plots
-  
-  table(valid$gene_snp %in% results[["sqtlseeker"]]$gene_snp)
-  
-  results[["sqtlseeker"]][which(results[["sqtlseeker"]]$gene_snp %in% valid$gene_snp), ]
-  
-  
-  sqtlseeker_counts <- read.table(paste0(sqtlseeker_results, "/data/trExpCount_CEU_sqtlseeker_ratios.tsv"), header = TRUE, sep = "\t", as.is = TRUE)
-  
-  
-  for(i in which(valid$gene_snp %in% results[["sqtlseeker"]]$gene_snp)){
-    # i = 1
-    
-    load(paste0(method_out, population, "_chr",valid$chr[i], "_d.Rdata"))
-    
-    sqtlseeker_counts_tmp <- sqtlseeker_counts[sqtlseeker_counts$geneId == valid$gene_id[i], , drop = FALSE]
-    
-    counts <- as.matrix(sqtlseeker_counts_tmp[, -c(1, 2), drop = FALSE])
-    rownames(counts) <- sqtlseeker_counts_tmp[, "trId"]
-    
-    block <- d@blocks[[valid$gene_id[i]]]
-    block_id <- block[which(block[, "snp_id"] == valid$snp_id[i]), "block_id"]
-    
-    group <- factor(d@genotypes[[valid$gene_id[i]]][block_id, colnames(counts)])
-    
-    plot_main <- paste0(valid$gene_name[i], " - ", valid$snp_name[i], "\n FDR = ", sprintf( "%.02e",results[["sqtlseeker"]][which(results[["sqtlseeker"]]$gene_snp == valid$gene_snp[i]), "adj_pvalue"]))
-    
-    
-    ggp <- DRIMSeq:::dm_plotProportions(counts, group, pi_full = NULL, pi_null = NULL, main = plot_main, plot_type = "boxplot1", order = FALSE)
-    
-    
-    pdf(paste0(out_dir, "figures/sqtlseeker_boxplot1_", i, "_", valid$gene_name[i], "_", valid$snp_name[i], ".pdf"), width = 14, height = 7)
-    print(ggp)
-    dev.off()
-    
-    
-  }
-  
-  
   
   
 }

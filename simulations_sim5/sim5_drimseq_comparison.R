@@ -20,13 +20,13 @@ library(plyr)
 # Test arguments
 ##############################################################################
 
-# rwd='/home/gosia/multinomial_project/simulations_sim5'
-# simulation='hsapiens_node_nonull'
-# count_method='kallisto'
-# filter_method="filter1"
-# CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
-# method_out='drimseq_0_3_3'
-# comparison_out='drimseq_0_3_3_comparison'
+rwd='/home/gosia/multinomial_project/simulations_sim5'
+simulation='hsapiens_node_nonull'
+count_method='htseqprefiltered5'
+filter_method="filter0"
+CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
+method_out='drimseq_0_3_3'
+comparison_out='drimseq_0_3_3_comparison'
 
 
 ##############################################################################
@@ -132,8 +132,20 @@ if(count_method == "kallistoprefiltered5")
 results_dir
 
 
+### Make a histogram of DEXSeq exon p-values
+
 # load(paste0(results_dir, ".Rdata"))
 # 
+# 
+# ggp <- DRIMSeq:::dm_plotPvalues(pvalues = res$pvalue) +
+#   geom_histogram(breaks = seq(0,1, by = 0.01), fill = "grey50")
+# 
+# pdf(paste0(out_dir, "dexseq_hist_pvalues_exons.pdf"))
+# print(ggp)
+# dev.off()
+
+
+
 # pdf("test_dexseq_plot.pdf")
 # 
 # try(plotDEXSeq(res, geneID = "ENSG00000000003", FDR = 0.1, fitExpToVar = "condition", norCounts=FALSE, expression=TRUE, splicing = TRUE,  displayTranscripts=FALSE, names=FALSE, legend=TRUE, color=NULL, color.samples=NULL, las = 3), silent = TRUE)
