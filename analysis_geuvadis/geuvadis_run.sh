@@ -36,7 +36,7 @@ done
 ###################################################
 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4" $RCODE/geuvadis_sqtlseeker_2_1.R $ROUT/geuvadis_sqtlseeker_2_1_run.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 population='CEU'" $RCODE/geuvadis_sqtlseeker_2_1.R $ROUT/geuvadis_sqtlseeker_2_1_run.Rout
 
 
 ###################################################
@@ -261,7 +261,7 @@ tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_summary_gwas_glimmps.Rout
 ###################################################
 
 
-R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4" $RCODE/geuvadis_sqtlseeker_2_1_drimseq_counts.R $ROUT/geuvadis_sqtlseeker_2_1_drimseq_counts.Rout
+R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 population='CEU'" $RCODE/geuvadis_sqtlseeker_2_1_drimseq_counts.R $ROUT/geuvadis_sqtlseeker_2_1_drimseq_counts.Rout
 
 
 

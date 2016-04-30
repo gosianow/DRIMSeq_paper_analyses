@@ -24,6 +24,8 @@ library(plyr)
 rwd='/home/Shared/data/seq/geuvadis'
 workers=10
 drimseq_results_path='drimseq_0_3_3_analysis_permutations_all_genes'
+population='CEU'
+
 
 ##############################################################################
 # Read in the arguments
@@ -36,9 +38,6 @@ for (i in 1:length(args)) {
 }
 
 print(args)
-
-print(rwd)
-print(workers)
 
 
 ##############################################################################
@@ -62,7 +61,7 @@ dir.create(out_plots_dir, showWarnings = FALSE, recursive = TRUE)
 
 ## Input files: transcript expression, gene location and genotype information
 gene_bed_path = paste0(data_dir, "annotation/gencode.v12.annotation_genes.bed")
-genotypes_path = paste0(out_data_dir, "snps_CEU_full.tsv")
+genotypes_path = paste0(out_data_dir, paste0("snps_", population, "_full.tsv"))
 
 
 ##################################################################################
@@ -71,7 +70,7 @@ genotypes_path = paste0(out_data_dir, "snps_CEU_full.tsv")
 
 if(!file.exists(genotypes_path)){
   
-  snps_files <- list.files(path = paste0(data_dir, "/genotypes"), pattern = "snps_CEU", full.names = TRUE, include.dirs = FALSE)
+  snps_files <- list.files(path = paste0(data_dir, "/genotypes"), pattern = paste0("snps_", population), full.names = TRUE, include.dirs = FALSE)
   
   snps_files <- snps_files[grepl("chr",snps_files) & !grepl("sort",snps_files)]
   
@@ -109,7 +108,7 @@ if(!file.exists(genotypes_path)){
   
   ### merge chromosome files
   
-  cmd <- paste0("cat ", paste0(paste0(out_data_dir, basename(file_path_sans_ext(snps_files)), "_sort.tsv"), collapse = " "), " > ", out_data_dir ,"/snps_CEU.tsv")
+  cmd <- paste0("cat ", paste0(paste0(out_data_dir, basename(file_path_sans_ext(snps_files)), "_sort.tsv"), collapse = " "), " > ", out_data_dir ,"/snps_", population, ".tsv")
   
   cat(cmd, fill = TRUE)
   
@@ -119,14 +118,14 @@ if(!file.exists(genotypes_path)){
   
   ### add header with samples names
   
-  cmd <- paste0("head -n 1 ", snps_files[1], " > ", out_data_dir ,"snps_CEU_head.tsv")
+  cmd <- paste0("head -n 1 ", snps_files[1], " > ", out_data_dir ,"snps_", population, "_head.tsv")
   
   cat(cmd, fill = TRUE)
   
   system(cmd)
   
   
-  cmd <- paste0("cat ", out_data_dir, "snps_CEU_head.tsv ", out_data_dir, "snps_CEU.tsv > ", out_data_dir, "snps_CEU_full.tsv")
+  cmd <- paste0("cat ", out_data_dir, "snps_", population, "_head.tsv ", out_data_dir, "snps_", population, ".tsv > ", out_data_dir, "snps_", population, "_full.tsv")
   
   cat(cmd, fill = TRUE)
   
@@ -144,9 +143,9 @@ if(!file.exists(genotypes_path)){
 
 
 
-## Getting the IDs of samples in CEU population
+## Getting the IDs of samples in the population
 metadata <- read.table(paste0(data_dir, "metadata/sample-groups.tsv"), header=TRUE, as.is=TRUE)
-metadata <- subset(metadata, group == "CEU")
+metadata <- subset(metadata, group == population)
 
 
 ### check if the samples order is the same in genotype files
@@ -159,7 +158,7 @@ stopifnot(metadata$sampleShort == read.table(genotypes_path, header = FALSE, nro
 
 genotypes_path_index <- index.genotype(genotypes_path)
 genotypes_path_index
-# genotypes_path_index <- paste0(out_data_dir, "snps_CEU_full.tsv.bgz")
+# genotypes_path_index <- paste0(out_data_dir, "snps_", population, "_full.tsv.bgz")
 
 
 ########################################
@@ -168,12 +167,12 @@ genotypes_path_index
 
 ### Use prefiltered DRIMSeq counts for the analysis 
 
-if(!file.exists(paste0(out_data_dir, "trExpCount_CEU_sqtlseeker_ratios.tsv"))){
+if(!file.exists(paste0(out_data_dir, "trExpCount_", population, "_sqtlseeker_ratios.tsv"))){
   
   counts <- lapply(1:22, function(chr){
     # chr = 1
     
-    load(paste0(drimseq_results_path, "/CEU_chr",chr, "_d.Rdata"))
+    load(paste0(drimseq_results_path, "/", population, "_chr",chr, "_d.Rdata"))
     
     out <- data.frame(trId = rownames(d@counts), geneId = rep(names(d@counts@partitioning), times = width(d@counts)), d@counts@unlistData, stringsAsFactors = FALSE)
     
@@ -197,13 +196,13 @@ if(!file.exists(paste0(out_data_dir, "trExpCount_CEU_sqtlseeker_ratios.tsv"))){
   ratios <- data.frame(trId = counts$trId, geneId = counts$geneId, ratios, stringsAsFactors = FALSE)
   
   
-  write.table(ratios, paste0(out_data_dir, "trExpCount_CEU_sqtlseeker_ratios.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+  write.table(ratios, paste0(out_data_dir, "trExpCount_", population, "_sqtlseeker_ratios.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
   
   
 }
 
 
-ratios <- read.table(paste0(out_data_dir, "trExpCount_CEU_sqtlseeker_ratios.tsv"), header = TRUE, as.is=TRUE)
+ratios <- read.table(paste0(out_data_dir, "trExpCount_", population, "_sqtlseeker_ratios.tsv"), header = TRUE, as.is=TRUE)
 
 
 tt <- as.numeric(table(ratios$geneId))
@@ -221,7 +220,7 @@ ggp <- ggplot(df, aes_string(x = "tt")) +
   geom_text(data = data.frame(x = Inf, y = Inf, label = paste0(length(tt), " genes   \n ", sum(tt) , " features   ")), aes_string(x = "x", y = "y", label = "label"), hjust = 1, vjust = 2, size = 6)
 
 
-pdf(paste0(out_data_dir, "hist_features_CEU.pdf"))
+pdf(paste0(out_data_dir, "hist_features_", population, ".pdf"))
 print(ggp)
 dev.off()
 
@@ -236,7 +235,7 @@ colSums(is.na(ratios))
 # per block of genes to make it parallel
 ########################################
 
-# out_res_dir_gene <- paste0(out_res_dir, "CEU_gene_level_results/")
+# out_res_dir_gene <- paste0(out_res_dir, population, "_gene_level_results/")
 # dir.create(out_res_dir_gene)
 # 
 # 
@@ -281,7 +280,7 @@ colSums(is.na(ratios))
 # results <- do.call(rbind, results_list)
 # 
 # 
-# write.table(results, paste0(out_res_dir, "CEU_results_all.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+# write.table(results, paste0(out_res_dir, population, "_results_all.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 ########################################
@@ -297,7 +296,7 @@ colnames(gene_bed) <- c("chr","start","end","geneId")
 results <- sqtl.seeker(tre.df = ratios, genotype.f = genotypes_path_index, gene.loc = gene_bed, genic.window = 5000, min.nb.ext.scores = 1000, nb.perm.max = 1e+06, nb.perm.max.svQTL = 10000, svQTL = FALSE, approx = TRUE, verbose = TRUE)
 
 
-write.table(results, paste0(out_res_dir, "CEU_results_all.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+write.table(results, paste0(out_res_dir, population, "_results_all.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 pvalues <- results[, "pv"]
@@ -315,7 +314,7 @@ ggp <- ggplot(df, aes_string(x = "pvalues")) +
 
 
 
-pdf(paste0(out_res_dir, "CEU_results_", "hist_pvalues.pdf"))
+pdf(paste0(out_res_dir, population, "_results_hist_pvalues.pdf"))
 print(ggp)
 dev.off()
 
@@ -324,13 +323,13 @@ dev.off()
 ## 4) Get significant sQTLs
 ########################################
 
-# results <- read.table(paste0(out_res_dir, "CEU_results_all.txt"), header = TRUE, as.is=TRUE)
+# results <- read.table(paste0(out_res_dir, population, "_results_all.txt"), header = TRUE, as.is=TRUE)
 # 
 # 
-# results_sign <- sqtls(res.df = results, FDR = 0.05, md.min=.01, out.pdf = paste0(out_res_dir, "CEU_results_fdr05.pdf"), svQTL.removal=TRUE, FDR.svQTL=.01)
+# results_sign <- sqtls(res.df = results, FDR = 0.05, md.min=.01, out.pdf = paste0(out_res_dir, population, "_results_fdr05.pdf"), svQTL.removal=TRUE, FDR.svQTL=.01)
 # 
 # 
-# write.table(results_sign, paste0(out_res_dir, "CEU_results_fdr05.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+# write.table(results_sign, paste0(out_res_dir, population, "_results_fdr05.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
