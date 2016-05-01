@@ -15,6 +15,7 @@ library(Hmisc)
 library(DEXSeq)
 library(DRIMSeq)
 library(plyr)
+library(limma)
 
 ##############################################################################
 # Test arguments
@@ -22,7 +23,7 @@ library(plyr)
 
 rwd='/home/gosia/multinomial_project/simulations_sim5'
 simulation='hsapiens_node_nonull'
-count_method='htseqprefiltered5'
+count_method='kallistofiltered5'
 filter_method="filter0"
 CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
 method_out='drimseq_0_3_3'
@@ -284,6 +285,39 @@ levels(truth$nbrexonbins_catn) <- paste0(levels(truth$nbrexonbins_cat), " n = ",
 levels(truth$nbrexonbins_catn)
 
 
+##########################################################################
+# Load counts
+##########################################################################
+
+
+if(count_method == "htseq")
+  count_dir <- "2_counts/dexseq_nomerge/dexseq"
+if(count_method == "kallisto")
+  count_dir <- "2_counts/kallisto/kallisto"
+if(count_method == "htseqprefiltered15")
+  count_dir <- "2_counts/INCOMPLETE_KALLISTOEST/dexseq_nomerge_kallistoest_atleast15/dexseq"
+if(count_method == "htseqprefiltered5")
+  count_dir <- "2_counts/INCOMPLETE_KALLISTOEST/dexseq_nomerge_kallistoest_atleast5/dexseq"
+if(count_method == "kallistofiltered5")
+  count_dir <- "2_counts/kallisto_txfilt_5/kallisto"
+if(count_method == "kallistoprefiltered5")
+  count_dir <- "2_counts/INCOMPLETE_KALLISTOEST/kallisto_kallistoest_atleast5/kallisto"
+
+count_dir
+
+### load counts
+counts_list <- lapply(1:6, function(i){
+  # i = 1
+  cts <- read.table(paste0(count_dir, i, ".txt"), header = FALSE, as.is = TRUE)
+  colnames(cts) <- c("group_id", paste0("sample_", i))  
+  return(cts)
+})
+
+counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
+
+counts <- counts[!grepl(pattern = "_", counts$group_id),]
+group_split <- strsplit2(counts[,1], ":")
+counts <- counts[, -1]
 
 
 
@@ -300,7 +334,7 @@ save(cobradata, file = paste0(out_dir, "cobradata.Rdata"))
 
 ### Venn diagrams overall
 
-cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", aspects = c("overlap"))
+cobraperf <- calculate_performance(cobradata, binary_truth = "ds_status", aspects = c("overlap"), thr_venn = 0.05)
 
 basemethods(cobraperf)
 
@@ -315,11 +349,122 @@ for(i in grep("drimseq", basemethods(cobraperf))){
   dev.off()
   
   pdf(paste0(out_dir, "upset_", basemethods(cobraperf)[i], ".pdf"))
-  plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 10)
+  plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = c("truth", "dexseq", basemethods(cobraperf)[i]), sets.bar.color = c("grey", colors[c("dexseq", basemethods(cobraperf)[i])]))
   dev.off()
   
   
 }
+
+
+### Plot distributions of differenet gene characteristics for unique genes
+bmethds <- basemethods(cobraperf)
+
+
+### Mean expression
+
+# mean_expression <- truth$TPM
+# names(mean_expression) <- truth$gene
+
+mean_expression <- by(counts, factor(group_split[, 1]), function(x){
+  mean(colSums(x, na.rm = TRUE), na.rm = TRUE)
+}, simplify = FALSE)
+
+mean_expression <- unlist(mean_expression)
+
+
+### Number of expressed transcripts per gene 
+
+# nbr_isoforms <- truth$nbr_isoforms
+# names(nbr_isoforms) <- truth$gene
+
+
+nbr_features<- by(counts, factor(group_split[, 1]), function(x){
+  x <- as.matrix(x)
+  sum(rowSums(x > 10, na.rm = TRUE) > 2, na.rm = TRUE)
+}, simplify = FALSE)
+
+nbr_features <- unlist(nbr_features)
+
+
+
+for(i in grep("drimseq", bmethds)){
+  # i = 2
+  
+  all_genes <- rownames(results_padj)
+  truth_genes <- truth[truth$ds_status == 1, "gene"]
+  
+  m1 <- "dexseq"
+  m2 <- bmethds[i]
+  
+  genes_sign_m1 <- rownames(results_padj[results_padj[, m1] < 0.05, , drop = FALSE])
+  genes_sign_m2 <- rownames(results_padj[results_padj[, m2] < 0.05, , drop = FALSE])
+  
+  genes_sign_overlap <- intersect(genes_sign_m1, genes_sign_m2)
+  genes_sign_m1_unique <- setdiff(genes_sign_m1, genes_sign_overlap)
+  genes_sign_m2_unique <- setdiff(genes_sign_m2, genes_sign_overlap)
+  
+  
+  ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[truth_genes], mean_expression[genes_sign_m1_unique], mean_expression[genes_sign_m2_unique], mean_expression[genes_sign_overlap]), 
+    group = c(rep("all_genes", length(all_genes)), rep("truth_genes", length(truth_genes)), rep(m1, length(genes_sign_m1_unique)), rep(m2, length(genes_sign_m2_unique)), rep("overlap", length(genes_sign_overlap))), 
+    stringsAsFactors = FALSE)
+  
+  ggdf <- ggdf[complete.cases(ggdf), ]
+  
+  ggdf$group <- factor(ggdf$group, levels = c("all_genes", "truth_genes", "overlap", m1, m2))
+  
+  ggdf <- ggdf[ggdf$mean_expression > 0, ,drop = FALSE]
+  
+  
+  ggp <- ggplot(ggdf, aes(x = log10(mean_expression), color = group, group = group)) +
+    geom_density(size = 2) +
+    theme_bw() +
+    xlab("Log10 of gene mean expression") +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), legend.title = element_blank(), legend.position = "bottom") +
+    scale_color_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)])))
+  
+  pdf(paste0(out_dir, "characteristics_mean_expr_", bmethds[i], ".pdf"))
+  print(ggp)
+  dev.off()
+  
+  
+  
+  # ggp <- ggplot(ggdf, aes(x = group, y = log10(mean_expression), color = group, fill = group)) +
+  #   geom_boxplot(outlier.size = NA, alpha = 0.25, lwd = 0.5) +
+  #   geom_jitter(position = position_jitter(width = 0.75), alpha = 0.5, size = 0.5, na.rm = TRUE) +
+  #   theme_bw() +
+  #   ylab("Log10 of gene TPM") +
+  #   theme(axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), legend.title = element_blank(), legend.position = "bottom") +
+  #   scale_color_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)]))) +
+  #   scale_fill_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)])))
+  # 
+  # pdf(paste0(out_dir, "characteristics_TPM_box_", bmethds[i], ".pdf"))
+  # print(ggp)
+  # dev.off()
+  
+
+  ggdf <- data.frame(nbr_features = nbr_features[c(all_genes, truth_genes, genes_sign_m1_unique, genes_sign_m2_unique, genes_sign_overlap)], 
+    group = rep(c("all_genes", "truth_genes", m1, m2, "overlap"), c(length(all_genes), length(truth_genes), length(genes_sign_m1_unique), length(genes_sign_m2_unique), length(genes_sign_overlap))),
+    stringsAsFactors = FALSE)
+  
+  ggdf <- ggdf[complete.cases(ggdf), ]
+  
+  ggdf$group <- factor(ggdf$group, levels = c("all_genes", "truth_genes", "overlap", m1, m2))
+  
+  
+  ggp <- ggplot(ggdf, aes(x = nbr_features, color = group, group = group)) +
+    geom_density(size = 2) +
+    theme_bw() +
+    xlab("Number of expressed features") +
+    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), legend.title = element_blank(), legend.position = "bottom") +
+    scale_color_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)])))
+  
+  pdf(paste0(out_dir, "characteristics_nbr_features_", bmethds[i], ".pdf"))
+  print(ggp)
+  dev.off()
+  
+  
+}
+
 
 
 
