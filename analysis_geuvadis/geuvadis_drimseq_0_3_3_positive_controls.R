@@ -190,7 +190,7 @@ keep_methods <- colors_df$methods
 
 if(plot_tables){
   
-  summary <- read.table(paste0(positive_controls_out, "validation.txt"), header = TRUE)
+  summary <- read.table(paste0(positive_controls_out, population, "_validation.txt"), header = TRUE)
   
   summarym <- melt(summary, id.vars = c("gene_id", "gene_name", "snp_id", "snp_name", "gene_snp"))
   
@@ -233,11 +233,13 @@ if(plot_proportions){
   ### drimseq plots
   
   for(i in 1:length(valid$gene_snp)){
-    # i = 8
+    # i = 1
     
     load(paste0(method_out, population, "_chr",valid$chr[i], "_d.Rdata"))
     
-    if(!valid$gene_snp %in% d@results$gene_snp)
+    gene_snp <- unique(paste0(d@results$gene_id, ":", d@results$snp_id))
+    
+    if(!valid$gene_snp[i] %in% gene_snp)
       next
     
     mean_expression <- round(d@mean_expression[valid$gene_id[i]], 1)

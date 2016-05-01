@@ -5,10 +5,10 @@
 
 # BioC 3.0
 # Created 9 Jan 2014
+# Updated 1 May 2016
 
-# Updated 9 Oct 2015
 
-
+##############################################################################
 
 setwd("/home/Shared/data/seq/geuvadis/")
 
@@ -51,17 +51,17 @@ write.table(gene.bed.f, paste0(out_dir,"annotation/gencode.v12.annotation_genes.
 ###  metadata
 ##############################################################################
 
-groups <- read.table("geuvadis_analysis_results/E-GEUV-1.sdrf.txt", header = T, sep="\t", as.is=TRUE)
+metadata <- read.table("geuvadis_analysis_results/E-GEUV-1.sdrf.txt", header = T, sep="\t", as.is=TRUE)
 
-groups <- groups[c("Assay.Name", "Characteristics.population.")]
-groups <- unique(groups)
+metadata <- metadata[c("Assay.Name", "Characteristics.population.")]
+metadata <- unique(metadata)
 
-table(groups$Characteristics.population.)
+table(metadata$Characteristics.population.)
 
-colnames(groups) <- c("sample", "group")
-groups$sampleShort <- substr(groups$sample, 1, 7)
+colnames(metadata) <- c("sample", "group")
+metadata$sampleShort <- substr(metadata$sample, 1, 7)
 
-write.table(groups, paste0(out_dir, "metadata/sample-groups.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE) 
+write.table(metadata, paste0(out_dir, "metadata/sample-groups.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE) 
 
 
 
@@ -75,13 +75,13 @@ quantFile <- "geuvadis_analysis_results/GD660.TrQuantRPKM.txt"
 
 trans.exp.f0 <- read.table(quantFile, header = T, sep="\t", as.is = TRUE)
 
-trans.exp.f <- trans.exp.f0[, c("TargetID", "Gene_Symbol", groups$sample)]
-colnames(trans.exp.f) <- c("trId", "geneId", groups$sample)
+trans.exp.f <- trans.exp.f0[, c("TargetID", "Gene_Symbol", metadata$sample)]
+colnames(trans.exp.f) <- c("trId", "geneId", metadata$sample)
 
 write.table(trans.exp.f, paste0(out_dir,"expression/trExpRPKM.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
-for(i in unique(groups$group))
-  write.table(trans.exp.f[,c("trId", "geneId", groups$sample[groups$group == i])], paste0(out_dir,"expression/trExpRPKM_",i,".tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+for(i in unique(metadata$group))
+  write.table(trans.exp.f[,c("trId", "geneId", metadata$sample[metadata$group == i])], paste0(out_dir,"expression/trExpRPKM_",i,".tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
@@ -90,13 +90,13 @@ quantFile <- "geuvadis_analysis_results/GD660.TrQuantCount.txt"
 
 trans.exp.f0 <- read.table(quantFile, header = T, sep="\t", as.is = TRUE)
 
-trans.exp.f <- trans.exp.f0[, c("TargetID", "Gene_Symbol", groups$sample)]
-colnames(trans.exp.f) <- c("trId", "geneId", groups$sample)
+trans.exp.f <- trans.exp.f0[, c("TargetID", "Gene_Symbol", metadata$sample)]
+colnames(trans.exp.f) <- c("trId", "geneId", metadata$sample)
 
 write.table(trans.exp.f, paste0(out_dir,"expression/trExpCount.tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
-for(i in unique(groups$group))
-  write.table(trans.exp.f[,c("trId", "geneId", groups$sample[groups$group == i])], paste0(out_dir,"expression/trExpCount_",i,".tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+for(i in unique(metadata$group))
+  write.table(trans.exp.f[,c("trId", "geneId", metadata$sample[metadata$group == i])], paste0(out_dir,"expression/trExpCount_",i,".tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 
@@ -120,11 +120,13 @@ for(i in unique(groups$group))
 ##############################################################################
 
 library(VariantAnnotation)
+library(limma)
+
 
 tbindex <- list.files(path = "geuvadis_genotypes", pattern = "genotypes.vcf.bgz.tbi", full.names = TRUE, include.dirs = FALSE)
 compressVcf <- substr(tbindex, 1, nchar(tbindex)-4)
 
-library(limma)
+
 chr <- gsub("chr", "", strsplit2(compressVcf, split=".", fixed=TRUE)[,2])
 
 
@@ -139,24 +141,27 @@ seqlevels(gnrng) <- gsub("chr", "", seqlevels(gnrng))
 
 
 for(j in c("CEU", "FIN", "GBR", "TSI", "YRI")){
-  # j = "CEU"
   
   for(i in 1:length(compressVcf)){
-    # i=11
-    cat(j, chr[i], fill = TRUE)
+    # j = "TSI"; i = 3
+    
+    message(paste0(j, chr[i]))
     
     tab <- TabixFile(compressVcf[i], tbindex[i])
     gnrngTmp <- gnrng[seqnames(gnrng) == chr[i]]
+    sum(width(gnrngTmp))
     
+    gnrngTmp <- reduce(gnrngTmp)
+    sum(width(gnrngTmp))
     
     ## Explore the file header with scanVcfHeader
     hdr <- scanVcfHeader(tab)
-    all(sampleShort %in% samples(hdr))
     
-    
+    stopifnot(all(metadata$sampleShort %in% samples(hdr)))
+
     
     ## read VCF file 
-    param <- ScanVcfParam(which = gnrngTmp, samples = sampleShort[groups$group == j])
+    param <- ScanVcfParam(which = gnrngTmp, samples = metadata$sampleShort[metadata$group == j])
     
     vcf <- readVcf(tab, "hg19", param)
     #   vcf
@@ -172,28 +177,48 @@ for(j in c("CEU", "FIN", "GBR", "TSI", "YRI")){
     nalt <- elementLengths(alt(vcf))
     # select only bi-allelic SNPs (monomorphic OK, so aw can be 0 or 1)
     snp <- rw == 1 & aw <= 1 & nalt == 1
+    
     # subset vcf  
     vcfbi <- vcf[snp,]
+    # remove duplicates
+    vcfbi <- vcfbi[!duplicated(rownames(vcfbi)), ]
+    
     
     rowdata <- rowData(vcfbi)
     
-    ## Convert genotype into number of mutated allels
+    ## Convert genotype into number of alternative allels
     geno <- geno(vcfbi)$GT
-    geno01 <- geno
-    geno01[,] <- -1
-    geno01[geno %in% c("0/0", "0|0")] <- 0 # AA = REF/REF
-    geno01[geno %in% c("0/1", "0|1", "1/0", "1|0")] <- 1 # AB = REF/ALT
-    geno01[geno %in% c("1/1", "1|1")] <- 2 # BB = ALT/ALT
-    # geno01 should be integer, not character
-    mode(geno01) <- "integer"
     
-    genotype <- unique(data.frame(chr = seqnames(rowdata), start = start(rowdata), end = end(rowdata), snpId = rownames(geno01), geno01))
+    geno01 <- matrix(-1, nrow = nrow(geno), ncol = ncol(geno))
+    rownames(geno01) <- rownames(geno)
+    colnames(geno01) <- colnames(geno)
+    
+    geno01[geno %in% c("0/0", "0|0")] <- 0 # REF/REF
+    geno01[geno %in% c("0/1", "0|1", "1/0", "1|0")] <- 1 # REF/ALT
+    geno01[geno %in% c("1/1", "1|1")] <- 2 # ALT/ALT
+    
+    ### genotype
+    genotype <- data.frame(chr = seqnames(rowdata), start = start(rowdata), end = end(rowdata), snpId = rownames(geno01), geno01)
+    
+    
+    ## ref alt
+    ref <- as.matrix(ref(vcfbi))
+    alt <- unlist(alt(vcfbi))
+    
+    ref_alt <- data.frame(chr = seqnames(rowdata), start = start(rowdata), end = end(rowdata), snpId = rownames(geno01), ref = ref, alt = alt)
+    
     
     ### sorting
-    genotype <- genotype[order(genotype[,2]), ]
+    oo <- order(genotype[,2])
+    
+    genotype <- genotype[oo, ]
+    ref_alt <- ref_alt[oo, ]
     
     
-    write.table(genotype, file=paste0(out_dir, "genotypes/snps_",j,"_chr" ,chr[i], ".tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+    write.table(genotype, file=paste0(out_dir, "genotypes/snps_", j, "_chr", chr[i], ".tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+    
+    write.table(ref_alt, file=paste0(out_dir, "genotypes/refalt_", j, "_chr", chr[i], ".tsv"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+    
     
     gc()
     

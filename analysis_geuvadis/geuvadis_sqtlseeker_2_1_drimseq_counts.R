@@ -11,6 +11,7 @@ Sys.time()
 
 ##############################################################################
 
+library(DRIMSeq)
 library(sQTLseekeR)
 library(tools)
 library(BiocParallel)
@@ -21,10 +22,10 @@ library(plyr)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/Shared/data/seq/geuvadis'
-workers=10
-drimseq_results_path='drimseq_0_3_3_analysis_permutations_all_genes'
-population='CEU'
+# rwd='/home/Shared/data/seq/geuvadis'
+# workers=10
+# drimseq_results_path='drimseq_0_3_3_analysis_permutations_all_genes'
+# population='CEU'
 
 
 ##############################################################################
@@ -46,7 +47,7 @@ setwd(rwd)
 
 data_dir <- "data/"
 
-out_dir <- "sqtlseeker_2_1_analysis_drimseq_counts_nobp/"
+out_dir <- "sqtlseeker_2_1_analysis_drimseq_counts/"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 out_data_dir <- paste0(out_dir, "data/")
@@ -174,7 +175,7 @@ if(!file.exists(paste0(out_data_dir, "trExpCount_", population, "_sqtlseeker_rat
     
     load(paste0(drimseq_results_path, "/", population, "_chr",chr, "_d.Rdata"))
     
-    out <- data.frame(trId = rownames(d@counts), geneId = rep(names(d@counts@partitioning), times = width(d@counts)), d@counts@unlistData, stringsAsFactors = FALSE)
+    out <- data.frame(trId = rownames(d@counts@unlistData), geneId = rep(names(d@counts@partitioning), times = lapply(d@counts@partitioning, length)), d@counts@unlistData, stringsAsFactors = FALSE)
     
     return(out)
     

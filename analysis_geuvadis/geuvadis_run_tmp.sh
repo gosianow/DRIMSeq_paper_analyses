@@ -429,9 +429,30 @@ population='YRI'
 
 
 
+  ###################################################
+  ## Run sQTLSeekeR analysis on drimseq counts
+  ###################################################
+
+
+  for population in 'CEU'
+  do
+
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 population='${population}' drimseq_results_path='drimseq_0_3_3_analysis_permutations_all_genes'" $RCODE/geuvadis_sqtlseeker_2_1_drimseq_counts.R $ROUT/geuvadis_sqtlseeker_2_1_drimseq_counts_${population}.Rout
+
+    tail $ROUT/geuvadis_sqtlseeker_2_1_drimseq_counts_${population}.Rout
+
+  done
 
 
 
+  for population in 'YRI'
+  do
+
+    R31 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 population='${population}' drimseq_results_path='drimseq_0_3_3_analysis_permutations_all_genes'" $RCODE/geuvadis_sqtlseeker_2_1_drimseq_counts.R $ROUT/geuvadis_sqtlseeker_2_1_drimseq_counts_${population}.Rout
+
+    tail $ROUT/geuvadis_sqtlseeker_2_1_drimseq_counts_${population}.Rout
+
+  done
 
 
 
