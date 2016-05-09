@@ -112,12 +112,14 @@ R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/drimseq
 
 for model in 'model_full' 'model_full_glm' 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
 do 
-  for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
+  for count_method in 'kallistofiltered5' 'htseqprefiltered5' 'kallisto' 'htseq' 
   do 
   
     echo "${model}_${count_method}"
 
-    R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/kim_drimseq_0_3_3_comparison.R $ROUT/kim_drimseq_0_3_3_comparison_run.Rout
+    R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' text_size=18 legend_size=16" $RCODE/kim_drimseq_0_3_3_comparison.R $ROUT/kim_drimseq_0_3_3_comparison_run.Rout
+    
+    tail $ROUT/kim_drimseq_0_3_3_comparison_run.Rout
 
   done
 done
@@ -126,13 +128,13 @@ done
 
 ### Barplots of the number of all and DS genes + overlaps
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' comparison_out='drimseq_0_3_3_comparison' keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended')" $RCODE/kim_drimseq_0_3_3_comparison_summary.R $ROUT/kim_drimseq_0_3_3_comparison_summary.Rout
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' comparison_out='drimseq_0_3_3_comparison' keep_methods=c('dexseq','drimseq_genewise_grid_none','drimseq_genewise_grid_common','drimseq_genewise_grid_trended') text_size=18 legend_size=16 strip_size=16" $RCODE/kim_drimseq_0_3_3_comparison_summary.R $ROUT/kim_drimseq_0_3_3_comparison_summary.Rout
 
 
 
-### Plot the overlap versus number of top ranked genes + CAT plots
+### CAT plots
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'" $RCODE/kim_drimseq_0_3_3_comparison_plots.R $ROUT/kim_drimseq_0_3_3_comparison_plots.Rout
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' text_size=18 legend_size=16 strip_size=16" $RCODE/kim_drimseq_0_3_3_comparison_plots.R $ROUT/kim_drimseq_0_3_3_comparison_plots.Rout
 
 
 ### Plot overlaps between models
@@ -145,6 +147,8 @@ do
     echo "${ds_method}_${count_method}"
 
     R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' ds_method='${ds_method}' model_list=c('model_full','model_full_glm') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/kim_drimseq_0_3_3_comparison_models.R $ROUT/kim_drimseq_0_3_3_comparison_models.Rout
+    
+    tail $ROUT/kim_drimseq_0_3_3_comparison_models.Rout
 
   done
 done

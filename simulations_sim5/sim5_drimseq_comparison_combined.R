@@ -29,6 +29,10 @@ library(plyr)
 # pdf_height=8
 # method_out='drimseq_0_3_3'
 # comparison_out='drimseq_0_3_3_comparison'
+# strip_text_size=12
+# text_size=16
+# legend_size=18
+
 
 ##############################################################################
 # Read in the arguments
@@ -176,7 +180,7 @@ yaxisrange <- c(0.4, 0.9)
 ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3)
 ggp <- ggp + 
   theme_bw() +
-  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16, color = "darkgrey"), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 11), strip.background = element_rect(colour = "black", fill="white")) + 
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = text_size, color = "darkgrey"), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), strip.text = element_text(size = strip_text_size), strip.background = element_rect(colour = "black", fill="white")) + 
   guides(colour = guide_legend(nrow = legend_nrow)) + 
   facet_wrap(~splitval, nrow = facet_nrow) +
   coord_cartesian(xlim = xaxisrange, ylim = yaxisrange)
@@ -200,7 +204,7 @@ yaxisrange <- c(0.4, 0.9)
 ggp <- plot_fdrtprcurve(cobraplot, pointsize = 3)
 ggp <- ggp + 
   theme_bw() +
-  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16, color = "darkgrey"), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 11), strip.background = element_rect(colour = "black", fill="white")) + 
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = text_size, color = "darkgrey"), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), strip.text = element_text(size = strip_text_size), strip.background = element_rect(colour = "black", fill="white")) + 
   guides(colour = guide_legend(nrow = legend_nrow)) + 
   facet_wrap(~splitval, nrow = facet_nrow) +
   coord_cartesian(xlim = xaxisrange, ylim = yaxisrange)
@@ -270,7 +274,7 @@ if(all(simulation_list == c('drosophila_node_nonull','hsapiens_node_nonull')) &&
   ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3)
   ggp <- ggp + 
     theme_bw() +
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16, color = "darkgrey"), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 11), strip.background = element_rect(colour = "black", fill="white")) + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = text_size, color = "darkgrey"), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), strip.text = element_text(size = strip_text_size), strip.background = element_rect(colour = "black", fill="white")) + 
     guides(colour = guide_legend(nrow = legend_nrow)) + 
     facet_wrap(~splitval, nrow = facet_nrow) +
     coord_cartesian(xlim = xaxisrange, ylim = yaxisrange)
@@ -291,7 +295,7 @@ if(all(simulation_list == c('drosophila_node_nonull','hsapiens_node_nonull')) &&
   ggp <- plot_fdrtprcurve(cobraplot, pointsize = 3)
   ggp <- ggp + 
     theme_bw() +
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16, color = "darkgrey"), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 11), strip.background = element_rect(colour = "black", fill="white")) + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = text_size, color = "darkgrey"), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), strip.text = element_text(size = strip_text_size), strip.background = element_rect(colour = "black", fill="white")) + 
     guides(colour = guide_legend(nrow = legend_nrow)) + 
     facet_wrap(~splitval, nrow = facet_nrow) +
     coord_cartesian(xlim = xaxisrange, ylim = yaxisrange)
@@ -307,7 +311,7 @@ if(all(simulation_list == c('drosophila_node_nonull','hsapiens_node_nonull')) &&
 
 
 ##############################################################################
-### Order for split - simulations per column
+### CAT plots - Order for split - simulations per column
 ##############################################################################
 
 
@@ -446,6 +450,7 @@ ggp <- plotCAT(data_CAT, metadata = metadata_ov, plot_var = "method_name", facet
 
 ggp <- ggp + 
   coord_cartesian(xlim = c(0, 1500), ylim = c(0, 1)) +
+  theme(legend.position = "bottom", axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), strip.text = element_text(size = strip_text_size + 4), strip.background = element_rect(colour = "black", fill="white")) + 
   guides(colour = guide_legend(nrow = legend_nrow))
 
 

@@ -20,18 +20,20 @@ library(plyr)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
-sim_name=''
-n=c(3)
-nm=c(1000)
-nd=0
-prop=c('prop_q3_kim_kallisto_fcutoff','prop_q10_kim_kallisto_fcutoff')
-disp=c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')
-pdf_width=7
-pdf_height=7
-fig_name='3_1000_'
-out_dir='core_fp'
-out_suffix='core_fp'
+# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
+# sim_name=''
+# n=c(3)
+# nm=c(1000)
+# nd=0
+# prop=c('prop_q3_kim_kallisto_fcutoff','prop_q10_kim_kallisto_fcutoff')
+# disp=c('disp_common_kim_kallisto','disp_genewise_kim_kallisto_lognormal')
+# pdf_width=7
+# pdf_height=7
+# fig_name='3_1000_'
+# out_dir='core_fp_auto_moderation'
+# out_suffix='core_fp'
+# strip_text_size=14
+# text_size=16
 
 ##############################################################################
 # Read in the arguments
@@ -52,6 +54,12 @@ print(nm)
 print(nd)
 print(prop)
 print(disp)
+print(pdf_width)
+print(pdf_height)
+print(fig_name)
+print(out_dir)
+print(out_suffix)
+print(strip_text_size)
 
 
 ##############################################################################
@@ -194,8 +202,9 @@ res$simulation <- factor(res$simulation, levels = c("common", "genewise"))
 res$dispersion <- factor(res$dispersion, levels = c("genewise", "moderated", "common"))
 res$method <- factor(res$method, levels = c("true", "ML-dirmult", "PL", "CR"))
 
-res$prop <- factor(res$prop, levels = prop)
+res$prop <- factor(res$prop, levels = prop, labels = gsub("_fcutoff", "", prop))
 levels(res$prop)
+
 
 res$n <- factor(res$n, levels = n, labels = paste0("n=", n))
 res$nm <- factor(res$nm, levels = nm, labels = paste0("m=", nm))
@@ -206,7 +215,7 @@ levels(res$n_nm)
 res$n_nm_simulation <- interaction(res$n_nm, res$simulation, lex.order = TRUE)
 levels(res$n_nm_simulation)
 
-res$all_interactions <- interaction(res$dispersion, res$method, res$prop, drop = TRUE)
+res$all_interactions <- interaction(res$dispersion, res$method, drop = TRUE)
 
 
 
@@ -226,7 +235,7 @@ ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) +
   theme_bw() +
   ylab("Absolute error") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(prop ~ n_nm_simulation)
 
 pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -238,13 +247,15 @@ print(ggp)
 dev.off()
 
 
+
+
 # ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) + 
 #   geom_violin(trim = TRUE, scale = "width", position = position_dodge(width = 0.9), width = 0.9) +
 #   geom_boxplot(outlier.size = NA, alpha = 0, position = position_dodge(width = 0.9), width = 0.45) +
 #   theme_bw() +
 #   ylab("Absolute error") +
 #   coord_cartesian(ylim = ylim) +
-#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+#   theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size)) +
 #   facet_grid(prop ~ n_nm_simulation)
 # 
 # pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_violin.pdf"), width = pdf_width, height = pdf_height)
@@ -252,11 +263,12 @@ dev.off()
 # dev.off()
 
 
+
 ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
-  geom_boxplot(outlier.size = 0.2, outlier.colour = "black") +
+  geom_boxplot(outlier.size = 0.1, outlier.colour = "black") +
   theme_bw() +
   ylab("Log10 of absolute error") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(prop ~ n_nm_simulation)
 
 pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_boxplot_log.pdf"), width = pdf_width, height = pdf_height)
@@ -268,12 +280,13 @@ print(ggp)
 dev.off()
 
 
+
 ggp <- ggplot(data = error, aes(y = log10(error), x = dispersion, fill = method)) + 
   geom_violin(trim = TRUE, aes(colour = method), scale = "width", position = position_dodge(width = 0.9), width = 0.9) +
   geom_boxplot(outlier.size = NA, alpha = 0, position = position_dodge(width = 0.9), width = 0.45) +
   theme_bw() +
   ylab("Log10 of absolute error") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(prop ~ n_nm_simulation)
 
 pdf(paste0(out_dir_plots, "/", fig_name, "error_absolute_violin_log.pdf"), width = pdf_width, height = pdf_height)
@@ -282,6 +295,35 @@ dev.off()
 
 
 
+
+
+
+
+### Raw error
+
+error <- res[res$method != "true", ]
+error$error <- asinh(error$est - error$true)
+
+
+ylim <- c(min(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_lower)[, "error"]) - 1, max(aggregate(. ~ all_interactions, error[, c("error", "all_interactions")], whisker_upper)[, "error"]) + 1)
+
+
+ggp <- ggplot(data = error, aes(y = error, x = dispersion, fill = method)) + 
+  geom_boxplot(outlier.size = 0.1, outlier.colour = "black") +
+  geom_hline(yintercept = 0, color="black", linetype = 2, size = 0.3) +
+  theme_bw() +
+  ylab("Arcsinh of raw error") +
+  coord_cartesian(ylim = ylim) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
+  facet_grid(prop ~ n_nm_simulation)
+
+pdf(paste0(out_dir_plots, "/", fig_name, "error_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
+
+png(paste0(out_dir_plots, "/", fig_name, "error_raw_boxplot.png"), width = 75*pdf_width, height = 75*pdf_height)
+print(ggp)
+dev.off()
 
 
 
@@ -305,7 +347,7 @@ ggp <- ggplot(data = res, aes(y = log10(est), x = dispersion, fill = method)) +
   geom_boxplot(outlier.size = NA, outlier.colour = NULL, position = position_dodge(width = 0.9), width = 0.5) +
   theme_bw() +
   ylab("Log10 of gamma_+") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   scale_fill_manual(values = c("grey", gg_color_hue(ggn))) +
   facet_grid(prop ~ n_nm_simulation)
 
@@ -330,7 +372,7 @@ mse$simulation <- factor(mse$simulation, levels = c("common", "genewise"))
 mse$dispersion <- factor(mse$dispersion, levels = c("genewise", "moderated", "common"))
 mse$method <- factor(mse$method, levels = c("ML-dirmult", "PL", "CR"))
 
-mse$prop <- factor(mse$prop, levels = prop)
+mse$prop <- factor(mse$prop, levels = prop, labels = gsub("_fcutoff", "", prop))
 levels(mse$prop)
 
 mse$n <- factor(mse$n, levels = n, labels = paste0("n=", n))
@@ -355,7 +397,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = dispersion, colour = metho
   theme_bw() +
   ylab("Mean absolute error") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(prop ~ n_nm_simulation)
 
 pdf(paste0(out_dir_plots, "/", fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -374,7 +416,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = dispersion, colour = met
   theme_bw() +
   ylab("Median absolute error") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(prop ~ n_nm_simulation)
 
 pdf(paste0(out_dir_plots, "/", fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -395,7 +437,7 @@ ggp <- ggplot(data = mse, aes(y = median_error, x = dispersion, colour = method)
   theme_bw() +
   ylab("Median error") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(prop ~ n_nm_simulation)
 
 pdf(paste0(out_dir_plots, "/", fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -418,7 +460,7 @@ fp$dispersion <- factor(fp$dispersion, levels = c("genewise", "moderated", "comm
 
 fp$method <- factor(fp$method, levels = c("true", "ML-dirmult", "PL", "CR"))
 
-fp$prop <- factor(fp$prop, levels = prop)
+fp$prop <- factor(fp$prop, levels = prop, labels = gsub("_fcutoff", "", prop))
 levels(fp$prop)
 
 fp$n <- factor(fp$n, levels = n, labels = paste0("n=", n))
@@ -455,7 +497,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = dispersion, fill = method)) +
   theme_bw() +
   ylab("FP rate") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   scale_fill_manual(values = c("grey", gg_color_hue(ggn))) +
   facet_grid(prop ~ n_nm_simulation)
 
@@ -487,7 +529,7 @@ ggp <- ggplot(data = res, aes(x = pvalue, linetype = dispersion, colour = method
   ylab("Density") +
   xlab("P-values") +
   coord_cartesian(xlim = c(0, 1)) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   scale_colour_manual(values = c("grey", gg_color_hue(ggn))) +
   facet_grid(prop ~ n_nm_simulation)
 
@@ -505,7 +547,7 @@ ggp <- ggplot(data = res, aes(x = pvalue, linetype = dispersion, colour = method
   ylab("Count") +
   xlab("P-values") +
   coord_cartesian(xlim = c(0, 1)) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   scale_colour_manual(values = c("grey", gg_color_hue(ggn))) +
   facet_grid(prop ~ n_nm_simulation)
 

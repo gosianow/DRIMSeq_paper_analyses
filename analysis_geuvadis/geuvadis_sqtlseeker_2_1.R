@@ -21,9 +21,9 @@ library(ggplot2)
 # Arguments for testing the code
 ##############################################################################
 
-rwd='/home/Shared/data/seq/geuvadis'
-workers=4
-population='CEU'
+# rwd='/home/Shared/data/seq/geuvadis'
+# workers=4
+# population='YRI'
 
 ##############################################################################
 # Read in the arguments
@@ -143,16 +143,18 @@ metadata <- subset(metadata, group == population)
 
 
 ### check if the samples order is the same in genotype files
-all(metadata$sampleShort == read.table(genotypes_path, header = FALSE, nrows = 1)[-c(1:4)])
+stopifnot(all(metadata$sampleShort == read.table(genotypes_path, header = FALSE, nrows = 1)[-c(1:4)]))
 
 
 ########################################
 ### 1) Index the genotype file (if not done externally before)
 ########################################
 
-genotypes_path_index <- index.genotype(genotypes_path)
-genotypes_path_index
-# genotypes_path_index <- paste0(out_data_dir, "snps_", population, "_full.tsv.bgz")
+genotypes_path_index <- paste0(out_data_dir, "snps_", population, "_full.tsv.bgz")
+
+if(!file.exists(genotypes_path_index)){
+  genotypes_path_index <- index.genotype(genotypes_path)
+}
 
 
 ########################################
@@ -162,6 +164,7 @@ genotypes_path_index
 counts_raw <- read.table(counts_path, as.is=TRUE, header=TRUE, sep="\t")
 
 counts <- counts_raw[,c("trId", "geneId", metadata$sample)]
+
 colnames(counts) <- c("trId", "geneId", metadata$sampleShort)
 
 
@@ -259,6 +262,8 @@ colSums(is.na(ratios))
 
 gene_bed <- read.table(gene_bed_path, as.is=TRUE, sep="\t")
 colnames(gene_bed) <- c("chr","start","end","geneId")
+
+gene_bed$chr <- gsub("chr", "", gene_bed$chr)
 
 
 results <- sqtl.seeker(tre.df = ratios, genotype.f = genotypes_path_index, gene.loc = gene_bed, genic.window = 5000, min.nb.ext.scores = 1000, nb.perm.max = 1e+06, nb.perm.max.svQTL = 10000, svQTL = FALSE, approx = TRUE, verbose = TRUE)

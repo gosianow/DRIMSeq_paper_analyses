@@ -66,7 +66,6 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/${comparis
 for population in 'CEU' 'YRI'
 do
 
-
 ### Venn diagrams and upset plots with iCOBRA
 
 R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_permutations.R $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations_${population}.Rout
@@ -321,7 +320,6 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/${comparis
 for population in 'CEU' 'YRI'
 do
 
-
 ### Venn diagrams and upset plots with iCOBRA
 
 R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_permutations.R $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations_${population}.Rout
@@ -331,17 +329,19 @@ tail $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations_${population}.Rout
 
 ### For detected sQTLs: Distance to the closest exon, % within exons, mean gene expression, nr transcripts
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf' comparison_out='${comparison_out}' FDR=${FDR} workers=10" $RCODE/geuvadis_drimseq_0_3_3_biol_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_biol_comparison_plots_${population}.Rout
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf' comparison_out='${comparison_out}' FDR=${FDR} workers=5" $RCODE/geuvadis_drimseq_0_3_3_biol_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_biol_comparison_plots_${population}.Rout
 
 tail $ROUT/geuvadis_drimseq_0_3_3_biol_comparison_plots_${population}.Rout
 
 
-### Plots of the overlap versus number of top ranked genes
-### CAT (concordance at top) plots
+
+### CAT (concordance at top) plots for top ranked genes
 
 R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
 
 tail $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
+
+
 
 done
 
@@ -362,7 +362,6 @@ FDR=0.05
 
 for population in 'CEU' 'YRI'
 do
-
 
 # GLIMMPS: PCR validated sQTLs
 
@@ -404,6 +403,8 @@ tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_${population}.Rout
 
 
 done
+
+
 
 
 ###################################################

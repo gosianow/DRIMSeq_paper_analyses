@@ -157,10 +157,11 @@ stopifnot(metadata$sampleShort == read.table(genotypes_path, header = FALSE, nro
 ### 1) Index the genotype file (if not done externally before)
 ########################################
 
-genotypes_path_index <- index.genotype(genotypes_path)
-genotypes_path_index
-# genotypes_path_index <- paste0(out_data_dir, "snps_", population, "_full.tsv.bgz")
+genotypes_path_index <- paste0(out_data_dir, "snps_", population, "_full.tsv.bgz")
 
+if(!file.exists(genotypes_path_index)){
+  genotypes_path_index <- index.genotype(genotypes_path)
+}
 
 ########################################
 ### 2) Prepare transcript expression
@@ -292,6 +293,8 @@ colSums(is.na(ratios))
 
 gene_bed <- read.table(gene_bed_path, as.is=TRUE, sep="\t")
 colnames(gene_bed) <- c("chr","start","end","geneId")
+
+gene_bed$chr <- gsub("chr", "", gene_bed$chr)
 
 
 results <- sqtl.seeker(tre.df = ratios, genotype.f = genotypes_path_index, gene.loc = gene_bed, genic.window = 5000, min.nb.ext.scores = 1000, nb.perm.max = 1e+06, nb.perm.max.svQTL = 10000, svQTL = FALSE, approx = TRUE, verbose = TRUE)

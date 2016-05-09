@@ -63,7 +63,7 @@ count_method="c('kallisto','htseq')"
 out_suffix='moderation_real'
 
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} fig_name='all_' out_suffix='${out_suffix}' pdf_width=14 pdf_height=7" $RCODE/moderation_real_plots_run.R $ROUT/moderation_real_plots_run_n${n}.Rout
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} fig_name='all_' out_suffix='${out_suffix}' pdf_width=14 pdf_height=7 strip_text_size=16 text_size=16" $RCODE/moderation_real_plots_run.R $ROUT/moderation_real_plots_run_n${n}.Rout
     
 
 
@@ -79,7 +79,7 @@ count_method="c('kallisto','htseq')"
 out_suffix='moderation_real'
 
 
-R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} fig_name='n3_' out_suffix='${out_suffix}' pdf_width=7 pdf_height=7" $RCODE/moderation_real_plots_run.R $ROUT/moderation_real_plots_run_n${n}.Rout
+R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' sim_name='' n=${n} nm=${nm} nd=${nd} prop=${prop} disp=${disp} data_name=${data_name} count_method=${count_method} fig_name='n3_' out_suffix='${out_suffix}' pdf_width=7 pdf_height=7 strip_text_size=16 text_size=16" $RCODE/moderation_real_plots_run.R $ROUT/moderation_real_plots_run_n${n}.Rout
    
 
 

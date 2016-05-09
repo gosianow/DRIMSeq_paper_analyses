@@ -36,7 +36,8 @@ library(DRIMSeq)
 # pdf_width=7
 # pdf_height=7
 # fig_name='n3_'
-
+# strip_text_size=18
+# text_size=18
 
 ##############################################################################
 # Read in the arguments
@@ -232,7 +233,7 @@ ggp <- ggplot(data = error, aes(y = log10(error), x = disp_prior_df)) +
   theme_bw() +
   ylab("Log10 of absolute error") +
   xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction)
 
 
@@ -251,7 +252,7 @@ ggp <- ggplot(data = res, aes(y = log10(est), x = disp_prior_df)) +
   theme_bw() +
   ylab("Log10 of gamma_+") +
   xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
 
@@ -296,7 +297,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df)) +
   theme_bw() +
   ylab("Mean absolute error") +
   xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
 pdf(paste0(out_dir_plots, fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -311,7 +312,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df)) +
   theme_bw() +
   ylab("Median absolute error") +
   xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -325,7 +326,7 @@ ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df)) +
   theme_bw() +
   ylab("Log10 of median absolute error") +
   xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -342,7 +343,7 @@ ggp <- ggplot(data = mse, aes(y = median_error, x = disp_prior_df)) +
   theme_bw() +
   ylab("Median error") +
   xlab("Moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -388,7 +389,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df)) +
   ylab("FP rate") +
   xlab("Moderation") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction)
 
 pdf(paste0(out_dir_plots, fig_name, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -439,7 +440,7 @@ for(k in 1:length(n)){
         xlab("Log10 of mean expression") +
         ylab("Log10 of gamma_+") +
         geom_point(size = 1.5, alpha = 0.7, na.rm = TRUE, shape = 1) +
-        theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), legend.title = element_text(size=16, face="bold"), legend.text = element_text(size = 14), legend.position = "top") +
+        theme(axis.text = element_text(size=text_size), axis.title = element_text(size=18, face="bold"), legend.title = element_text(size=text_size, face="bold"), legend.text = element_text(size = text_size), legend.position = "top", strip.text = element_text(size = strip_text_size)) +
         guides(colour = guide_colorbar(barwidth = 20, barheight = 0.5)) +
         scale_colour_gradient(limits = c(2, max(breaks)), breaks = breaks, low = "royalblue2", high="red2", name = "Number of features", na.value = "red2") +
         facet_wrap(~ disp_prior_df, nrow = 3)

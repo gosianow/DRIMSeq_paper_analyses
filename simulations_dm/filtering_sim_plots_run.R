@@ -33,6 +33,8 @@ library(DRIMSeq)
 # out_suffix='filtering'
 # pdf_width=7 
 # pdf_height=7
+# strip_text_size=16
+# text_size=16
 
 
 ##############################################################################
@@ -238,7 +240,7 @@ res$max_features <- factor(res$max_features, levels = max_features_levels)
 
 res$prop <- factor(res$prop, levels = prop)
 res$n <- factor(res$n, levels = n, labels = paste0("n=", n))
-res$nm <- factor(res$nm, levels = nm, labels = paste0("nm=", nm))
+res$nm <- factor(res$nm, levels = nm, labels = paste0("m=", nm))
 
 res$n_nm <- interaction(res$n, res$nm, lex.order = TRUE)
 levels(res$n_nm)
@@ -259,7 +261,7 @@ ggp <- ggplot(data = error, aes(y = error, x = max_features)) +
   ylab("Absolute error") +
   xlab("Max features") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(nm ~ n)
 
 
@@ -278,7 +280,7 @@ ggp <- ggplot(data = error, aes(y = log10(error), x = max_features)) +
   theme_bw() +
   ylab("Log10 of absolute error") +
   xlab("Max features") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(nm ~ n)
 
 
@@ -298,7 +300,7 @@ ggp <- ggplot(data = res, aes(y = log10(est), x = max_features)) +
   theme_bw() +
   ylab("Log 10 of gamma_+") +
   xlab("Max features") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(nm ~ n)
 
 
@@ -317,7 +319,7 @@ levels(mse$max_features)
 
 mse$prop <- factor(mse$prop, levels = prop)
 mse$n <- factor(mse$n, levels = n, labels = paste0("n=", n))
-mse$nm <- factor(mse$nm, levels = nm, labels = paste0("nm=", nm))
+mse$nm <- factor(mse$nm, levels = nm, labels = paste0("m=", nm))
 
 mse$n_nm <- interaction(mse$n, mse$nm, lex.order = TRUE)
 levels(mse$n_nm)
@@ -330,7 +332,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = max_features)) +
   theme_bw() +
   ylab("Mean absolute error") +
   xlab("Max features") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -348,7 +350,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = max_features)) +
   theme_bw() +
   ylab("Median absolute error") +
   xlab("Max features") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size)) +
   facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -364,7 +366,7 @@ ggp <- ggplot(data = mse, aes(y = median_error, x = max_features)) +
   theme_bw() +
   ylab("Median error") +
   xlab("Max features") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(nm ~ n)
 
 pdf(paste0(out_dir_plots, out_suffix, "_error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -383,7 +385,7 @@ levels(fp$max_features)
 
 fp$prop <- factor(fp$prop, levels = prop)
 fp$n <- factor(fp$n, levels = n, labels = paste0("n=", n))
-fp$nm <- factor(fp$nm, levels = nm, labels = paste0("nm=", nm))
+fp$nm <- factor(fp$nm, levels = nm, labels = paste0("m=", nm))
 
 fp$n_nm <- interaction(fp$n, fp$nm, lex.order = TRUE)
 levels(fp$n_nm)
@@ -404,7 +406,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = max_features, fill = disp_estimator)) +
   ylab("FP rate") +
   xlab("Max features") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   scale_fill_manual(values = c("grey", gg_color_hue(nlevels(fp$disp_estimator) - 1))) +
   facet_grid(nm ~ n)
 

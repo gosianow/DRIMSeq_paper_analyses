@@ -133,11 +133,21 @@ results_padj <- results_padj[, !grepl("gene_id", colnames(results_padj)), drop =
 ### use iCOBRA
 #######################################################
 
+### standard ggplot scheme
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length=n+1)
+  hcl(h=hues, l=65, c=100)[1:n]
+}
+
 cobradata <- COBRAData(padj = results_padj)
 
 ### Count how many genes are tested in total
 
 cobraperf <- calculate_performance(cobradata, aspects = "overlap", thr_venn = 1.1)
+
+bmethods <- basemethods(cobraperf)
+
 
 cobraplot <- prepare_data_for_plot(cobraperf, incltruth = FALSE)
 
@@ -146,7 +156,7 @@ plot_overlap(cobraplot, cex=c(1.2,1,0.7))
 dev.off()
 
 pdf(paste0(out_dir, "/upset_", ds_method, "_all.pdf"))
-plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 10)
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = bmethods, sets.bar.color = gg_color_hue(length(bmethods)))
 dev.off()
 
 
@@ -161,7 +171,7 @@ plot_overlap(cobraplot, cex=c(1.2,1,0.7))
 dev.off()
 
 pdf(paste0(out_dir, "/upset_", ds_method, ".pdf"))
-plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 10)
+plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = bmethods, sets.bar.color = gg_color_hue(length(bmethods)))
 dev.off()
 
 

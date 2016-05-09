@@ -28,6 +28,8 @@ library(iCOBRA)
 # comparison_out='drimseq_0_3_3_positive_controls'
 # ROC_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotROCx.R'
 # valid_path='5_validation/brooks_validated_genes.txt'
+# strip_text_size=16
+
 
 ##############################################################################
 # Read in the arguments
@@ -193,7 +195,8 @@ ggp <- ggp +
   coord_cartesian(xlim = c(0, 1000), ylim = c(0, nrow(valid))) +
   xlab("Number of genes detected as DS") +
   ylab("Number of validated genes detected as DS") +
-  guides(colour = guide_legend(nrow = 1))
+  guides(colour = guide_legend(nrow = 1)) +
+  theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size))
 
 
 

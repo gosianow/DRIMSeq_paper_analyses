@@ -58,6 +58,7 @@ comparison_out <- paste0(comparison_out, "/")
 out_dir <- comparison_out
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
+text_size <- 20
 
 ### colors
 
@@ -218,7 +219,7 @@ ggp <- ggplot(df, aes_string(x = "tt")) +
   xlab("Number of features per gene") +
   ylab("Frequency") +
   theme_bw() +
-  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=18, face="bold")) +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
   coord_cartesian(xlim = c(0, max(df$tt) + 2)) 
  
 
@@ -254,7 +255,7 @@ ggp <- ggplot(df, aes_string(x = "tt")) +
   xlab("Number of features per gene") +
   ylab("Frequency") +
   theme_bw() +
-  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=18, face="bold")) +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
   coord_cartesian(xlim = c(0, max(df$tt) + 2)) 
 
 
@@ -275,7 +276,7 @@ ggp <- ggplot(df, aes(x = tt, fill = method)) +
   xlab("Number of features per gene") +
   ylab("Frequency") +
   theme_bw() +
-  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=18, face="bold"),  legend.title = element_blank(), legend.position = "bottom") +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
   scale_fill_manual(values = colors[order(colors, decreasing = TRUE)])
 
 pdf(paste0(out_dir, population, "_hist_features.pdf"))
@@ -309,6 +310,9 @@ dips_mean <- unique(dips_mean)
 
 ggp <- DRIMSeq:::dm_plotDispersion(genewise_dispersion = dips_mean$genewise_dispersion, mean_expression = dips_mean$mean_expression, nr_features = dips_mean$nr_features, common_dispersion = NULL)
 
+
+ggp <- ggp +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"))
 
 pdf(paste0(out_dir, population, "_drimseq_disversion_versus_mean.pdf"))
 print(ggp)
@@ -348,7 +352,7 @@ ggp <- ggplot(df, aes(x = pvalues, fill = method)) +
   xlab("p-values") +
   ylab("Frequency") +
   geom_histogram(breaks = seq(0, 1, by = 0.01), alpha = 0.5, position="identity") +
-  theme(axis.text = element_text(size=16), axis.title = element_text(size=18, face="bold"), plot.title = element_text(size=16, face="bold"), legend.title = element_blank(), legend.position = "bottom") +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
   coord_cartesian(xlim = c(0, 1)) +
   scale_fill_manual(values = colors[order(colors, decreasing = TRUE)])
 

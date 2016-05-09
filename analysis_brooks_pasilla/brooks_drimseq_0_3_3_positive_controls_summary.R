@@ -92,7 +92,7 @@ ggp <- ggplot(summarym, aes(x = count_method, y = variable, fill = value)) +
   xlab("") + 
   ylab("") + 
   theme_bw() +
-  theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14)) +
+  theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14), legend.position="none") +
   scale_fill_gradient(low = "grey90", high = "grey50", na.value = "grey90") +
   facet_wrap(~ model)
 
@@ -148,7 +148,7 @@ for(i in 1:nlevels(summary$model)){
     xlab("") + 
     ylab("") + 
     theme_bw() +
-    theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14)) +
+    theme(panel.background = element_rect(fill = NA, colour = NA), axis.ticks = element_blank(), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.text.y = element_text(size = 14), strip.text = element_text(size = 14), legend.position="none") +
     scale_fill_manual(values = c("grey80", "grey50"), na.value = "grey90") +
     facet_wrap(~ count_method, nrow = 1)
   

@@ -7,6 +7,7 @@ library(DRIMSeq)
 
 dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARAM){
   
+  text_size <- 20
 
   mean_expression = TRUE
   common_dispersion = FALSE
@@ -131,7 +132,8 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   ggp <- plotDispersion(x)
   
   ggp <- ggp + 
-    geom_abline(intercept = log10(splineDisp), slope = 0, linetype = 3, color = "orange")
+    geom_abline(intercept = log10(splineDisp), slope = 0, linetype = 3, size = 1, color = "darkgrey") +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size))
   
   pdf(paste0(prefix_mod, "moderation_none_dispersion_vs_mean_grid.pdf"))
   print(ggp)
@@ -147,7 +149,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   
   ggp <- ggplot(df_loglik_span_mean, aes(x = log10(mean_expression), y = loglik_span)) +
     geom_point(alpha = 1, size = 1) +
-    coord_cartesian(xlim = log10(range(mean_expression))) 
+    coord_cartesian(xlim = log10(range(mean_expression))) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "liks_span_versus_mean_expression_boundry.pdf"))
   print(ggp)
@@ -165,8 +169,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
 
   ggp <- ggplot(df_liks, aes(x = splinePts, y = -log10(-loglik))) +
     geom_line(size = 3) +
-    ggtitle(paste0("Loglik span ", max(df_liks$loglik) - min(df_liks$loglik))) +
-    theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"), legend.text = element_text(size = 14), legend.title = element_text(size = 14), legend.position = "bottom") 
+    ggtitle(paste0("Loglik span ", round(max(df_liks$loglik) - min(df_liks$loglik)), 2)) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom") 
   
   pdf(paste0(prefix_mod, "liks_boundry.pdf"))
   print(ggp)
@@ -178,8 +183,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   
   ggp <- ggplot(df_liks, aes(x = splinePts, y = -log10(-loglik))) +
     geom_line(size = 3) +
-    ggtitle(paste0("Loglik span ", max(df_liks$loglik) - min(df_liks$loglik))) +
-    theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"), legend.text = element_text(size = 14), legend.title = element_text(size = 14), legend.position = "bottom") 
+    ggtitle(paste0("Loglik span ", round(max(df_liks$loglik) - min(df_liks$loglik)), 2)) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "liks_notboundry.pdf"))
   print(ggp)
@@ -214,7 +220,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   ggp <- ggplot(df_loglik_span[df_loglik_span$loglik_span > 1e-5, ], aes(x = boundry, y = log10(loglik_span), fill = boundry)) +
     geom_boxplot(outlier.size = 0) +
     geom_point(position = position_jitter(width = 0.5), alpha = 0.2) +
-    geom_abline(intercept = log10(moderation_span), slope = 0, linetype = 2) 
+    geom_abline(intercept = log10(moderation_span), slope = 0, linetype = 2) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "liks_span_log.pdf"))
   print(ggp)
@@ -225,7 +233,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
     geom_boxplot(outlier.size = 0) +
     geom_point(position = position_jitter(width = 0.5), alpha = 0.2) +
     geom_abline(intercept = moderation_span, slope = 0, linetype = 2) +
-    coord_cartesian(ylim = c(0, 2*moderation_span))
+    coord_cartesian(ylim = c(0, 2*moderation_span)) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "liks_span.pdf"))
   print(ggp)
@@ -241,7 +251,10 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   
   ggp <- ggplot(df_loglik_span_mean[df_loglik_span_mean$loglik_span > 1e-5, ], aes(x = log10(mean_expression), y = log10(loglik_span), color = boundry)) +
     geom_point(alpha = 1, size = 0.5) +
-    geom_abline(intercept = log10(moderation_span), slope = 0, linetype = 2)
+    geom_abline(intercept = log10(moderation_span), slope = 0, linetype = 2, color = "firebrick3") +
+    scale_color_manual(values = c("darkgrey", "black")) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "liks_span_versus_mean_expression_log.pdf"))
   print(ggp)
@@ -250,8 +263,11 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   
   ggp <- ggplot(df_loglik_span_mean, aes(x = log10(mean_expression), y = loglik_span, color = boundry)) +
     geom_point(alpha = 1, size = 0.5) +
-    geom_abline(intercept = moderation_span, slope = 0, linetype = 2) +
-    coord_cartesian(ylim = c(0, 2*moderation_span))
+    geom_abline(intercept = moderation_span, slope = 0, linetype = 2, color = "firebrick3") +
+    scale_color_manual(values = c("darkgrey", "black")) +
+    coord_cartesian(ylim = c(0, 2*moderation_span)) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "liks_span_versus_mean_expression.pdf"))
   print(ggp)
@@ -287,7 +303,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
     geom_point(alpha = 0.6) +
     geom_abline(intercept = priorN, slope = 0, linetype = 2) +
     coord_cartesian(xlim = log10(range(df_loglik_span_mean$mean_expression))) +
-    ggtitle(paste0("priorN = ", round(priorN, 4))) 
+    ggtitle(paste0("priorN = ", round(priorN, 4))) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "priorn_versus_mean_expression.pdf"))
   print(ggp)
@@ -298,7 +316,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
     geom_point(alpha = 0.6) +
     geom_abline(intercept = log10(priorN), slope = 0, linetype = 2) +
     coord_cartesian(xlim = log10(range(df_loglik_span_mean$mean_expression))) +
-    ggtitle(paste0("priorN = ", round(priorN, 4))) 
+    ggtitle(paste0("priorN = ", round(priorN, 4))) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "priorn_versus_mean_expression_log.pdf"))
   print(ggp)
@@ -321,8 +341,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
     geom_abline(intercept = priorN, slope = 0, linetype = 2) +
     coord_cartesian(xlim = log10(range(df_loglik_span_mean$mean_expression))) +
     ggtitle(paste0("priorN = ", round(priorN, 4))) +
-    geom_point(data = df_priorN_gene_loglog, aes(x = log10(mean_expression), y = priorN), color = "blue", size = 1)+
-    theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"), legend.text = element_text(size = 14), legend.title = element_text(size = 14), legend.position = "bottom") 
+    geom_point(data = df_priorN_gene_loglog, aes(x = log10(mean_expression), y = priorN), color = "blue", size = 1) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   
   pdf(paste0(prefix_mod, "priorn_versus_mean_expression_loess.pdf"))
@@ -362,9 +383,11 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   
   ggp <- ggplot(df_loglik_span_mean[df_loglik_span_mean$loglik_span > 1e-5, ], aes(x = log10(mean_expression), y = log10(loglik_span), color = boundry)) +
     geom_point(alpha = 1, size = 0.5) +
-    geom_point(data = df_moderation_span, aes(x = log10(mean_expression), y = log10(moderation_span)), color = "black", size = 0.5) +
-    geom_abline(intercept = log10(common_moderation_span), slope = 0, linetype = 3, size = 2) +
-    theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"), legend.text = element_text(size = 14), legend.title = element_text(size = 14), legend.position = "bottom") 
+    geom_point(data = df_moderation_span, aes(x = log10(mean_expression), y = log10(moderation_span)), color = "chocolate4", size = 0.5) +
+    geom_abline(intercept = log10(common_moderation_span), slope = 0, linetype = 2, size = 1, color = "firebrick3") +
+    scale_color_manual(values = c("darkgrey", "black")) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
 
   pdf(paste0(prefix_mod, "liks_span_versus_mean_expression_log.pdf"))
@@ -378,8 +401,12 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
   
   ggp <- ggplot(df_loglik_span_mean, aes(x = log10(mean_expression), y = loglik_span, color = boundry)) +
     geom_point(alpha = 1, size = 0.5) +
-    geom_point(data = df_moderation_span, aes(x = log10(mean_expression), y = moderation_span), color = "black", size = 0.5) +
-    coord_cartesian(ylim = c(0, 2*max(moderation_span)))
+    geom_point(data = df_moderation_span, aes(x = log10(mean_expression), y = moderation_span), color = "chocolate4", size = 0.5) +
+    geom_abline(intercept = common_moderation_span, slope = 0, linetype = 2, size = 1, color = "firebrick3") +
+    scale_color_manual(values = c("darkgrey", "black")) +
+    coord_cartesian(ylim = c(0, 2*max(moderation_span))) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "liks_span_versus_mean_expression.pdf"))
   print(ggp)
@@ -414,7 +441,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
     geom_point(alpha = 0.6) +
     geom_abline(intercept = priorN, slope = 0, linetype = 2) +
     coord_cartesian(xlim = log10(range(df_loglik_span_mean$mean_expression))) +
-    ggtitle(paste0("priorN = ", round(priorN, 4))) 
+    ggtitle(paste0("priorN = ", round(priorN, 4))) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "priorn_versus_mean_expression.pdf"))
   print(ggp)
@@ -425,7 +454,9 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
     geom_point(alpha = 0.6) +
     geom_abline(intercept = log10(priorN), slope = 0, linetype = 2) +
     coord_cartesian(xlim = log10(range(df_loglik_span_mean$mean_expression))) +
-    ggtitle(paste0("priorN = ", round(priorN, 4)))
+    ggtitle(paste0("priorN = ", round(priorN, 4))) +
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   
   pdf(paste0(prefix_mod, "priorn_versus_mean_expression_log.pdf"))
@@ -451,7 +482,8 @@ dmDS_auto_moderation_diagnostics <- function(x, common_disp, out_dir_tmp, BPPARA
     coord_cartesian(xlim = log10(range(df_loglik_span_mean$mean_expression))) +
     ggtitle(paste0("priorN = ", round(priorN, 4))) +
     geom_point(data = df_priorN_gene_loglog, aes(x = log10(mean_expression), y = priorN), color = "blue", size = 1) +
-    theme(axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"), legend.text = element_text(size = 14), legend.title = element_text(size = 14), legend.position = "bottom") 
+    theme_bw() +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size), legend.position = "bottom")
   
   pdf(paste0(prefix_mod, "priorn_versus_mean_expression_loess.pdf"))
   print(ggp)

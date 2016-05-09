@@ -55,6 +55,8 @@ comparison_out <- paste0(comparison_out, "/")
 
 dir.create(comparison_out, showWarnings = FALSE, recursive = TRUE)
 
+strip_text_size <- 16
+text_size <- 18
 
 ##############################################################################
 # colors
@@ -203,7 +205,8 @@ ggp <- plotCAT(data_CAT, metadata = metadata_ov, plot_var = "method_name", facet
 ggp <- ggp + 
   coord_cartesian(ylim = c(0, 1)) +
   ylab("Percentage overlap with sqtlseeker") +
-  xlab("Number of top ranked sQTLs")
+  xlab("Number of top ranked sQTLs") +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size))
 
 
 pdf(paste0(comparison_out, population, "_cat.pdf"), width = 7, height = 7)
@@ -214,7 +217,8 @@ dev.off()
 ggp <- ggp + 
   coord_cartesian(xlim = c(0, 10000), ylim = c(0, 1)) +
   ylab("Percentage overlap with sqtlseeker") +
-  xlab("Number of top ranked sQTLs")
+  xlab("Number of top ranked sQTLs") +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size))
 
 
 pdf(paste0(comparison_out, population, "_cat_zoom.pdf"), width = 7, height = 7)
@@ -225,7 +229,8 @@ dev.off()
 ggp <- ggp + 
   coord_cartesian(xlim = c(0, 6000), ylim = c(0, 1)) +
   ylab("Percentage overlap with sqtlseeker") +
-  xlab("Number of top ranked sQTLs")
+  xlab("Number of top ranked sQTLs") +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size))
 
 
 pdf(paste0(comparison_out, population, "_cat_zoom2.pdf"), width = 7, height = 7)

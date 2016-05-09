@@ -262,7 +262,7 @@ dev.off()
 
 
 ##############################################################################
-### gene expression
+### mean gene expression
 ##############################################################################
 
 gene_expr <- dge$counts[, use_sample]
@@ -288,29 +288,7 @@ print(ggp)
 dev.off()
 
 
-### Fit negative binomial distribution to gene expression
-
-params <- fitdistr(x = gene_expr[gene_expr <= whisker_up], "negative binomial")
-params[[1]]
-
-nm_size <- params[[1]][1]
-nm_mu <- params[[1]][2]
-
-ggp <- ggplot(data = data.frame(gene_expr = gene_expr), aes(x = gene_expr)) + 
-  geom_density() +
-  geom_line(data = data.frame(x = seq(1, round(whisker_up)), y = dnbinom(seq(1, round(whisker_up)), size = nm_size, mu = nm_mu)), aes(x = x, y = y), colour = "red") +
-  ggtitle(paste0("Negative binomial fit with mu = ", round(nm_mu, 2), " and size = ", round(nm_size, 2))) +
-  xlim(0, whisker_up)
-
-pdf(paste0(out_dir, "nm_",data_name,"_", count_method, "_hist_negative_binomial.pdf"))
-print(ggp)
-dev.off()
-
-
-write.table(round(params[[1]], 2), file = paste0(out_dir, "nm_",data_name,"_", count_method, "_negative_binomial.txt"), quote = FALSE, sep = "\t", row.names = TRUE, col.names = FALSE)
-
-
-### Fit lognormal distribution to gene expression
+### Fit lognormal distribution to mean gene expression
 
 params <- fitdistr(x = gene_expr, "lognormal")
 params[[1]]
@@ -332,7 +310,7 @@ dev.off()
 write.table(round(params[[1]], 2), file = paste0(out_dir, "nm_",data_name,"_", count_method, "_lognormal.txt"), quote = FALSE, sep = "\t", row.names = TRUE, col.names = FALSE)
 
 
-### Fit normal distribution to log of gene expression
+### Fit normal distribution to log of mean gene expression
 
 params <- fitdistr(x = log(gene_expr), "normal")
 params[[1]]

@@ -21,13 +21,13 @@ library(limma)
 # Test arguments
 ##############################################################################
 
-rwd='/home/gosia/multinomial_project/simulations_sim5'
-simulation='hsapiens_node_nonull'
-count_method='kallistofiltered5'
-filter_method="filter0"
-CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
-method_out='drimseq_0_3_3'
-comparison_out='drimseq_0_3_3_comparison'
+# rwd='/home/gosia/multinomial_project/simulations_sim5'
+# simulation='hsapiens_node_nonull'
+# count_method='kallistofiltered5'
+# filter_method="filter0"
+# CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
+# method_out='drimseq_0_3_3'
+# comparison_out='drimseq_0_3_3_comparison'
 
 
 ##############################################################################
@@ -66,7 +66,7 @@ colors_df$methods <- as.character(colors_df$methods)
 
 
 #######################################################
-# Redo the dispersion plots
+# Redo the dispersion plots with the same axes and larger font 
 #######################################################
 
 
@@ -88,8 +88,11 @@ for(i in grep("_grid_", files)){
   
   load(paste0(results_dir, files[i]))
   
+  text_size <- 26
+  
   ggp <- plotDispersion(d) +
-    coord_cartesian(ylim = log10(c(splineDisp[1], splineDisp[disp_grid_length])))
+    coord_cartesian(ylim = log10(c(splineDisp[1], splineDisp[disp_grid_length]))) +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_text(size = text_size, face = "bold"))
   
   if(grepl("_grid_none_", files[i])){
     
@@ -98,11 +101,19 @@ for(i in grep("_grid_", files)){
     ggdf <- ggdf[not_boundry, ]
     
     ggp <- ggp + 
-      geom_smooth(data = ggdf, color = "black", span = 0.1)
+      geom_smooth(data = ggdf, color = "black", span = 0.1)  
     
   }
   
   pdf(paste0(results_dir, gsub("_d.Rdata", "", files[i]), "_dispersion_vs_mean.pdf"))
+  print(ggp)
+  dev.off()
+  
+  ### Plot p-values
+  ggp <- plotTest(d) +
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), plot.title = element_text(size = text_size))
+  
+  pdf(paste0(results_dir, gsub("_d.Rdata", "", files[i]), "_hist_pvalues.pdf"))
   print(ggp)
   dev.off()
   
@@ -348,7 +359,7 @@ for(i in grep("drimseq", basemethods(cobraperf))){
   plot_overlap(cobraplot, cex = c(1.2, 1, 0.7))
   dev.off()
   
-  pdf(paste0(out_dir, "upset_", basemethods(cobraperf)[i], ".pdf"))
+  pdf(paste0(out_dir, "upset_", basemethods(cobraperf)[i], ".pdf"), width = 10)
   plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = c("truth", "dexseq", basemethods(cobraperf)[i]), sets.bar.color = c("grey", colors[c("dexseq", basemethods(cobraperf)[i])]))
   dev.off()
   
@@ -358,6 +369,9 @@ for(i in grep("drimseq", basemethods(cobraperf))){
 
 ### Plot distributions of differenet gene characteristics for unique genes
 bmethds <- basemethods(cobraperf)
+
+text_size=18 
+legend_size=16
 
 
 ### Mean expression
@@ -396,21 +410,21 @@ for(i in grep("drimseq", bmethds)){
   m1 <- "dexseq"
   m2 <- bmethds[i]
   
-  genes_sign_m1 <- rownames(results_padj[results_padj[, m1] < 0.05, , drop = FALSE])
-  genes_sign_m2 <- rownames(results_padj[results_padj[, m2] < 0.05, , drop = FALSE])
+  genes_sign_m1 <- rownames(results_padj[results_padj[, m1] < 0.05 & !is.na(results_padj[, m1]), , drop = FALSE])
+  genes_sign_m2 <- rownames(results_padj[results_padj[, m2] < 0.05 & !is.na(results_padj[, m2]), , drop = FALSE])
   
   genes_sign_overlap <- intersect(genes_sign_m1, genes_sign_m2)
   genes_sign_m1_unique <- setdiff(genes_sign_m1, genes_sign_overlap)
   genes_sign_m2_unique <- setdiff(genes_sign_m2, genes_sign_overlap)
   
   
-  ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[truth_genes], mean_expression[genes_sign_m1_unique], mean_expression[genes_sign_m2_unique], mean_expression[genes_sign_overlap]), 
-    group = c(rep("all_genes", length(all_genes)), rep("truth_genes", length(truth_genes)), rep(m1, length(genes_sign_m1_unique)), rep(m2, length(genes_sign_m2_unique)), rep("overlap", length(genes_sign_overlap))), 
+  ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[truth_genes], mean_expression[genes_sign_m1], mean_expression[genes_sign_m2]), 
+    group = c(rep("all_genes", length(all_genes)), rep("truth_genes", length(truth_genes)), rep(m1, length(genes_sign_m1)), rep(m2, length(genes_sign_m2))), 
     stringsAsFactors = FALSE)
   
   ggdf <- ggdf[complete.cases(ggdf), ]
   
-  ggdf$group <- factor(ggdf$group, levels = c("all_genes", "truth_genes", "overlap", m1, m2))
+  ggdf$group <- factor(ggdf$group, levels = c("all_genes", "truth_genes", m1, m2), , labels = paste0(c("all_genes", "truth_genes", m1, m2), " (", c(length(all_genes), length(truth_genes), length(genes_sign_m1), length(genes_sign_m2)), ")"))
   
   ggdf <- ggdf[ggdf$mean_expression > 0, ,drop = FALSE]
   
@@ -419,44 +433,31 @@ for(i in grep("drimseq", bmethds)){
     geom_density(size = 2) +
     theme_bw() +
     xlab("Log10 of gene mean expression") +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), legend.title = element_blank(), legend.position = "bottom") +
-    scale_color_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)])))
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), legend.title = element_blank(), legend.position = "bottom") +
+    scale_color_manual(values = as.character(c("grey50", "grey", colors[c(m1, m2)]))) +
+    guides(color = guide_legend(nrow = 2))
   
   pdf(paste0(out_dir, "characteristics_mean_expr_", bmethds[i], ".pdf"))
   print(ggp)
   dev.off()
   
-  
-  
-  # ggp <- ggplot(ggdf, aes(x = group, y = log10(mean_expression), color = group, fill = group)) +
-  #   geom_boxplot(outlier.size = NA, alpha = 0.25, lwd = 0.5) +
-  #   geom_jitter(position = position_jitter(width = 0.75), alpha = 0.5, size = 0.5, na.rm = TRUE) +
-  #   theme_bw() +
-  #   ylab("Log10 of gene TPM") +
-  #   theme(axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), legend.title = element_blank(), legend.position = "bottom") +
-  #   scale_color_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)]))) +
-  #   scale_fill_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)])))
-  # 
-  # pdf(paste0(out_dir, "characteristics_TPM_box_", bmethds[i], ".pdf"))
-  # print(ggp)
-  # dev.off()
-  
 
-  ggdf <- data.frame(nbr_features = nbr_features[c(all_genes, truth_genes, genes_sign_m1_unique, genes_sign_m2_unique, genes_sign_overlap)], 
-    group = rep(c("all_genes", "truth_genes", m1, m2, "overlap"), c(length(all_genes), length(truth_genes), length(genes_sign_m1_unique), length(genes_sign_m2_unique), length(genes_sign_overlap))),
+  ggdf <- data.frame(nbr_features = nbr_features[c(all_genes, truth_genes, genes_sign_m1, genes_sign_m2)], 
+    group = rep(c("all_genes", "truth_genes", m1, m2), c(length(all_genes), length(truth_genes), length(genes_sign_m1), length(genes_sign_m2))),
     stringsAsFactors = FALSE)
   
   ggdf <- ggdf[complete.cases(ggdf), ]
   
-  ggdf$group <- factor(ggdf$group, levels = c("all_genes", "truth_genes", "overlap", m1, m2))
+  ggdf$group <- factor(ggdf$group, levels = c("all_genes", "truth_genes", m1, m2), , labels = paste0(c("all_genes", "truth_genes", m1, m2), " (", c(length(all_genes), length(truth_genes), length(genes_sign_m1), length(genes_sign_m2)), ")"))
   
   
   ggp <- ggplot(ggdf, aes(x = nbr_features, color = group, group = group)) +
     geom_density(size = 2) +
     theme_bw() +
     xlab("Number of expressed features") +
-    theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), legend.title = element_blank(), legend.position = "bottom") +
-    scale_color_manual(values = as.character(c("grey50", "grey", "black", colors[c(m1, m2)])))
+    theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), legend.title = element_blank(), legend.position = "bottom") +
+    scale_color_manual(values = as.character(c("grey50", "grey", colors[c(m1, m2)])))+
+    guides(color = guide_legend(nrow = 2))
   
   pdf(paste0(out_dir, "characteristics_nbr_features_", bmethds[i], ".pdf"))
   print(ggp)
@@ -542,7 +543,7 @@ for(i in 1:length(splv_list)){
   ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 8, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
   ggp <- ggp + 
     theme_bw() +
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), strip.text = element_text(size = 10)) + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 12)) + 
     guides(colour = guide_legend(nrow = 1)) + 
     facet_wrap(~splitval, nrow = 1) 
   
@@ -557,7 +558,7 @@ for(i in 1:length(splv_list)){
   ggp <- plot_fdrtprcurve(cobraplot, plottype = c("points"), pointsize = 3, stripsize = 8, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
   ggp <- ggp + 
     theme_bw() +
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), strip.text = element_text(size = 10)) + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 12)) + 
     guides(colour = guide_legend(nrow = 1)) + 
     facet_wrap(~splitval, nrow = 1) 
   
@@ -580,7 +581,7 @@ for(i in 1:length(splv_list)){
   ggp <- plot_fdrtprcurve(cobraplot, plottype = c("curve", "points"), pointsize = 3, stripsize = 8, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
   ggp <- ggp + 
     theme_bw() +
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), strip.text = element_text(size = 10)) + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 12)) + 
     guides(colour = guide_legend(nrow = 1)) + 
     facet_wrap(~splitval, nrow = 1)
   
@@ -595,7 +596,7 @@ for(i in 1:length(splv_list)){
   ggp <- plot_fdrtprcurve(cobraplot, plottype = c("curve", "points"), pointsize = 3, stripsize = 8, xaxisrange = c(0, xaxisrange[2]), yaxisrange = yaxisrange)
   ggp <- ggp + 
     theme_bw() +
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 10), strip.text = element_text(size = 10)) + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), strip.text = element_text(size = 12)) + 
     guides(colour = guide_legend(nrow = 1)) + 
     facet_wrap(~splitval, nrow = 1) 
   

@@ -11,7 +11,7 @@ Sys.time()
 library(ggplot2)
 library(iCOBRA)
 library(DRIMSeq)
-
+library(limma)
 
 ##############################################################################
 # Test arguments
@@ -22,6 +22,8 @@ library(DRIMSeq)
 # model='model_full'
 # method_out='drimseq_0_3_3'
 # comparison_out='drimseq_0_3_3_comparison'
+# text_size=14
+# legend_size=12
 
 ##############################################################################
 # Read in the arguments
@@ -38,6 +40,7 @@ print(args)
 print(rwd)
 print(model)
 print(count_method)
+
 
 
 ##############################################################################
@@ -84,8 +87,11 @@ if(model != "model_full_glm"){
     
     load(paste0(res_path, files[i]))
     
+    text_size_disp <- 26
+    
     ggp <- plotDispersion(d) +
-      coord_cartesian(ylim = log10(c(splineDisp[1], splineDisp[disp_grid_length])))
+      coord_cartesian(ylim = log10(c(splineDisp[1], splineDisp[disp_grid_length]))) +
+      theme(axis.text = element_text(size = text_size_disp), axis.title = element_text(size = text_size_disp, face = "bold"), legend.text = element_text(size = text_size_disp), legend.title = element_text(size = text_size_disp, face = "bold"))
     
     if(grepl("_grid_none_", files[i])){
       
@@ -102,6 +108,14 @@ if(model != "model_full_glm"){
     print(ggp)
     dev.off()
     
+    
+    ### Plot p-values
+    ggp <- plotTest(d) +
+      theme(axis.text = element_text(size = text_size_disp), axis.title = element_text(size = text_size_disp, face = "bold"), plot.title = element_text(size = text_size_disp))
+    
+    pdf(paste0(res_path, gsub("_d.Rdata", "", files[i]), "_hist_pvalues.pdf"))
+    print(ggp)
+    dev.off()
     
   }
   
@@ -208,8 +222,8 @@ if(nrow(summary) == 1){
     plot_overlap(cobraplot, cex=c(1.2,1,0.7))
     dev.off()
     
-    pdf(paste0(out_dir, "/upset_", basemethods(cobraperf)[i], "_all.pdf"))
-    plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 10)
+    pdf(paste0(out_dir, "/upset_", basemethods(cobraperf)[i], "_all.pdf"), width = 10)
+    plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = c("dexseq", basemethods(cobraperf)[i]), sets.bar.color = colors[c("dexseq", basemethods(cobraperf)[i])])
     dev.off()
     
   }
@@ -240,11 +254,183 @@ if(nrow(summary) == 1){
     plot_overlap(cobraplot, cex=c(1.2,1,0.7))
     dev.off()
     
-    pdf(paste0(out_dir, "/upset_", basemethods(cobraperf)[i], ".pdf"))
-    plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 10)
+    pdf(paste0(out_dir, "/upset_", basemethods(cobraperf)[i], ".pdf"), width = 10)
+    plot_upset(cobraplot, order.by = "degree", empty.intersections = "on", name.size = 14, sets = c("dexseq", basemethods(cobraperf)[i]), sets.bar.color = colors[c("dexseq", basemethods(cobraperf)[i])])
     dev.off()
     
   }
+  
+  
+  if(model == "model_full"){
+    
+    ### load metadata
+    metadata <- read.table("3_metadata/metadata.xls", stringsAsFactors = FALSE, sep="\t", header=TRUE) 
+    
+    metadata_org <- metadata
+    
+    count_dir <- paste0("2_counts/", count_method, "/")
+    
+    
+    ### load counts
+    counts_list <- lapply(1:length(metadata_org$sampleName), function(i){
+      # i = 1
+      cts <- read.table(paste0(count_dir, metadata_org$sampleName[i], ".txt"), header = FALSE, as.is = TRUE)
+      colnames(cts) <- c("group_id", metadata_org$sampleName[i])  
+      return(cts)
+    })
+    
+    counts <- Reduce(function(...) merge(..., by = "group_id", all=TRUE, sort = FALSE), counts_list)
+    counts <- counts[!grepl(pattern = "_", counts$group_id),]
+    
+    
+    ### Prepare data
+    group_split <- strsplit2(counts[,1], ":")
+    counts <- counts[, -1]
+    ### order the samples like in metadata!!!
+    counts <- counts[, metadata_org$sampleName]
+    
+    
+    ### Plot distributions of differenet gene characteristics for unique genes
+    bmethds <- basemethods(cobraperf)
+    
+    
+    ### Mean expression
+    
+    mean_expression <- by(counts, factor(group_split[, 1]), function(x){
+      mean(colSums(x, na.rm = TRUE), na.rm = TRUE)
+    }, simplify = FALSE)
+    
+    mean_expression <- unlist(mean_expression)
+    
+    
+    ### Number of expressed features per gene 
+    
+    nbr_features<- by(counts, factor(group_split[, 1]), function(x){
+      x <- as.matrix(x)
+      sum(rowSums(x > 10, na.rm = TRUE) > 2, na.rm = TRUE)
+    }, simplify = FALSE)
+    
+    nbr_features <- unlist(nbr_features)
+    
+    
+    
+    for(i in grep("drimseq", bmethds)){
+      # i = 2
+      
+      all_genes <- rownames(results_padj)
+      
+      m1 <- "dexseq"
+      m2 <- bmethds[i]
+      
+      genes_sign_m1 <- rownames(results_padj[results_padj[, m1] < 0.05 & !is.na(results_padj[, m1]), , drop = FALSE])
+      genes_sign_m2 <- rownames(results_padj[results_padj[, m2] < 0.05 & !is.na(results_padj[, m2]), ,drop = FALSE])
+      
+      genes_sign_overlap <- intersect(genes_sign_m1, genes_sign_m2)
+      genes_sign_m1_unique <- setdiff(genes_sign_m1, genes_sign_overlap)
+      genes_sign_m2_unique <- setdiff(genes_sign_m2, genes_sign_overlap)
+      
+      
+      ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_m1], mean_expression[genes_sign_m2]), 
+        group = c(rep("all_genes", length(all_genes)), rep(m1, length(genes_sign_m1)), rep(m2, length(genes_sign_m2))), stringsAsFactors = FALSE)
+      
+      ggdf <- ggdf[complete.cases(ggdf), ]
+      
+      ggdf$group <- factor(ggdf$group, levels = c("all_genes", m1, m2), labels = paste0(c("all_genes", m1, m2), " (", c(length(all_genes), length(genes_sign_m1), length(genes_sign_m2)), ")"))
+      
+      ggdf <- ggdf[ggdf$mean_expression > 0, ,drop = FALSE]
+      
+      
+      ggp <- ggplot(ggdf, aes(x = log10(mean_expression), color = group, group = group)) +
+        geom_density(size = 2) +
+        theme_bw() +
+        xlab("Log10 of gene mean expression") +
+        theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), legend.title = element_blank(), legend.position = "bottom") +
+        scale_color_manual(values = as.character(c("grey", colors[c(m1, m2)]))) +
+        guides(color = guide_legend(nrow = 2))
+      
+      pdf(paste0(out_dir, "characteristics_mean_expr_", bmethds[i], ".pdf"))
+      print(ggp)
+      dev.off()
+      
+      
+      ### Unique genes
+      ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_overlap], mean_expression[genes_sign_m1_unique], mean_expression[genes_sign_m2_unique]), 
+        group = c(rep("all_genes", length(all_genes)), rep("overlap", length(genes_sign_overlap)), rep(m1, length(genes_sign_m1_unique)), rep(m2, length(genes_sign_m2_unique))), stringsAsFactors = FALSE)
+      
+      ggdf <- ggdf[complete.cases(ggdf), ]
+      
+      ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", m1, m2), labels = paste0(c("all_genes", "overlap", m1, m2), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_m1_unique), length(genes_sign_m2_unique)), ")"))
+      
+      ggdf <- ggdf[ggdf$mean_expression > 0, ,drop = FALSE]
+      
+      
+      ggp <- ggplot(ggdf, aes(x = log10(mean_expression), color = group, group = group)) +
+        geom_density(size = 2) +
+        theme_bw() +
+        xlab("Log10 of gene mean expression") +
+        theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), legend.title = element_blank(), legend.position = "bottom") +
+        scale_color_manual(values = as.character(c("grey", "gray50", colors[c(m1, m2)]))) +
+        guides(color = guide_legend(nrow = 2))
+      
+      pdf(paste0(out_dir, "characteristics_mean_expr_", bmethds[i], "2.pdf"))
+      print(ggp)
+      dev.off()
+      
+      
+      
+      
+      
+      
+      ggdf <- data.frame(nbr_features = nbr_features[c(all_genes, genes_sign_m1, genes_sign_m2)], 
+        group = rep(c("all_genes", m1, m2), c(length(all_genes), length(genes_sign_m1), length(genes_sign_m2))),
+        stringsAsFactors = FALSE)
+      
+      ggdf <- ggdf[complete.cases(ggdf), ]
+      
+      ggdf$group <- factor(ggdf$group, levels = c("all_genes", m1, m2), labels = paste0(c("all_genes", m1, m2), " (", c(length(all_genes), length(genes_sign_m1), length(genes_sign_m2)), ")"))
+      
+      
+      ggp <- ggplot(ggdf, aes(x = nbr_features, color = group, group = group)) +
+        geom_density(size = 2) +
+        theme_bw() +
+        xlab("Number of expressed features") +
+        theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), legend.title = element_blank(), legend.position = "bottom") +
+        scale_color_manual(values = as.character(c("grey", colors[c(m1, m2)])))+
+        guides(color = guide_legend(nrow = 2))
+      
+      pdf(paste0(out_dir, "characteristics_nbr_features_", bmethds[i], ".pdf"))
+      print(ggp)
+      dev.off()
+      
+      
+      ### Unique genes
+      ggdf <- data.frame(nbr_features = nbr_features[c(all_genes, genes_sign_overlap, genes_sign_m1_unique, genes_sign_m2_unique)], 
+        group = rep(c("all_genes", "overlap", m1, m2), c(length(all_genes), length(genes_sign_overlap), length(genes_sign_m1_unique), length(genes_sign_m2_unique))),
+        stringsAsFactors = FALSE)
+      
+      ggdf <- ggdf[complete.cases(ggdf), ]
+      
+      ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", m1, m2), labels = paste0(c("all_genes", "overlap", m1, m2), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_m1_unique), length(genes_sign_m2_unique)), ")"))
+      
+      
+      ggp <- ggplot(ggdf, aes(x = nbr_features, color = group, group = group)) +
+        geom_density(size = 2) +
+        theme_bw() +
+        xlab("Number of expressed features") +
+        theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = legend_size), legend.title = element_blank(), legend.position = "bottom") +
+        scale_color_manual(values = as.character(c("grey", "gray50", colors[c(m1, m2)])))+
+        guides(color = guide_legend(nrow = 2))
+      
+      pdf(paste0(out_dir, "characteristics_nbr_features_", bmethds[i], "2.pdf"))
+      print(ggp)
+      dev.off()
+      
+      
+    }
+    
+    
+  }
+  
   
   
 }

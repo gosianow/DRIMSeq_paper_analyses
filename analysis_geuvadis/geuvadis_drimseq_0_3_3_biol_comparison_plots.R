@@ -24,12 +24,12 @@ library(BiocParallel)
 # Test arguments
 ##############################################################################
 
-rwd='/home/Shared/data/seq/geuvadis'
-population='CEU'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts'
-FDR=0.05
-path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
-workers=10
+# rwd='/home/Shared/data/seq/geuvadis'
+# population='CEU'
+# comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts'
+# FDR=0.05
+# path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf'
+# workers=5
 
 ##############################################################################
 # Read in the arguments
@@ -63,6 +63,8 @@ if(workers > 1){
   BPPARAM <- SerialParam()
 }
 
+strip_text_size <- 16
+text_size <- 18
 
 ##############################################################################
 # colors
@@ -188,10 +190,36 @@ mean_expression <- by(counts, factor(counts_raw$geneId), function(x){
 mean_expression <- unlist(mean_expression)
 
 
-ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]), 
-  group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker", length(genes_sign_sqtlseeker_unique)), rep("drimseq", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
 
-ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker", "drimseq"))
+### Use unique genes per method
+ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]), 
+  group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker_unique", length(genes_sign_sqtlseeker_unique)), rep("drimseq_unique", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
+
+ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), labels = paste0(c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker_unique), length(genes_sign_drimseq_unique)), ")"))
+
+ggdf <- ggdf[ggdf$mean_expression > 0, ,drop = FALSE]
+
+
+ggp <- ggplot(ggdf, aes(x = log10(mean_expression), color = group, group = group)) +
+  geom_density(size = 2) +
+  theme_bw() +
+  xlab("Log10 of mean gene expression ") +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("grey", "gray50", colors[c("sqtlseeker", "drimseq")]))) +
+  guides(color = guide_legend(nrow = 2))
+
+pdf(paste0(out_dir, population, "_sign_sqtls_mean_expr.pdf"))
+print(ggp)
+dev.off()
+
+
+
+
+### Use all genes per method
+ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_sqtlseeker], mean_expression[genes_sign_drimseq], mean_expression[genes_sign_overlap]), 
+  group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker", length(genes_sign_sqtlseeker)), rep("drimseq", length(genes_sign_drimseq)), rep("overlap", length(genes_sign_overlap))))
+
+ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker", "drimseq"), labels = paste0(c("all_genes", "overlap", "sqtlseeker", "drimseq"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker), length(genes_sign_drimseq)), ")"))
 
 ggdf <- ggdf[ggdf$mean_expression > 0, ,drop = FALSE]
 
@@ -201,12 +229,15 @@ ggp <- ggplot(ggdf, aes(x = log10(mean_expression), color = group, group = group
   geom_density(size = 2) +
   theme_bw() +
   xlab("Log10 of mean gene expression ") +
-  theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
-  scale_color_manual(values = as.character(c("grey", "black", colors[c("sqtlseeker", "drimseq")])))
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("grey", "gray50", colors[c("sqtlseeker", "drimseq")]))) +
+  guides(color = guide_legend(nrow = 2))
 
-pdf(paste0(out_dir, population, "_sign_sqtls_mean_expr.pdf"))
+pdf(paste0(out_dir, population, "_sign_sqtls_mean_expr2.pdf"))
 print(ggp)
 dev.off()
+
+
 
 
 ### calculate the number of expressed transcripts per gene 
@@ -221,33 +252,57 @@ nr_trans <- by(counts, factor(counts_raw$geneId), function(x){
 nr_trans <- unlist(nr_trans)
 
 
+
+### Use unique genes per method
 ggdf <- data.frame(nr_trans = c(nr_trans[all_genes], nr_trans[genes_sign_sqtlseeker_unique], nr_trans[genes_sign_drimseq_unique], nr_trans[genes_sign_overlap]), 
-  group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker", length(genes_sign_sqtlseeker_unique)), rep("drimseq", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
+  group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker_unique", length(genes_sign_sqtlseeker_unique)), rep("drimseq_unique", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
 
-ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker", "drimseq"))
-
+ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), labels = paste0(c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker_unique), length(genes_sign_drimseq_unique)), ")"))
 
 
 ggp <- ggplot(ggdf, aes(x = nr_trans, color = group, group = group)) +
   geom_density(size = 2) +
   theme_bw() +
   xlab("Number of expressed transcripts") +
-  theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
-  scale_color_manual(values = as.character(c("grey", "black", colors[c("sqtlseeker", "drimseq")])))
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("grey", "gray50", colors[c("sqtlseeker", "drimseq")]))) +
+  guides(color = guide_legend(nrow = 2))
 
 pdf(paste0(out_dir, population, "_sign_sqtls_nr_trans.pdf"))
 print(ggp)
 dev.off()
 
 
-### Plot a scatter of nr of transcripts versus mean gene expression
 
+### Use all genes per method
+ggdf <- data.frame(nr_trans = c(nr_trans[all_genes], nr_trans[genes_sign_sqtlseeker], nr_trans[genes_sign_drimseq], nr_trans[genes_sign_overlap]), 
+  group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker", length(genes_sign_sqtlseeker)), rep("drimseq", length(genes_sign_drimseq)), rep("overlap", length(genes_sign_overlap))))
+
+ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker", "drimseq"), labels = paste0(c("all_genes", "overlap", "sqtlseeker", "drimseq"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker), length(genes_sign_drimseq)), ")"))
+
+
+ggp <- ggplot(ggdf, aes(x = nr_trans, color = group, group = group)) +
+  geom_density(size = 2) +
+  theme_bw() +
+  xlab("Number of expressed transcripts") +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("grey", "gray50", colors[c("sqtlseeker", "drimseq")]))) +
+  guides(color = guide_legend(nrow = 2))
+
+pdf(paste0(out_dir, population, "_sign_sqtls_nr_trans2.pdf"))
+print(ggp)
+dev.off()
+
+
+
+
+### Plot a scatter of nr of transcripts versus mean gene expression
 
 ggdf <- data.frame(mean_expression = c(mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]), 
   nr_trans = c(nr_trans[genes_sign_sqtlseeker_unique], nr_trans[genes_sign_drimseq_unique], nr_trans[genes_sign_overlap]),
-  group = c(rep("sqtlseeker", length(genes_sign_sqtlseeker_unique)), rep("drimseq", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
+  group = c(rep("sqtlseeker_unique", length(genes_sign_sqtlseeker_unique)), rep("drimseq_unique", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
 
-ggdf$group <- factor(ggdf$group, levels = c("overlap", "sqtlseeker", "drimseq"))
+ggdf$group <- factor(ggdf$group, levels = c("overlap", "sqtlseeker_unique", "drimseq_unique"), labels = paste0(c("overlap", "sqtlseeker_unique", "drimseq_unique"), " (", c(length(genes_sign_overlap), length(genes_sign_sqtlseeker_unique), length(genes_sign_drimseq_unique)), ")"))
 
 
 ggp <- ggplot(ggdf, aes(x = log10(mean_expression), y = nr_trans, color = group)) +
@@ -255,8 +310,9 @@ ggp <- ggplot(ggdf, aes(x = log10(mean_expression), y = nr_trans, color = group)
   theme_bw() +
   xlab("Log10 of mean gene expression ") +
   ylab("Number of expressed transcripts") +
-  theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
-  scale_color_manual(values = as.character(c("black", colors[c("sqtlseeker", "drimseq")])))
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("gray50", colors[c("sqtlseeker", "drimseq")]))) +
+  guides(color = guide_legend(nrow = 2))
 
 pdf(paste0(out_dir, population, "_sign_sqtls_scatter.pdf"))
 print(ggp)
@@ -269,6 +325,9 @@ dev.off()
 ############################################################################
 
 gtf <- import(path_gtf)
+
+levels(mcols(gtf)$type)
+
 
 ## keep exon regions for protein coding genes
 keep <- mcols(gtf)$gene_type == "protein_coding" & mcols(gtf)$type == "exon"
@@ -312,11 +371,16 @@ non_sqtl <- setdiff(all_sqtls, union(sqtls_sign_sqtlseeker, sqtls_sign_drimseq))
 
 freq_non_sqtl <- freq_within_exons(sqlt_list = non_sqtl, gtf_exon, BPPARAM = BPPARAM)
 freq_sqtls_sign_overlap <- freq_within_exons(sqlt_list = sqtls_sign_overlap, gtf_exon, BPPARAM = BPPARAM)
+
 freq_sqtls_sign_sqtlseeker_unique <- freq_within_exons(sqlt_list = sqtls_sign_sqtlseeker_unique, gtf_exon, BPPARAM = BPPARAM)
 freq_sqtls_sign_drimseq_unique <- freq_within_exons(sqlt_list = sqtls_sign_drimseq_unique, gtf_exon, BPPARAM = BPPARAM)
 
+freq_sqtls_sign_sqtlseeker <- freq_within_exons(sqlt_list = sqtls_sign_sqtlseeker, gtf_exon, BPPARAM = BPPARAM)
+freq_sqtls_sign_drimseq <- freq_within_exons(sqlt_list = sqtls_sign_drimseq, gtf_exon, BPPARAM = BPPARAM)
 
-freq_summary <- data.frame(set = c("non_sqtl", "overlap", "sqtlseeker", "drimseq"), freq_within_exon = c(freq_non_sqtl, freq_sqtls_sign_overlap, freq_sqtls_sign_sqtlseeker_unique, freq_sqtls_sign_drimseq_unique))
+
+freq_summary <- data.frame(set = c("non_sqtl", "overlap", "sqtlseeker", "drimseq", "sqtlseeker_unique", "drimseq_unique"), freq_within_exon = c(freq_non_sqtl, freq_sqtls_sign_overlap, freq_sqtls_sign_sqtlseeker, freq_sqtls_sign_drimseq, freq_sqtls_sign_sqtlseeker_unique, freq_sqtls_sign_drimseq_unique))
+
 
 write.table(freq_summary, paste0(out_dir, population, "_sign_sqtls_freq_within_exon.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
@@ -349,16 +413,16 @@ dist_closest_exon <- function(sqlt_list, gtf_exon, BPPARAM){
     
     ### Set NA for snps that are within exons
     dist <- rep(NA, length(variantMatch))
-
+    
     for(j in which(is.na(variantMatch))){
       # j = 1
       
       dist[j] <- min(abs(c(start_snp[j] - start(gene_ranges), start_snp[j] - end(gene_ranges))))
       
-      }
+    }
     
     return(dist)
-
+    
   }, BPPARAM = BPPARAM)
   
   dist <- unlist(dist_list)
@@ -370,17 +434,23 @@ dist_closest_exon <- function(sqlt_list, gtf_exon, BPPARAM){
 
 dist_non_sqtl <- dist_closest_exon(sqlt_list = non_sqtl, gtf_exon, BPPARAM = BPPARAM)
 dist_sqtls_sign_overlap <- dist_closest_exon(sqlt_list = sqtls_sign_overlap, gtf_exon, BPPARAM = BPPARAM)
+
 dist_sqtls_sign_sqtlseeker_unique <- dist_closest_exon(sqlt_list = sqtls_sign_sqtlseeker_unique, gtf_exon, BPPARAM = BPPARAM)
 dist_sqtls_sign_drimseq_unique <- dist_closest_exon(sqlt_list = sqtls_sign_drimseq_unique, gtf_exon, BPPARAM = BPPARAM)
 
+dist_sqtls_sign_sqtlseeker <- dist_closest_exon(sqlt_list = sqtls_sign_sqtlseeker, gtf_exon, BPPARAM = BPPARAM)
+dist_sqtls_sign_drimseq <- dist_closest_exon(sqlt_list = sqtls_sign_drimseq, gtf_exon, BPPARAM = BPPARAM)
 
+
+
+
+### Use unique genes per method
 ggdf <- data.frame(dist = c(dist_non_sqtl, dist_sqtls_sign_overlap, dist_sqtls_sign_sqtlseeker_unique, dist_sqtls_sign_drimseq_unique), 
-  group = c(rep("non_sqtl", length(dist_non_sqtl)), rep("overlap", length(dist_sqtls_sign_overlap)), rep("sqtlseeker", length(dist_sqtls_sign_sqtlseeker_unique)), rep("drimseq", length(dist_sqtls_sign_drimseq_unique))))
+  group = c(rep("non_sqtl", length(dist_non_sqtl)), rep("overlap", length(dist_sqtls_sign_overlap)), rep("sqtlseeker_unique", length(dist_sqtls_sign_sqtlseeker_unique)), rep("drimseq_unique", length(dist_sqtls_sign_drimseq_unique))))
 
 ggdf <- ggdf[complete.cases(ggdf), , drop = FALSE]
 
-ggdf$group <- factor(ggdf$group, levels = c("non_sqtl", "overlap", "sqtlseeker", "drimseq"))
-
+ggdf$group <- factor(ggdf$group, levels = c("non_sqtl", "overlap", "sqtlseeker_unique", "drimseq_unique"), labels = paste0(c("non_sqtl", "overlap", "sqtlseeker_unique", "drimseq_unique"), " (", c(length(dist_non_sqtl), length(dist_sqtls_sign_overlap), length(dist_sqtls_sign_sqtlseeker_unique), length(dist_sqtls_sign_drimseq_unique)), ")"))
 
 
 ggp <- ggplot(ggdf, aes(x = dist, color = group, group = group)) +
@@ -389,8 +459,9 @@ ggp <- ggplot(ggdf, aes(x = dist, color = group, group = group)) +
   xlab("Distance to the closest exon") +
   ylab("Cumulative proportion") +
   coord_cartesian(xlim = c(0, 5000)) +
-  theme(axis.text = element_text(size = 16), axis.title = element_text(size = 16, face = "bold"), legend.text = element_text(size = 14), legend.title = element_blank(), legend.position = "bottom") +
-  scale_color_manual(values = as.character(c("grey", "black", colors[c("sqtlseeker", "drimseq")])))
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("grey", "gray50", colors[c("sqtlseeker", "drimseq")]))) +
+  guides(color = guide_legend(nrow = 2))
 
 pdf(paste0(out_dir, population, "_sign_sqtls_dist_closest_exon_cdf.pdf"))
 print(ggp)
@@ -398,7 +469,105 @@ dev.off()
 
 
 
+### Use all genes per method
+ggdf <- data.frame(dist = c(dist_non_sqtl, dist_sqtls_sign_overlap, dist_sqtls_sign_sqtlseeker, dist_sqtls_sign_drimseq), 
+  group = c(rep("non_sqtl", length(dist_non_sqtl)), rep("overlap", length(dist_sqtls_sign_overlap)), rep("sqtlseeker", length(dist_sqtls_sign_sqtlseeker)), rep("drimseq", length(dist_sqtls_sign_drimseq))))
 
+ggdf <- ggdf[complete.cases(ggdf), , drop = FALSE]
+
+ggdf$group <- factor(ggdf$group, levels = c("non_sqtl", "overlap", "sqtlseeker", "drimseq"), labels = paste0(c("non_sqtl", "overlap", "sqtlseeker", "drimseq"), " (", c(length(dist_non_sqtl), length(dist_sqtls_sign_overlap), length(dist_sqtls_sign_sqtlseeker), length(dist_sqtls_sign_drimseq)), ")"))
+
+
+ggp <- ggplot(ggdf, aes(x = dist, color = group, group = group)) +
+  stat_ecdf(size = 2) +
+  theme_bw() +
+  xlab("Distance to the closest exon") +
+  ylab("Cumulative proportion") +
+  coord_cartesian(xlim = c(0, 5000)) +
+  theme(axis.text = element_text(size = text_size), axis.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), legend.title = element_blank(), legend.position = "bottom") +
+  scale_color_manual(values = as.character(c("grey", "gray50", colors[c("sqtlseeker", "drimseq")]))) +
+  guides(color = guide_legend(nrow = 2))
+
+pdf(paste0(out_dir, population, "_sign_sqtls_dist_closest_exon_cdf2.pdf"))
+print(ggp)
+dev.off()
+
+
+
+############################################################################
+# Check how many sQTLs is within 1kb GWAS
+############################################################################
+
+### Read in the GWAS data
+path_gwas <- "data/gwas/gwas_catalog_v1.0-associations_e84_r2016-05-01.tsv"
+
+gwas <- read.table(path_gwas, header = TRUE, sep = "\t", as.is = TRUE, quote = "", fill = TRUE)
+
+### Read in the snp ID converter
+path_id_convert <- "data/metadata/snp_id_convert.Rdata"
+load(path_id_convert)
+
+
+match_gwas <- match(gwas$SNPS, snp_id_convert[, 1])
+
+gwas$snp_id <- snp_id_convert[match_gwas, 2]
+
+
+### Keep only SNP (no indels, no NAs)
+
+gwas_sub <- gwas[grep("snp_", gwas$snp_id), c("SNPS", "snp_id")]
+
+
+### Create ranges around GWAS
+
+gwas_split <- data.frame(strsplit2(gwas_sub$snp_id, "_"), stringsAsFactors = FALSE)
+
+gwas_split[, 3] <- as.numeric(gwas_split[, 3])
+
+gwas_ranges <- GRanges(Rle(paste0("chr", gwas_split[, 2])), IRanges(gwas_split[, 3], gwas_split[, 3]))
+
+window <- 1001
+
+gwas_ranges <- resize(gwas_ranges, window, fix = "center")
+
+
+
+freq_within_gwas <- function(sqlt_list, gwas_ranges){
+  
+  snp_id <- unique(strsplit2(sqlt_list, ":")[, 2])
+  
+  snp_split <- data.frame(strsplit2(snp_id, "_"), stringsAsFactors = FALSE)
+  
+  start_snp <- as.numeric(snp_split[, 3])
+  
+  snp_ranges <- GRanges(Rle(paste0("chr", snp_split[, 2])), IRanges(start_snp, start_snp))
+
+  variantMatch <- findOverlaps(snp_ranges, gwas_ranges, select = "first")
+  
+  freq <- !is.na(variantMatch)
+  
+  freq <- mean(freq, na.rm = TRUE)
+  
+  return(freq)
+  
+}
+
+non_sqtl <- setdiff(all_sqtls, union(sqtls_sign_sqtlseeker, sqtls_sign_drimseq))
+
+freq_non_sqtl <- freq_within_gwas(sqlt_list = non_sqtl, gwas_ranges)
+freq_sqtls_sign_overlap <- freq_within_gwas(sqlt_list = sqtls_sign_overlap, gwas_ranges)
+
+freq_sqtls_sign_sqtlseeker_unique <- freq_within_gwas(sqlt_list = sqtls_sign_sqtlseeker_unique, gwas_ranges)
+freq_sqtls_sign_drimseq_unique <- freq_within_gwas(sqlt_list = sqtls_sign_drimseq_unique, gwas_ranges)
+
+freq_sqtls_sign_sqtlseeker <- freq_within_gwas(sqlt_list = sqtls_sign_sqtlseeker, gwas_ranges)
+freq_sqtls_sign_drimseq <- freq_within_gwas(sqlt_list = sqtls_sign_drimseq, gwas_ranges)
+
+
+
+freq_summary <- data.frame(set = c("non_sqtl", "overlap", "sqtlseeker", "drimseq", "sqtlseeker_unique", "drimseq_unique"), freq_within_gwas = c(freq_non_sqtl, freq_sqtls_sign_overlap, freq_sqtls_sign_sqtlseeker, freq_sqtls_sign_drimseq, freq_sqtls_sign_sqtlseeker_unique, freq_sqtls_sign_drimseq_unique))
+
+write.table(freq_summary, paste0(out_dir, population, "_sign_sqtls_freq_within_gwas.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
 

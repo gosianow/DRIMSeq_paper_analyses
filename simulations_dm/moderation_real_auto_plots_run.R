@@ -35,7 +35,7 @@ library(DRIMSeq)
 # pdf_width=7
 # pdf_height=7
 # fig_name='n3_'
-
+# strip_text_size=16
 
 ##############################################################################
 # Read in the arguments
@@ -239,7 +239,7 @@ ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df_median)) +
   theme_bw() +
   ylab("Mean absolute error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
 pdf(paste0(out_dir_plots, fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -254,7 +254,7 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df_median)) +
   theme_bw() +
   ylab("Median absolute error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -268,7 +268,7 @@ ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df_med
   theme_bw() +
   ylab("Log10 of median absolute error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -284,7 +284,7 @@ ggp <- ggplot(data = mse, aes(y = median_error, x = disp_prior_df_median)) +
   theme_bw() +
   ylab("Median error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
 pdf(paste0(out_dir_plots, fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -338,7 +338,7 @@ ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df_median)) +
   ylab("FP rate") +
   xlab("Median auto moderation") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16)) +
+  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction)
 
 pdf(paste0(out_dir_plots, fig_name, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
@@ -355,7 +355,7 @@ ggp <- ggplot(data = fp, aes(y = disp_prior_df, x = unique_interaction)) +
   geom_boxplot(outlier.size = 1, fill = "grey60") +
   theme_bw() +
   ylab("Auto moderation") +
-  theme(axis.text = element_text(size = 14), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16))
+  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size))
 
 pdf(paste0(out_dir_plots, fig_name, "auto_moderation_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
