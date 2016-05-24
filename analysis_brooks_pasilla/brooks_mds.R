@@ -50,7 +50,7 @@ metadata_org <- metadata
 
 metadata$colors <- ifelse(metadata$condition == "CTL", "blue", "orange")
 
-metadata$shortname <- paste0(metadata$LibraryName, "_", substr(metadata$LibraryLayout, 1, 2))
+metadata$shortname <- paste0(1:nrow(metadata), "_", metadata$condition, "_", substr(metadata$LibraryLayout, 1, 2))
 
 ##########################################################################
 # Load counts

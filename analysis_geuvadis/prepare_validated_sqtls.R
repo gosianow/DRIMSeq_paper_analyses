@@ -3,6 +3,7 @@
 
 # BioC 3.2
 # Created 1 Mar 2016 
+# Updated 9 May 2016
 
 # Process files with validated sQTLs or results from other methods
 
@@ -285,84 +286,191 @@ write.table(valid, file = "data/validation/glimmps/glimmps_valid_glimmps.txt", q
 
 
 ##########################################################################
-### trQTLs found in GEUVADIS project 
+### trQTLs found in GEUVADIS project - all
 ##########################################################################
 
-valid <- read.table("data/validation/geuvadis/EUR373.trratio.cis.FDR5.all.rs137.txt", sep = "\t", header = TRUE, as.is = TRUE)
+valid_set <- data.frame(path = c("EUR373.trratio.cis.FDR5.all.rs137.txt", "YRI89.trratio.cis.FDR5.all.rs137.txt"), population = c("EUR", "YRI"), stringsAsFactors = FALSE)
 
 
-### There are gene-snp pairs that have multiple transcripts significant
-table(duplicated(valid[, c("SNP_ID", "GENE_ID")]))
-table(duplicated(valid[, c("SNP_ID", "GENE_ID", "PROBE_ID")]))
-
-
-valid$snp_name <- valid$SNP_ID
-
-match_snps <- match(valid$snp_name, snp_id_convert[, 1])
-
-table(is.na(match_snps))
-
-valid$snp_id <- snp_id_convert[match_snps, 2]
-
-
-valid$gene_id <- valid$GENE_ID
-
-match_gene <- match(valid$gene_id, mcols(gtf)$gene_id)
-
-table(is.na(match_gene))
-
-valid$gene_name <- mcols(gtf)[match_gene, "gene_name"]
-
-
-valid$gene_snp <- paste0(valid$gene_id, ":", valid$snp_id)
-valid$chr <- strsplit2(valid$snp_id, "_")[, 2]
-valid$snp_position <- as.numeric(strsplit2(valid$snp_id, "_")[, 3])
-
-table(duplicated(valid$gene_snp))
-
-valid$target_start <- valid$TSSpos
-valid$target_end <- valid$TSSpos + 1
-
-
-### There are not only snps in the list but also indels; We keep only snps
-
-valid <- valid[grepl("snp_", valid$snp_id), ]
-
-
-### Prepare positions of target transcripts
-
-valid_split <- split.data.frame(valid, factor(valid$gene_snp))
-
-
-valid_list <- lapply(1:length(valid_split), function(i){
-  # i = 5
-  valid_tmp <- valid_split[[i]]
+for(i in 1:nrow(valid_set)){
   
-  if(nrow(valid_tmp) == 1)
+  valid <- read.table(paste0("data/validation/geuvadis/", valid_set$path[i]), sep = "\t", header = TRUE, as.is = TRUE)
+  
+  
+  ### There are gene-snp pairs that have multiple transcripts significant
+  table(duplicated(valid[, c("SNP_ID", "GENE_ID")]))
+  table(duplicated(valid[, c("SNP_ID", "GENE_ID", "PROBE_ID")]))
+  
+  table(grepl("snp_", valid$SNP_ID))
+  
+  
+  valid$snp_name <- valid$SNP_ID
+  
+  match_snps <- match(valid$snp_name, snp_id_convert[, 1])
+  
+  table(is.na(match_snps))
+  
+  valid$snp_id <- snp_id_convert[match_snps, 2]
+  
+  
+  valid$gene_id <- valid$GENE_ID
+  
+  match_gene <- match(valid$gene_id, mcols(gtf)$gene_id)
+  
+  table(is.na(match_gene))
+  
+  valid$gene_name <- mcols(gtf)[match_gene, "gene_name"]
+  
+  
+  valid$gene_snp <- paste0(valid$gene_id, ":", valid$snp_id)
+  valid$chr <- strsplit2(valid$snp_id, "_")[, 2]
+  valid$snp_position <- as.numeric(strsplit2(valid$snp_id, "_")[, 3])
+  
+  table(duplicated(valid$gene_snp))
+  
+  
+  
+  ### There are not only snps in the list but also indels; We keep only snps
+  
+  valid <- valid[grepl("snp_", valid$snp_id), ]
+  
+  
+  ### Prepare positions of target transcripts and keep only the unique genes with min p-value
+  
+  valid$target_start <- valid$TSSpos
+  valid$target_end <- valid$TSSpos + 1
+  
+  
+  valid_split <- split.data.frame(valid, factor(valid$gene_snp))
+  
+  
+  valid_list <- lapply(1:length(valid_split), function(i){
+    # i = 5
+    valid_tmp <- valid_split[[i]]
+    
+    if(nrow(valid_tmp) == 1)
+      return(valid_tmp)
+    
+    PROBE_ID <- paste0(valid_tmp$PROBE_ID, collapse = ",")
+    target_start <- paste0(unique(valid_tmp$target_start), collapse = ",")
+    target_end <- paste0(unique(valid_tmp$target_end), collapse = ",")
+    
+    valid_tmp <- valid_tmp[which.min(valid_tmp$pvalue), , drop = FALSE]
+    
+    valid_tmp$PROBE_ID <- PROBE_ID
+    valid_tmp$target_start <- target_start
+    valid_tmp$target_end <- target_end
+    
     return(valid_tmp)
+    
+  })
   
-  PROBE_ID <- paste0(valid_tmp$PROBE_ID, collapse = ",")
-  target_start <- paste0(unique(valid_tmp$target_start), collapse = ",")
-  target_end <- paste0(unique(valid_tmp$target_end), collapse = ",")
   
-  valid_tmp <- valid_tmp[which.min(valid_tmp$pvalue), , drop = FALSE]
+  valid_geuv <- rbind.fill(valid_list)
   
-  valid_tmp$PROBE_ID <- PROBE_ID
-  valid_tmp$target_start <- target_start
-  valid_tmp$target_end <- target_end
   
-  return(valid_tmp)
+  write.table(valid_geuv, file = paste0("data/validation/geuvadis/geuvadis_valid_geuvadis_all_", valid_set$population[i],".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
   
-})
-
-
-valid_geuv <- rbind.fill(valid_list)
-
-
-write.table(valid_geuv, file = "data/validation/geuvadis/geuvadis_valid_geuvadis.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+  
+}
 
 
 
+
+
+##########################################################################
+### trQTLs found in GEUVADIS project - best
+##########################################################################
+
+valid_set <- data.frame(path = c("EUR373.trratio.cis.FDR5.best.rs137.txt", "YRI89.trratio.cis.FDR5.best.rs137.txt"), population = c("EUR", "YRI"), stringsAsFactors = FALSE)
+
+
+header <- colnames(read.table(paste0("data/validation/geuvadis/YRI89.trratio.cis.FDR5.all.rs137.txt"), sep = "\t", header = TRUE, as.is = TRUE))
+
+
+for(i in 1:nrow(valid_set)){
+  
+  valid <- read.table(paste0("data/validation/geuvadis/", valid_set$path[i]), sep = "\t", header = FALSE, as.is = TRUE)
+  
+  colnames(valid) <- header
+  
+  
+  ### There are gene-snp pairs that have multiple transcripts significant
+  table(duplicated(valid[, c("SNP_ID", "GENE_ID")]))
+  table(duplicated(valid[, c("SNP_ID", "GENE_ID", "PROBE_ID")]))
+  
+  table(grepl("snp_", valid$SNP_ID))
+  
+  
+  valid$snp_name <- valid$SNP_ID
+  
+  match_snps <- match(valid$snp_name, snp_id_convert[, 1])
+  
+  table(is.na(match_snps))
+  
+  valid$snp_id <- snp_id_convert[match_snps, 2]
+  
+  
+  valid$gene_id <- valid$GENE_ID
+  
+  match_gene <- match(valid$gene_id, mcols(gtf)$gene_id)
+  
+  table(is.na(match_gene))
+  
+  valid$gene_name <- mcols(gtf)[match_gene, "gene_name"]
+  
+  
+  valid$gene_snp <- paste0(valid$gene_id, ":", valid$snp_id)
+  valid$chr <- strsplit2(valid$snp_id, "_")[, 2]
+  valid$snp_position <- as.numeric(strsplit2(valid$snp_id, "_")[, 3])
+  
+  table(duplicated(valid$gene_snp))
+  
+  
+  
+  ### There are not only snps in the list but also indels; We keep only snps
+  
+  valid <- valid[grepl("snp_", valid$snp_id), ]
+  
+  
+  ### Prepare positions of target transcripts and keep only the unique genes with min p-value
+  
+  valid$target_start <- valid$TSSpos
+  valid$target_end <- valid$TSSpos + 1
+  
+  
+  valid_split <- split.data.frame(valid, factor(valid$gene_snp))
+  
+  
+  valid_list <- lapply(1:length(valid_split), function(i){
+    # i = 5
+    valid_tmp <- valid_split[[i]]
+    
+    if(nrow(valid_tmp) == 1)
+      return(valid_tmp)
+    
+    PROBE_ID <- paste0(valid_tmp$PROBE_ID, collapse = ",")
+    target_start <- paste0(unique(valid_tmp$target_start), collapse = ",")
+    target_end <- paste0(unique(valid_tmp$target_end), collapse = ",")
+    
+    valid_tmp <- valid_tmp[which.min(valid_tmp$pvalue), , drop = FALSE]
+    
+    valid_tmp$PROBE_ID <- PROBE_ID
+    valid_tmp$target_start <- target_start
+    valid_tmp$target_end <- target_end
+    
+    return(valid_tmp)
+    
+  })
+  
+  
+  valid_geuv <- rbind.fill(valid_list)
+  
+  
+  write.table(valid_geuv, file = paste0("data/validation/geuvadis/geuvadis_valid_geuvadis_best_", valid_set$population[i],".txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+  
+  
+}
 
 
 
