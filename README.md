@@ -1,1 +1,1 @@
-# DRIMSeq_paper
+# Analyses for the DRIMSeq paper
