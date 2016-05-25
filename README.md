@@ -2,9 +2,9 @@
 
 In each folder, the sh files describe the sequence of analyses that were performed.
 
-R32 - corresponds to R installation with Bioconductor version 3.2
-R31 - Bioconductor version 3.1
-R214 - Bioconductor version 2.14
++ R32 - corresponds to R installation with Bioconductor version 3.2
++ R31 - Bioconductor version 3.1
++ R214 - Bioconductor version 2.14
 
 ## Software versions
 
