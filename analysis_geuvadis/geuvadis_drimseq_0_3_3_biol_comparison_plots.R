@@ -3,7 +3,7 @@
 
 # BioC 3.2
 # Created 21 Apr 2016
-# Modified
+# Modified 17 Oct 2016
 
 
 ##############################################################################
@@ -174,7 +174,7 @@ sqtls_sign_drimseq_unique <- setdiff(sqtls_sign_drimseq, sqtls_sign_overlap)
 ############################################################################
 
 
-### read counts 
+### read counts
 counts_path <- paste0(data_dir, "expression/trExpCount_", population, ".tsv")
 counts_raw <- read.table(counts_path, header = TRUE, as.is = TRUE)
 
@@ -192,7 +192,7 @@ mean_expression <- unlist(mean_expression)
 
 
 ### Use unique genes per method
-ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]), 
+ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]),
   group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker_unique", length(genes_sign_sqtlseeker_unique)), rep("drimseq_unique", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
 
 ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), labels = paste0(c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker_unique), length(genes_sign_drimseq_unique)), ")"))
@@ -216,7 +216,7 @@ dev.off()
 
 
 ### Use all genes per method
-ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_sqtlseeker], mean_expression[genes_sign_drimseq], mean_expression[genes_sign_overlap]), 
+ggdf <- data.frame(mean_expression = c(mean_expression[all_genes], mean_expression[genes_sign_sqtlseeker], mean_expression[genes_sign_drimseq], mean_expression[genes_sign_overlap]),
   group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker", length(genes_sign_sqtlseeker)), rep("drimseq", length(genes_sign_drimseq)), rep("overlap", length(genes_sign_overlap))))
 
 ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker", "drimseq"), labels = paste0(c("all_genes", "overlap", "sqtlseeker", "drimseq"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker), length(genes_sign_drimseq)), ")"))
@@ -240,13 +240,13 @@ dev.off()
 
 
 
-### calculate the number of expressed transcripts per gene 
+### calculate the number of expressed transcripts per gene
 nr_trans <- by(counts, factor(counts_raw$geneId), function(x){
-  
+
   x <- as.matrix(x)
-  
+
   sum(rowSums(x > 10, na.rm = TRUE) > 5, na.rm = TRUE)
-  
+
 }, simplify = FALSE)
 
 nr_trans <- unlist(nr_trans)
@@ -254,7 +254,7 @@ nr_trans <- unlist(nr_trans)
 
 
 ### Use unique genes per method
-ggdf <- data.frame(nr_trans = c(nr_trans[all_genes], nr_trans[genes_sign_sqtlseeker_unique], nr_trans[genes_sign_drimseq_unique], nr_trans[genes_sign_overlap]), 
+ggdf <- data.frame(nr_trans = c(nr_trans[all_genes], nr_trans[genes_sign_sqtlseeker_unique], nr_trans[genes_sign_drimseq_unique], nr_trans[genes_sign_overlap]),
   group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker_unique", length(genes_sign_sqtlseeker_unique)), rep("drimseq_unique", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
 
 ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), labels = paste0(c("all_genes", "overlap", "sqtlseeker_unique", "drimseq_unique"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker_unique), length(genes_sign_drimseq_unique)), ")"))
@@ -275,7 +275,7 @@ dev.off()
 
 
 ### Use all genes per method
-ggdf <- data.frame(nr_trans = c(nr_trans[all_genes], nr_trans[genes_sign_sqtlseeker], nr_trans[genes_sign_drimseq], nr_trans[genes_sign_overlap]), 
+ggdf <- data.frame(nr_trans = c(nr_trans[all_genes], nr_trans[genes_sign_sqtlseeker], nr_trans[genes_sign_drimseq], nr_trans[genes_sign_overlap]),
   group = c(rep("all_genes", length(all_genes)), rep("sqtlseeker", length(genes_sign_sqtlseeker)), rep("drimseq", length(genes_sign_drimseq)), rep("overlap", length(genes_sign_overlap))))
 
 ggdf$group <- factor(ggdf$group, levels = c("all_genes", "overlap", "sqtlseeker", "drimseq"), labels = paste0(c("all_genes", "overlap", "sqtlseeker", "drimseq"), " (", c(length(all_genes), length(genes_sign_overlap), length(genes_sign_sqtlseeker), length(genes_sign_drimseq)), ")"))
@@ -298,7 +298,7 @@ dev.off()
 
 ### Plot a scatter of nr of transcripts versus mean gene expression
 
-ggdf <- data.frame(mean_expression = c(mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]), 
+ggdf <- data.frame(mean_expression = c(mean_expression[genes_sign_sqtlseeker_unique], mean_expression[genes_sign_drimseq_unique], mean_expression[genes_sign_overlap]),
   nr_trans = c(nr_trans[genes_sign_sqtlseeker_unique], nr_trans[genes_sign_drimseq_unique], nr_trans[genes_sign_overlap]),
   group = c(rep("sqtlseeker_unique", length(genes_sign_sqtlseeker_unique)), rep("drimseq_unique", length(genes_sign_drimseq_unique)), rep("overlap", length(genes_sign_overlap))))
 
@@ -321,13 +321,10 @@ dev.off()
 
 
 ############################################################################
-# Check how many sQTLs is within exons
+# Check how many sQTLs are within exons
 ############################################################################
 
 gtf <- import(path_gtf)
-
-levels(mcols(gtf)$type)
-
 
 ## keep exon regions for protein coding genes
 keep <- mcols(gtf)$gene_type == "protein_coding" & mcols(gtf)$type == "exon"
@@ -335,7 +332,8 @@ keep <- mcols(gtf)$gene_type == "protein_coding" & mcols(gtf)$type == "exon"
 gtf_exon <- gtf[keep, ]
 
 
-freq_within_exons <- function(sqlt_list, gtf_exon, BPPARAM){
+
+freq_within_ranges <- function(sqlt_list, gtf, BPPARAM){
   
   gene_id <- strsplit2(sqlt_list, ":")[, 1]
   genes <- unique(gene_id)
@@ -352,9 +350,9 @@ freq_within_exons <- function(sqlt_list, gtf_exon, BPPARAM){
     start_snp <- as.numeric(name_split[, 3])
     
     snp_ranges <- GRanges(Rle(paste0("chr", name_split[, 2])), IRanges(start_snp, start_snp))
-    gene_ranges <- gtf_exon[mcols(gtf_exon)$gene_id == genes[i], ]
+    ranges <- gtf[mcols(gtf)$gene_id == genes[i], ]
     
-    variantMatch <- GenomicRanges::findOverlaps(snp_ranges, gene_ranges, select = "first")
+    variantMatch <- GenomicRanges::findOverlaps(snp_ranges, ranges, select = "first")
     
     return(!is.na(variantMatch))
     
@@ -369,14 +367,14 @@ freq_within_exons <- function(sqlt_list, gtf_exon, BPPARAM){
 
 non_sqtl <- setdiff(all_sqtls, union(sqtls_sign_sqtlseeker, sqtls_sign_drimseq))
 
-freq_non_sqtl <- freq_within_exons(sqlt_list = non_sqtl, gtf_exon, BPPARAM = BPPARAM)
-freq_sqtls_sign_overlap <- freq_within_exons(sqlt_list = sqtls_sign_overlap, gtf_exon, BPPARAM = BPPARAM)
+freq_non_sqtl <- freq_within_ranges(sqlt_list = non_sqtl, gtf_exon, BPPARAM = BPPARAM)
+freq_sqtls_sign_overlap <- freq_within_ranges(sqlt_list = sqtls_sign_overlap, gtf_exon, BPPARAM = BPPARAM)
 
-freq_sqtls_sign_sqtlseeker_unique <- freq_within_exons(sqlt_list = sqtls_sign_sqtlseeker_unique, gtf_exon, BPPARAM = BPPARAM)
-freq_sqtls_sign_drimseq_unique <- freq_within_exons(sqlt_list = sqtls_sign_drimseq_unique, gtf_exon, BPPARAM = BPPARAM)
+freq_sqtls_sign_sqtlseeker_unique <- freq_within_ranges(sqlt_list = sqtls_sign_sqtlseeker_unique, gtf_exon, BPPARAM = BPPARAM)
+freq_sqtls_sign_drimseq_unique <- freq_within_ranges(sqlt_list = sqtls_sign_drimseq_unique, gtf_exon, BPPARAM = BPPARAM)
 
-freq_sqtls_sign_sqtlseeker <- freq_within_exons(sqlt_list = sqtls_sign_sqtlseeker, gtf_exon, BPPARAM = BPPARAM)
-freq_sqtls_sign_drimseq <- freq_within_exons(sqlt_list = sqtls_sign_drimseq, gtf_exon, BPPARAM = BPPARAM)
+freq_sqtls_sign_sqtlseeker <- freq_within_ranges(sqlt_list = sqtls_sign_sqtlseeker, gtf_exon, BPPARAM = BPPARAM)
+freq_sqtls_sign_drimseq <- freq_within_ranges(sqlt_list = sqtls_sign_drimseq, gtf_exon, BPPARAM = BPPARAM)
 
 
 freq_summary <- data.frame(set = c("non_sqtl", "overlap", "sqtlseeker", "drimseq", "sqtlseeker_unique", "drimseq_unique"), freq_within_exon = c(freq_non_sqtl, freq_sqtls_sign_overlap, freq_sqtls_sign_sqtlseeker, freq_sqtls_sign_drimseq, freq_sqtls_sign_sqtlseeker_unique, freq_sqtls_sign_drimseq_unique))
@@ -386,49 +384,101 @@ write.table(freq_summary, paste0(out_dir, population, "_sign_sqtls_freq_within_e
 
 
 ############################################################################
+# Check how many sQTLs are within splice sites 
+############################################################################
+
+
+mcols(gtf_exon)$transcript_id <- factor(mcols(gtf_exon)$transcript_id)
+transcripts <- levels(mcols(gtf_exon)$transcript_id)
+
+
+## get the splice sites per transcript
+gtf_sss <- bplapply(1:nlevels(mcols(gtf_exon)$transcript_id), function(i){
+  # i = 1
+  gtf_transcript <- gtf_exon[mcols(gtf_exon)$transcript_id == transcripts[i], ]
+  
+  # have to give start, otherwise the first range is from 1
+  introns <- gaps(gtf_transcript, start = min(start(gtf_transcript)))
+  
+  ## Extract the splice stites
+  donor <- introns
+  end(donor) <- start(donor) + 1
+  acceptor <- introns
+  start(acceptor) <- end(acceptor) - 1
+  
+  splice_sites <- c(donor, acceptor)
+  mcols(splice_sites) <- data.frame(transcript_id = transcripts[i], gene_id = mcols(gtf_transcript)$gene_id[1], stringsAsFactors = FALSE)
+  
+  return(splice_sites)
+  
+}, BPPARAM = BPPARAM)
+
+gtf_sss <- do.call(c, gtf_sss)
+
+
+non_sqtl <- setdiff(all_sqtls, union(sqtls_sign_sqtlseeker, sqtls_sign_drimseq))
+
+freq_non_sqtl <- freq_within_ranges(sqlt_list = non_sqtl, gtf_sss, BPPARAM = BPPARAM)
+freq_sqtls_sign_overlap <- freq_within_ranges(sqlt_list = sqtls_sign_overlap, gtf_sss, BPPARAM = BPPARAM)
+
+freq_sqtls_sign_sqtlseeker_unique <- freq_within_ranges(sqlt_list = sqtls_sign_sqtlseeker_unique, gtf_sss, BPPARAM = BPPARAM)
+freq_sqtls_sign_drimseq_unique <- freq_within_ranges(sqlt_list = sqtls_sign_drimseq_unique, gtf_sss, BPPARAM = BPPARAM)
+
+freq_sqtls_sign_sqtlseeker <- freq_within_ranges(sqlt_list = sqtls_sign_sqtlseeker, gtf_sss, BPPARAM = BPPARAM)
+freq_sqtls_sign_drimseq <- freq_within_ranges(sqlt_list = sqtls_sign_drimseq, gtf_sss, BPPARAM = BPPARAM)
+
+
+freq_summary <- data.frame(set = c("non_sqtl", "overlap", "sqtlseeker", "drimseq", "sqtlseeker_unique", "drimseq_unique"), freq_within_exon = c(freq_non_sqtl, freq_sqtls_sign_overlap, freq_sqtls_sign_sqtlseeker, freq_sqtls_sign_drimseq, freq_sqtls_sign_sqtlseeker_unique, freq_sqtls_sign_drimseq_unique))
+
+
+write.table(freq_summary, paste0(out_dir, population, "_sign_sqtls_freq_within_splice_sites.txt"), quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+
+############################################################################
 # Check the distance of nonexonic sQTLs to the closest exon
 ############################################################################
 
 
 dist_closest_exon <- function(sqlt_list, gtf_exon, BPPARAM){
-  
+
   gene_id <- strsplit2(sqlt_list, ":")[, 1]
   genes <- unique(gene_id)
-  
+
   sqlt_per_gene <- split(sqlt_list, factor(gene_id, levels = genes))
-  
-  
+
+
   dist_list <- bplapply(1:length(sqlt_per_gene), function(i){
     # i = 1
-    
+
     x <- sqlt_per_gene[[i]]
-    
+
     name_split <- strsplit2(x, "_")
     start_snp <- as.numeric(name_split[, 3])
-    
+
     snp_ranges <- GRanges(Rle(paste0("chr", name_split[, 2])), IRanges(start_snp, start_snp))
     gene_ranges <- gtf_exon[mcols(gtf_exon)$gene_id == genes[i], ]
-    
+
     variantMatch <- GenomicRanges::findOverlaps(snp_ranges, gene_ranges, select = "first")
-    
+
     ### Set NA for snps that are within exons
     dist <- rep(NA, length(variantMatch))
-    
+
     for(j in which(is.na(variantMatch))){
       # j = 1
-      
+
       dist[j] <- min(abs(c(start_snp[j] - start(gene_ranges), start_snp[j] - end(gene_ranges))))
-      
+
     }
-    
+
     return(dist)
-    
+
   }, BPPARAM = BPPARAM)
-  
+
   dist <- unlist(dist_list)
-  
+
   return(dist)
-  
+
 }
 
 
@@ -445,7 +495,7 @@ dist_sqtls_sign_drimseq <- dist_closest_exon(sqlt_list = sqtls_sign_drimseq, gtf
 
 
 ### Use unique genes per method
-ggdf <- data.frame(dist = c(dist_non_sqtl, dist_sqtls_sign_overlap, dist_sqtls_sign_sqtlseeker_unique, dist_sqtls_sign_drimseq_unique), 
+ggdf <- data.frame(dist = c(dist_non_sqtl, dist_sqtls_sign_overlap, dist_sqtls_sign_sqtlseeker_unique, dist_sqtls_sign_drimseq_unique),
   group = c(rep("non_sqtl", length(dist_non_sqtl)), rep("overlap", length(dist_sqtls_sign_overlap)), rep("sqtlseeker_unique", length(dist_sqtls_sign_sqtlseeker_unique)), rep("drimseq_unique", length(dist_sqtls_sign_drimseq_unique))))
 
 ggdf <- ggdf[complete.cases(ggdf), , drop = FALSE]
@@ -470,7 +520,7 @@ dev.off()
 
 
 ### Use all genes per method
-ggdf <- data.frame(dist = c(dist_non_sqtl, dist_sqtls_sign_overlap, dist_sqtls_sign_sqtlseeker, dist_sqtls_sign_drimseq), 
+ggdf <- data.frame(dist = c(dist_non_sqtl, dist_sqtls_sign_overlap, dist_sqtls_sign_sqtlseeker, dist_sqtls_sign_drimseq),
   group = c(rep("non_sqtl", length(dist_non_sqtl)), rep("overlap", length(dist_sqtls_sign_overlap)), rep("sqtlseeker", length(dist_sqtls_sign_sqtlseeker)), rep("drimseq", length(dist_sqtls_sign_drimseq))))
 
 ggdf <- ggdf[complete.cases(ggdf), , drop = FALSE]
@@ -533,23 +583,23 @@ gwas_ranges <- resize(gwas_ranges, window, fix = "center")
 
 
 freq_within_gwas <- function(sqlt_list, gwas_ranges){
-  
+
   snp_id <- unique(strsplit2(sqlt_list, ":")[, 2])
-  
+
   snp_split <- data.frame(strsplit2(snp_id, "_"), stringsAsFactors = FALSE)
-  
+
   start_snp <- as.numeric(snp_split[, 3])
-  
+
   snp_ranges <- GRanges(Rle(paste0("chr", snp_split[, 2])), IRanges(start_snp, start_snp))
 
   variantMatch <- findOverlaps(snp_ranges, gwas_ranges, select = "first")
-  
+
   freq <- !is.na(variantMatch)
-  
+
   freq <- mean(freq, na.rm = TRUE)
-  
+
   return(freq)
-  
+
 }
 
 non_sqtl <- setdiff(all_sqtls, union(sqtls_sign_sqtlseeker, sqtls_sign_drimseq))

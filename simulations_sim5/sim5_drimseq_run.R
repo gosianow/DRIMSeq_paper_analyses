@@ -34,22 +34,15 @@ library(ggplot2)
 # Read in the arguments
 ##############################################################################
 
+rm(list = ls())
+
+## Read input arguments
 args <- (commandArgs(trailingOnly = TRUE))
 for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
-
-print(rwd)
-print(simulation)
-print(workers)
-print(count_method)
-print(filter_method)
-print(dispersion_common)
-print(results_common)
-print(disp_mode)
-print(disp_moderation)
-
+cat(paste0(args, collapse = "\n"), fill = TRUE)
 
 ##############################################################################
 

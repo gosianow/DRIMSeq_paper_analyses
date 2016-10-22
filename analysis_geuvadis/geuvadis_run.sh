@@ -22,15 +22,15 @@ mkdir $ROUT
 
 for population in 'CEU' 'YRI'
 do
-  
-for chr in {22..1}
-do 
 
-  echo "${population}_${chr}"
+  for chr in {22..1}
+  do
 
-  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 population='${population}' chr=${chr}" $RCODE/geuvadis_drimseq_0_3_3_run_permutations.R $ROUT/geuvadis_drimseq_0_3_3_run_permutations_${population}_chr${chr}.Rout
+    echo "${population}_${chr}"
 
-done
+    R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=1 population='${population}' chr=${chr}" $RCODE/geuvadis_drimseq_0_3_3_run_permutations.R $ROUT/geuvadis_drimseq_0_3_3_run_permutations_${population}_chr${chr}.Rout
+
+  done
 done
 
 
@@ -56,37 +56,34 @@ done
 
 
 method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts' 
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts'
 sqtlseeker_results='sqtlseeker_2_1_analysis_drimseq_counts'
 FDR=0.05
 
-### Colors 
+### Colors
 R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/${comparison_out}'" $RCODE/colors.R $ROUT/colors.Rout
 
 
 for population in 'CEU' 'YRI'
 do
 
-### Venn diagrams and upset plots with iCOBRA
+  ### Venn diagrams and upset plots with iCOBRA
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_permutations.R $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_permutations.R $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations_${population}.Rout
+  tail $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations_${population}.Rout
 
-tail $ROUT/geuvadis_drimseq_0_3_3_comparison_permutations_${population}.Rout
 
+  ### For detected sQTLs: Distance to the closest exon, % within exons, mean gene expression, nr transcripts
 
-### For detected sQTLs: Distance to the closest exon, % within exons, mean gene expression, nr transcripts
-
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf' comparison_out='${comparison_out}' FDR=${FDR} workers=5" $RCODE/geuvadis_drimseq_0_3_3_biol_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_biol_comparison_plots_${population}.Rout
-
-tail $ROUT/geuvadis_drimseq_0_3_3_biol_comparison_plots_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' path_gtf='geuvadis_annotation/gencode.v12.annotation.gtf' comparison_out='${comparison_out}' FDR=${FDR} workers=1" $RCODE/geuvadis_drimseq_0_3_3_biol_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_biol_comparison_plots_${population}.Rout
+  tail $ROUT/geuvadis_drimseq_0_3_3_biol_comparison_plots_${population}.Rout
 
 
 
-### CAT (concordance at top) plots for top ranked genes
+  ### CAT (concordance at top) plots for top ranked genes
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
-
-tail $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
+  tail $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
 
 
 done
@@ -108,7 +105,7 @@ tail $ROUT/prepare_validated_sqtls.Rout
 ### Tables with adj p-values for validated sQTLs; Plots of this tables; Plots of expression of validated sQTLs
 
 method_out='drimseq_0_3_3_analysis_permutations_all_genes'
-comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts' 
+comparison_out='drimseq_0_3_3_comparison_permutations_all_genes_drimseq_counts'
 positive_controls_out='drimseq_0_3_3_positive_controls_permutations_all_genes_drimseq_counts'
 sqtlseeker_results='sqtlseeker_2_1_analysis_drimseq_counts'
 FDR=0.05
@@ -117,64 +114,64 @@ FDR=0.05
 for population in 'CEU' 'YRI'
 do
 
-# GLIMMPS: PCR validated sQTLs
+  # GLIMMPS: PCR validated sQTLs
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_pcr.txt' plot_proportions=TRUE plot_tables=TRUE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_pcr_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_pcr.txt' plot_proportions=TRUE plot_tables=TRUE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_pcr_${population}.Rout
 
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_pcr_${population}.Rout
-
-
-
-# GLIMMPS: GWAS SNPs
-
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_gwas.txt' plot_proportions=TRUE plot_tables=TRUE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_${population}.Rout
-
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_${population}.Rout
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_pcr_${population}.Rout
 
 
 
-# GLIMMPS: GLIMMPS SNPs that are linked to GWAS SNPs
+  # GLIMMPS: GWAS SNPs
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_gwas_glimmps.txt' plot_proportions=TRUE plot_tables=TRUE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_glimmps_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_gwas.txt' plot_proportions=TRUE plot_tables=TRUE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_${population}.Rout
 
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_glimmps_${population}.Rout
-
-
-
-# GLIMMPS: sQTLs detected by GLIMMPS (~140)
-
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_glimmps.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_glimmps_${population}.Rout
-
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_glimmps_${population}.Rout
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_${population}.Rout
 
 
 
-# GEUVADIS: trQTLs detected within GEUVADIS project for the EUR population all sQTLs
+  # GLIMMPS: GLIMMPS SNPs that are linked to GWAS SNPs
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_all_EUR.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_EUR_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_gwas_glimmps.txt' plot_proportions=TRUE plot_tables=TRUE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_glimmps_${population}.Rout
 
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_EUR_${population}.Rout
-
-
-# GEUVADIS: trQTLs detected within GEUVADIS project for the YRI population all sQTLs
-
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_all_YRI.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_YRI_${population}.Rout
-
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_YRI_${population}.Rout
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gwas_glimmps_${population}.Rout
 
 
-# GEUVADIS: trQTLs detected within GEUVADIS project for the EUR population best sQTLs
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_best_EUR.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_EUR_${population}.Rout
+  # GLIMMPS: sQTLs detected by GLIMMPS (~140)
 
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_EUR_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/glimmps/glimmps_valid_glimmps.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_glimmps_${population}.Rout
+
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_glimmps_${population}.Rout
 
 
-# GEUVADIS: trQTLs detected within GEUVADIS project for the YRI population best sQTLs
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_best_YRI.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_YRI_${population}.Rout
+  # GEUVADIS: trQTLs detected within GEUVADIS project for the EUR population all sQTLs
 
-tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_YRI_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_all_EUR.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_EUR_${population}.Rout
+
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_EUR_${population}.Rout
+
+
+  # GEUVADIS: trQTLs detected within GEUVADIS project for the YRI population all sQTLs
+
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_all_YRI.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_YRI_${population}.Rout
+
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_all_YRI_${population}.Rout
+
+
+  # GEUVADIS: trQTLs detected within GEUVADIS project for the EUR population best sQTLs
+
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_best_EUR.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_EUR_${population}.Rout
+
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_EUR_${population}.Rout
+
+
+  # GEUVADIS: trQTLs detected within GEUVADIS project for the YRI population best sQTLs
+
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' valid_path='data/validation/geuvadis/geuvadis_valid_geuvadis_best_YRI.txt' plot_proportions=FALSE plot_tables=FALSE method_out='${method_out}' comparison_out='${comparison_out}' positive_controls_out='${positive_controls_out}' sqtlseeker_results='${sqtlseeker_results}' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_positive_controls.R $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_YRI_${population}.Rout
+
+  tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_geuvadis_best_YRI_${population}.Rout
 
 
 
@@ -212,21 +209,3 @@ tail $ROUT/geuvadis_drimseq_0_3_3_positive_controls_gviz_gwas_glimmps.Rout
 
 
 ############################################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
