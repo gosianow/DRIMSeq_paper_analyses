@@ -158,7 +158,6 @@ if(!is.null(prefilter_method_list)){
   
   count_method_list <- prefilter_method_list
   filter_method_list <- "filter0"
-  simulation_list <- simulation_list[!grepl("hsapiens_withde", simulation_list)]
     
   results_padj_list <- list()
   truth_list <- list()
