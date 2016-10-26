@@ -18,7 +18,7 @@ library("DEXSeq")
 rwd='/home/Shared/data/seq/kim_adenocarcinoma/'
 workers=5
 count_method=c('htseq','kallisto')[1]
-model='model_full_glm'
+model='model_full2'
 
 ##############################################################################
 # Read in the arguments
@@ -80,7 +80,7 @@ switch(model,
          formulaReducedModel =  ~ sample + exon 
        },
        
-       model_full_glm = {
+       model_full2 = {
          
          metadata <- metadata_org
          countFiles <- paste0(counts_out, metadata$sampleName, ".counts")

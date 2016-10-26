@@ -18,7 +18,7 @@ library("DEXSeq")
 # rwd='/home/Shared/data/seq/brooks_pasilla/'
 # workers=4
 # count_method=c('htseq','kallisto')[2]
-# model=c('model_full','model_full_glm','model_full_paired','model_null1','model_null2','model_null3')[1]
+# model=c('model_full','model_full2','model_full_paired','model_null1','model_null2','model_null3')[1]
 
 
 ##############################################################################
@@ -80,7 +80,7 @@ switch(model,
          
        },
        
-       model_full_glm = {
+       model_full2 = {
          
          metadata <- metadata_org
          countFiles <- paste0(counts_out, metadata$SampleName, ".txt")

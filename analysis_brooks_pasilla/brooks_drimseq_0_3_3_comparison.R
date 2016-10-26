@@ -66,7 +66,7 @@ colors_df$methods <- as.character(colors_df$methods)
 #######################################################
 
 
-if(model != "model_full_glm"){
+if(model != "model_full2"){
   
   res_path <- paste0(method_out, "/",  model, "/", count_method, "/")
   files <- list.files(path = res_path, pattern = "_d.Rdata" )
