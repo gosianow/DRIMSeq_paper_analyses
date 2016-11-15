@@ -3,7 +3,7 @@
 
 # BioC 3.2
 # Created 16 Apr 2016 
-
+# Updated 15 Nov 2016
 
 ##############################################################################
 
@@ -22,32 +22,36 @@ library(DRIMSeq)
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
-# sim_name=''
-# n=c(3) # Number of samples
-# nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal','nm_kim_kallisto_lognormal','nm_kim_htseq_lognormal')
-# nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq','nd_common_kim_kallisto','nd_common_kim_htseq')
-# prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kallisto_fcutoff','prop_kim_htseq_fcutoff')
-# disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')
-# data_name=c('brooks','kim')
-# count_method=c('kallisto','htseq')
-# out_suffix='moderation_real_auto'
-# pdf_width=7
-# pdf_height=7
-# fig_name='n3_'
-# strip_text_size=16
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
+out_dir_plots='moderation_real_auto_v2'
+out_dir_res='moderation_real_auto_v2/run'
+sim_name=''
+n=c(3,6) # Number of samples
+nm=c('nm_brooks_kallisto_lognormal','nm_brooks_htseq_lognormal','nm_kim_kallisto_lognormal','nm_kim_htseq_lognormal')
+nd=c('nd_common_brooks_kallisto','nd_common_brooks_htseq','nd_common_kim_kallisto','nd_common_kim_htseq')
+prop=c('prop_brooks_kallisto_fcutoff','prop_brooks_htseq_fcutoff','prop_kim_kallisto_fcutoff','prop_kim_htseq_fcutoff')
+disp=c('disp_genewise_brooks_kallisto_lognormal','disp_genewise_brooks_htseq_lognormal','disp_genewise_kim_kallisto_lognormal','disp_genewise_kim_htseq_lognormal')
+data_name=c('brooks','kim')
+count_method=c('kallisto','htseq')
+out_suffix='moderation_real_auto'
+pdf_width=14
+pdf_height=7
+fig_name='all_'
+strip_text_size=16
+text_size=16
 
 ##############################################################################
 # Read in the arguments
 ##############################################################################
 
-## Read input arguments
+rm(list = ls())
+
 args <- (commandArgs(trailingOnly = TRUE))
 for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
-print(args)
+cat(paste0(args, collapse = "\n"), fill = TRUE)
 
 print(rwd)
 print(sim_name)
@@ -64,9 +68,7 @@ print(out_suffix)
 
 setwd(rwd)
 
-out_dir_plots <- "moderation_real_auto/"
-out_dir_res <- "moderation_real_auto/run/"
-
+dir.create(out_dir_plots, recursive = T, showWarnings = FALSE)
 
 
 ##############################################################################
@@ -102,7 +104,7 @@ for(ix_n in 1:length(n)){
             
             for(i in 1:length(files)){
               # i = 1
-              rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+              rr <- read.table(paste0(out_dir_res, "/", files[i]), header = TRUE, sep = "\t", as.is = TRUE)
               head(rr)
               
               rr$run <- i
@@ -155,7 +157,7 @@ for(ix_n in 1:length(n)){
             
             for(i in 1:length(files)){
               
-              rr <- read.table(paste0(out_dir_res, files[i]), header = TRUE, sep = "\t", as.is = TRUE)
+              rr <- read.table(paste0(out_dir_res, "/", files[i]), header = TRUE, sep = "\t", as.is = TRUE)
               fp_tmp_list[[i]] <- rr
               
               
@@ -231,18 +233,19 @@ levels(mse$disp_prior_df_median) <- disp_prior_df_median
 mse$disp_prior_df_median <- as.numeric(as.character(mse$disp_prior_df_median))
 
 
-
+# --------------------------------------------------------------------
 ### plot mean 
+# --------------------------------------------------------------------
 
 ggp <- ggplot(data = mse, aes(y = mean_error_abs, x = disp_prior_df_median)) + 
   geom_boxplot(outlier.size = 1, fill = "grey80", width = 0.2, outlier.colour = NULL) +
   theme_bw() +
   ylab("Mean absolute error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
-pdf(paste0(out_dir_plots, fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, "/", fig_name, "error_mean_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -254,10 +257,10 @@ ggp <- ggplot(data = mse, aes(y = median_error_abs, x = disp_prior_df_median)) +
   theme_bw() +
   ylab("Median absolute error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
-pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, "/", fig_name, "error_median_absolute_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -268,10 +271,10 @@ ggp <- ggplot(data = mse, aes(y = log10(median_error_abs), x = disp_prior_df_med
   theme_bw() +
   ylab("Log10 of median absolute error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
-pdf(paste0(out_dir_plots, fig_name, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, "/", fig_name, "error_median_absolute_log10_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
@@ -284,17 +287,18 @@ ggp <- ggplot(data = mse, aes(y = median_error, x = disp_prior_df_median)) +
   theme_bw() +
   ylab("Median error") +
   xlab("Median auto moderation") +
-  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction, scales = "free_y")
 
-pdf(paste0(out_dir_plots, fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, "/", fig_name, "error_median_raw_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
 
 
-
+# --------------------------------------------------------------------
 ### False positives
+# --------------------------------------------------------------------
 
 fp$disp_prior_df <- as.numeric(as.character(fp$disp_prior_df))
 
@@ -338,30 +342,64 @@ ggp <- ggplot(data = fp, aes(y = fp, x = disp_prior_df_median)) +
   ylab("FP rate") +
   xlab("Median auto moderation") +
   coord_cartesian(ylim = ylim) +
-  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_text(size = 16, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
   facet_grid(count_method ~ interaction)
 
-pdf(paste0(out_dir_plots, fig_name, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, "/", fig_name, "fp_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
 
 
-
+# --------------------------------------------------------------------
 ### Plot boxplot of estimated moderation
-
+# --------------------------------------------------------------------
 
 ggp <- ggplot(data = fp, aes(y = disp_prior_df, x = unique_interaction)) + 
   geom_boxplot(outlier.size = 1, fill = "grey60") +
   theme_bw() +
   ylab("Auto moderation") +
-  theme(axis.text = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = 16, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 16), strip.text = element_text(size = strip_text_size))
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size, angle = 90, vjust = 0.5, hjust = 1), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_blank(), legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size))
 
-pdf(paste0(out_dir_plots, fig_name, "auto_moderation_boxplot.pdf"), width = pdf_width, height = pdf_height)
+pdf(paste0(out_dir_plots, "/", fig_name, "auto_moderation_boxplot.pdf"), width = pdf_width, height = pdf_height)
 print(ggp)
 dev.off()
 
 
+# --------------------------------------------------------------------
+### Plot distributions of p-values
+# --------------------------------------------------------------------
+
+res$data_name <- NA 
+for(i in 1:length(data_name))
+  res$data_name[grepl(data_name[i], res$prop)] <- data_name[i]
+res$data_name <- factor(res$data_name, levels = unique(data_name))
+
+res$count_method <- NA 
+for(i in 1:length(count_method))
+  res$count_method[grepl(count_method[i], res$prop)] <- count_method[i]
+res$count_method <- factor(res$count_method, levels = unique(count_method))
+
+
+res$n <- factor(res$n, levels = n, labels = paste0("n=", n))
+
+res$interaction <- interaction(res$data_name, res$n, lex.order = FALSE)
+levels(res$interaction)
+
+
+
+ggp <- ggplot(data = res, aes(x = pvalue)) +
+  geom_density(trim = TRUE, adjust = 0.75, fill = "grey60") +
+  theme_bw() +
+  ylab("Density") +
+  xlab("P-values") +
+  coord_cartesian(xlim = c(0, 1)) +
+  theme(axis.text = element_text(size = text_size), axis.text.x = element_text(size = text_size), axis.title.y = element_text(size = text_size, face = "bold"), axis.title.x = element_text(size = text_size, face = "bold"), legend.position = "bottom", legend.title = element_text(size = text_size, face = "bold"), legend.text = element_text(size = text_size), strip.text = element_text(size = strip_text_size)) +
+  facet_grid(count_method ~ interaction)
+
+pdf(paste0(out_dir_plots, "/", fig_name, "pvalues_density.pdf"), width = pdf_width, height = pdf_height)
+print(ggp)
+dev.off()
 
 
 

@@ -28,6 +28,7 @@ library(tools)
 ##############################################################################
 
 # rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
+# out_dir='moderation_real/run'
 # simulation_script='/home/gosia/R/drimseq_paper/simulations_dm/dm_simulate.R'
 # workers=4
 # sim_name='test_'
@@ -128,7 +129,7 @@ print(nd)
 dir.create(rwd, recursive = T, showWarnings = FALSE)
 setwd(rwd)
 
-out_dir <- "moderation_real/run/"
+
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 out_suffix <- "moderation_real"
@@ -202,6 +203,7 @@ for(j in 1:length(disp_prior_df)){
   res <- results(d)
   
   fp[[j]] <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), disp_prior_df = disp_prior_df[j])
+  est[[j]]$pvalue <- res$pvalue
   
   rm("d")
   
@@ -212,10 +214,24 @@ fp <- rbind.fill(fp)
 
 
 
-write.table(est, paste0(out_dir, out_name, "est_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
-write.table(fp, paste0(out_dir, out_name, "fp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(est, paste0(out_dir, "/", out_name, "est_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(fp, paste0(out_dir, "/", out_name, "fp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 sessionInfo()
 
 
+
+
+
+
+
+
+
+
+
+
+
+#################################
+# moderation_real_run.R done!
+#################################

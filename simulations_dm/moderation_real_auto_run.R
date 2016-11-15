@@ -26,32 +26,32 @@ library(tools)
 # Arguments for testing the code
 ##############################################################################
 
-# rwd='/home/gosia/multinomial_project/simulations_dm/drimseq/'
-# simulation_script='/home/gosia/R/drimseq_paper/simulations_dm/dm_simulate.R'
-# workers=4
-# sim_name='test_'
-# run='run1'
-# m=100 # Number of genes
-# n=3 # Number of samples
-# param_nm_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/nm_kim_kallisto_lognormal.txt'
-# ### Common dispersion of gene expression
-# param_nd_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/nd_common_kim_kallisto.txt'
-# param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/prop_kim_kallisto.txt'
-# ### Genewise dispersion of feature proportions
-# param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters/kim_kallisto/disp_genewise_kim_kallisto_lognormal.txt'
-
+rwd='/home/gosia/multinomial_project/simulations_dm/drimseq'
+out_dir='moderation_real_auto_v2/run'
+simulation_script='/home/gosia/R/drimseq_paper/simulations_dm/dm_simulate.R'
+workers=5
+sim_name=''
+run='run1'
+m=200
+n=3
+param_pi_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/brooks_kallisto/prop_brooks_kallisto_fcutoff.txt'
+param_gamma_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/brooks_kallisto/disp_genewise_brooks_kallisto_lognormal.txt'
+param_nm_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/brooks_kallisto/nm_brooks_kallisto_lognormal.txt'
+param_nd_path='/home/gosia/multinomial_project/simulations_dm/drimseq/dm_parameters_drimseq_0_3_3/brooks_kallisto/nd_common_brooks_kallisto.txt'
 
 ##############################################################################
 # Read in the arguments
 ##############################################################################
 
-## Read input arguments
+rm(list = ls())
+
 args <- (commandArgs(trailingOnly = TRUE))
 for (i in 1:length(args)) {
   eval(parse(text = args[[i]]))
 }
 
-print(args)
+cat(paste0(args, collapse = "\n"), fill = TRUE)
+
 
 print(rwd)
 print(simulation_script)
@@ -64,7 +64,6 @@ print(param_nm_path)
 print(param_nd_path)
 print(param_pi_path)
 print(param_gamma_path)
-
 
 
 ##############################################################################
@@ -125,7 +124,7 @@ print(nd)
 dir.create(rwd, recursive = T, showWarnings = FALSE)
 setwd(rwd)
 
-out_dir <- "moderation_real_auto/run/"
+
 dir.create(out_dir, recursive = T, showWarnings = FALSE)
 
 out_suffix <- "moderation_real_auto"
@@ -173,11 +172,16 @@ d <- dmFilter(d_org, min_samps_gene_expr = 0, min_samps_feature_expr = 0, min_sa
 
 keep_genes <- names(d@counts)
 
+
+
+
 ### With CR adjustement
 
 d_org <- dmDispersion(d, mean_expression = FALSE, common_dispersion = TRUE, genewise_dispersion = FALSE, disp_adjust = TRUE, disp_mode = "grid", disp_interval = c(0, 1e+05), disp_tol = 1e-08, disp_init = 100, disp_init_weirMoM = TRUE, disp_grid_length = 21, disp_grid_range = c(-10, 10), disp_moderation = "none", disp_prior_df = 1, disp_span = 0.1, prop_mode = "constrOptimG", prop_tol = 1e-12, verbose = FALSE, BPPARAM = BPPARAM)
 
 common_disp <- common_dispersion(d_org)
+
+
 
 ### Dispersion with automated degree of moderation 
 
@@ -189,7 +193,6 @@ disp_prior_df <- d@priorn
 common_dispersion(d) <- common_disp
 
 
-
 est <- data.frame(est = round(genewise_dispersion(d)$genewise_dispersion, 2), true = round(g0[keep_genes], 2), disp_prior_df = disp_prior_df, q = sapply(pi[keep_genes], length), nm = nm[keep_genes])
 
 
@@ -198,11 +201,20 @@ d <- dmTest(d, BPPARAM = BPPARAM)
 res <- results(d)
 
 fp <- data.frame(fp = mean(res$pvalue < 0.05, na.rm = TRUE), disp_prior_df = disp_prior_df)
+est$pvalue <- res$pvalue
 
 
 
-write.table(est, paste0(out_dir, out_name, "est_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
-write.table(fp, paste0(out_dir, out_name, "fp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+
+
+
+write.table(est, paste0(out_dir, "/", out_name, "est_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(fp, paste0(out_dir, "/", out_name, "fp_", out_suffix, "_", run,".txt"), quote = FALSE, sep = "\t", row.names = FALSE)
+
+
+
+
+
 
 
 sessionInfo()

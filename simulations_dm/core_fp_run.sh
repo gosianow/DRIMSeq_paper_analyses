@@ -21,17 +21,17 @@ do
 
   for nm in 100 1000
   do
-    
+
     for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_fcutoff' 'prop_q10_kim_kallisto_fcutoff'
-    do 
-    
+    do
+
     for run in {1..50}
     do
-      
+
     echo "n${n}_nm${nm}_${prop}_${run}"
-    
+
       R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/kim_kallisto/${prop}.txt' param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' out_dir='core_fp' out_suffix='core_fp'" $RCODE/core_fp_run.R $ROUT/core_fp_run_${disp}_n${n}_nm${nm}_${prop}.Rout
-      
+
     done
 
     done
@@ -49,17 +49,17 @@ do
 
   for nm in 100 1000
   do
-    
+
     for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_fcutoff' 'prop_q10_kim_kallisto_fcutoff'
-    do 
-    
+    do
+
     for run in {1..50}
     do
-      
+
     echo "n${n}_nm${nm}_${prop}_${run}"
-    
+
       R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/kim_kallisto/${prop}.txt' param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' out_dir='core_fp' out_suffix='core_fp'" $RCODE/core_fp_run.R $ROUT/core_fp_run_${disp}_n${n}_nm${nm}_${prop}.Rout
-      
+
     done
 
     done
@@ -82,17 +82,17 @@ do
 
   for nm in 100 1000
   do
-    
+
     for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_fcutoff' 'prop_q10_kim_kallisto_fcutoff'
-    do 
-    
+    do
+
     for run in {1..50}
     do
-      
+
     echo "n${n}_nm${nm}_${prop}_${run}"
-    
+
       R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/kim_kallisto/${prop}.txt' param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' out_dir='core_fp_auto_moderation' out_suffix='core_fp'" $RCODE/core_fp_run.R $ROUT/core_fp_run_${disp}_n${n}_nm${nm}_${prop}.Rout
-      
+
     done
 
     done
@@ -110,17 +110,17 @@ do
 
   for nm in 100 1000
   do
-    
+
     for prop in 'prop_q3_uniform' 'prop_q10_uniform' 'prop_q3_kim_kallisto_fcutoff' 'prop_q10_kim_kallisto_fcutoff'
-    do 
-    
+    do
+
     for run in {1..50}
     do
-      
+
     echo "n${n}_nm${nm}_${prop}_${run}"
-    
+
       R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_script='$RCODE/dm_simulate.R' workers=${workers} sim_name='' run='run${run}' m=1000 n=${n} nm=${nm} nd=0 disp_prior_df=0.1 param_pi_path='$DMPARAMS/kim_kallisto/${prop}.txt' param_gamma_path='$DMPARAMS/kim_kallisto/${disp}.txt' out_dir='core_fp_auto_moderation' out_suffix='core_fp'" $RCODE/core_fp_run.R $ROUT/core_fp_run_${disp}_n${n}_nm${nm}_${prop}.Rout
-      
+
     done
 
     done
@@ -234,3 +234,5 @@ tail $ROUT/core_fp_plots_run.Rout
 
 
 
+
+#
