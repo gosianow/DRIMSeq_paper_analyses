@@ -1,7 +1,7 @@
 #!/bin/bash
 ## Define paths to software and reference files
 
-RCODE=/home/gosia/R/drimseq_paper/analysis_kim_adenocarcinoma
+RCODE=/home/gosia/R/drimseq_code/analysis_kim_adenocarcinoma
 RWD=/home/Shared/data/seq/kim_adenocarcinoma
 ROUT=$RWD/Rout
 ANNOTATION=/home/Shared/data/annotation/Human/Ensembl_GRCh37.71
@@ -42,7 +42,7 @@ R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' gtf_path='$ANNOTATION/gt
 ### Index BAM files
 
 for i in 'GSM927308' 'GSM927310' 'GSM927312' 'GSM927314' 'GSM927316' 'GSM927318' 'GSM927309' 'GSM927311' 'GSM927313' 'GSM927315' 'GSM927317' 'GSM927319'
- do 
+ do
   samtools index $RWD/1_reads/tophat_insilicodb/${i}/accepted_hits.bam
 done
 
@@ -61,7 +61,7 @@ R214 CMD BATCH --no-save --no-restore "--args rwd='$RWD' gtf='$ANNOTATION/gtf/Ho
 ### Run DEXSeq
 
 for model in 'model_full' 'model_full_glm' 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
-do 
+do
   for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
   do
 
@@ -80,16 +80,16 @@ done
 
 
 for model in 'model_full' 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
-do 
+do
   for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
   do
-    
+
     echo "${model}_${count_method}"
 
     R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=TRUE results_common=FALSE disp_mode_list='grid' disp_moderation_list='none' disp_prior_df=0.1" $RCODE/kim_drimseq_0_3_3_run.R $ROUT/kim_drimseq_0_3_3_run_${model}_${count_method}_grid_none.Rout
-    
+
     R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='common' disp_prior_df=0.1" $RCODE/kim_drimseq_0_3_3_run.R $ROUT/kim_drimseq_0_3_3_run_${model}_${count_method}_grid_common.Rout
-    
+
     R32 CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=4 count_method='${count_method}' model='${model}' dispersion_common=FALSE results_common=FALSE disp_mode_list='grid' disp_moderation_list='trended' disp_prior_df=1" $RCODE/kim_drimseq_0_3_3_run.R $ROUT/kim_drimseq_0_3_3_run_${model}_${count_method}_grid_trended.Rout
 
   done
@@ -111,14 +111,14 @@ R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' out_dir='$RWD/drimseq
 ### Plot venn diagrams, upset plots; Update dispersion plots; Create a summary file with numbers of positive genes
 
 for model in 'model_full' 'model_full_glm' 'model_null_normal1' 'model_null_normal2' 'model_null_tumor1' 'model_null_tumor2'
-do 
-  for count_method in 'kallistofiltered5' 'htseqprefiltered5' 'kallisto' 'htseq' 
-  do 
-  
+do
+  for count_method in 'kallistofiltered5' 'htseqprefiltered5' 'kallisto' 'htseq'
+  do
+
     echo "${model}_${count_method}"
 
     R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' text_size=18 legend_size=16" $RCODE/kim_drimseq_0_3_3_comparison.R $ROUT/kim_drimseq_0_3_3_comparison_run.Rout
-    
+
     tail $ROUT/kim_drimseq_0_3_3_comparison_run.Rout
 
   done
@@ -134,20 +134,20 @@ R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' comparison_out='drims
 
 ### CAT plots
 
-R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' text_size=18 legend_size=16 strip_size=16" $RCODE/kim_drimseq_0_3_3_comparison_plots.R $ROUT/kim_drimseq_0_3_3_comparison_plots.Rout
+R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD'  count_methods=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') models=c('model_full') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' CAT_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotCAT.R' text_size=18 legend_size=16 strip_size=16" $RCODE/kim_drimseq_0_3_3_comparison_plots.R $ROUT/kim_drimseq_0_3_3_comparison_plots.Rout
 
 
 ### Plot overlaps between models
 
 for ds_method in 'dexseq'
-do 
+do
   for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
-  do 
-  
+  do
+
     echo "${ds_method}_${count_method}"
 
     R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' ds_method='${ds_method}' model_list=c('model_full','model_full_glm') method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/kim_drimseq_0_3_3_comparison_models.R $ROUT/kim_drimseq_0_3_3_comparison_models.Rout
-    
+
     tail $ROUT/kim_drimseq_0_3_3_comparison_models.Rout
 
   done
@@ -162,45 +162,15 @@ done
 
 
 for model in 'model_full'
-do 
+do
   for count_method in 'kallisto' 'htseq' 'kallistofiltered5' 'htseqprefiltered5'
   do
-    
+
     echo "${model}_${count_method}"
 
-    R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_paper/help_functions/dmDS_auto_moderation_diagnostics.R'" $RCODE/kim_drimseq_0_3_3_auto_moderation.R $ROUT/kim_drimseq_0_3_3_auto_moderation_${model}_${count_method}.Rout
+    R32devloc CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=5 count_method='${count_method}' model='${model}' method_out='drimseq_0_3_3' dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_code/help_functions/dmDS_auto_moderation_diagnostics.R'" $RCODE/kim_drimseq_0_3_3_auto_moderation.R $ROUT/kim_drimseq_0_3_3_auto_moderation_${model}_${count_method}.Rout
 
 tail $ROUT/kim_drimseq_0_3_3_auto_moderation_${model}_${count_method}.Rout
 
   done
 done
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

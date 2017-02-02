@@ -1,7 +1,7 @@
 #!/bin/bash
 ## Define paths to software and reference files
 
-RCODE=/home/gosia/R/drimseq_paper/simulations_sim5
+RCODE=/home/gosia/R/drimseq_code/simulations_sim5
 RWD=/home/gosia/multinomial_project/simulations_sim5
 ROUT=$RWD/Rout
 
@@ -126,7 +126,7 @@ do
 
       echo "${simulation}_${count_method}_${filter_method}"
 
-      R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/sim5_drimseq_comparison.R $ROUT/sim5_drimseq_comparison_run.Rout
+      R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' CAT_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotCAT.R' method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison'" $RCODE/sim5_drimseq_comparison.R $ROUT/sim5_drimseq_comparison_run.Rout
 
       tail $RCODE/sim5_drimseq_comparison.R $ROUT/sim5_drimseq_comparison_run.Rout
 
@@ -145,14 +145,14 @@ do
   echo "${filter_method}"
   # All
 
-  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull') count_method_list=c('kallisto','kallistofiltered5','kallistoprefiltered5','htseq','htseqprefiltered5') filter_method='${filter_method}' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' name='_all' legend_nrow=1 pdf_width=18 pdf_height=10 method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' strip_text_size=12 text_size=16 legend_size=18" $RCODE/sim5_drimseq_comparison_combined.R $ROUT/sim5_drimseq_comparison_combined.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull','hsapiens_withde_nonull') count_method_list=c('kallisto','kallistofiltered5','kallistoprefiltered5','htseq','htseqprefiltered5') filter_method='${filter_method}' CAT_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotCAT.R' name='_all' legend_nrow=1 pdf_width=18 pdf_height=10 method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' strip_text_size=12 text_size=16 legend_size=18" $RCODE/sim5_drimseq_comparison_combined.R $ROUT/sim5_drimseq_comparison_combined.Rout
 
   tail -v $ROUT/sim5_drimseq_comparison_combined.Rout
 
 
   # Main
 
-  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull') count_method_list=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') filter_method='${filter_method}' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' name='' legend_nrow=1 pdf_width=14 pdf_height=8 method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' strip_text_size=12 text_size=16 legend_size=15" $RCODE/sim5_drimseq_comparison_combined.R $ROUT/sim5_drimseq_comparison_combined.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' simulation_list=c('drosophila_node_nonull','hsapiens_node_nonull') count_method_list=c('kallisto','kallistofiltered5','htseq','htseqprefiltered5') filter_method='${filter_method}' CAT_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotCAT.R' name='' legend_nrow=1 pdf_width=14 pdf_height=8 method_out='drimseq_0_3_3' comparison_out='drimseq_0_3_3_comparison' strip_text_size=12 text_size=16 legend_size=15" $RCODE/sim5_drimseq_comparison_combined.R $ROUT/sim5_drimseq_comparison_combined.Rout
 
   tail -v $ROUT/sim5_drimseq_comparison_combined.Rout
 
@@ -194,7 +194,7 @@ do
 
       echo "${simulation}_${count_method}_${filter_method}"
 
-      R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' method_out='drimseq_0_3_3' dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_paper/help_functions/dmDS_auto_moderation_diagnostics.R'" $RCODE/sim5_drimseq_auto_moderation.R $ROUT/sim5_drimseq_auto_moderation_${simulation}_${count_method}_${filter_method}.Rout
+      R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' workers=${workers} count_method='${count_method}' simulation='${simulation}' filter_method='${filter_method}' method_out='drimseq_0_3_3' dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_code/help_functions/dmDS_auto_moderation_diagnostics.R'" $RCODE/sim5_drimseq_auto_moderation.R $ROUT/sim5_drimseq_auto_moderation_${simulation}_${count_method}_${filter_method}.Rout
 
       tail $ROUT/sim5_drimseq_auto_moderation_${simulation}_${count_method}_${filter_method}.Rout
 

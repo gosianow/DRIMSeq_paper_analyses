@@ -21,7 +21,7 @@ library(limma)
 # count_method=c('htseq','kallisto')[2]
 # model=c('model_full','model_full_paired','model_null1','model_null2','model_null3')[1]
 # method_out='drimseq_0_3_3'
-# dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_paper/help_functions/dmDS_auto_moderation_diagnostics.R'
+# dmDS_auto_moderation_diagnostics_function_path='/home/gosia/R/drimseq_code/help_functions/dmDS_auto_moderation_diagnostics.R'
 
 ##############################################################################
 # Read in the arguments

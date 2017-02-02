@@ -24,7 +24,7 @@ library(iCOBRA)
 # models=c('model_full','model_full_paired')
 # method_out='drimseq_0_3_3'
 # comparison_out='drimseq_0_3_3_comparison'
-# CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R'
+# CAT_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotCAT.R'
 # text_size=18
 # legend_size=16
 # strip_size=16

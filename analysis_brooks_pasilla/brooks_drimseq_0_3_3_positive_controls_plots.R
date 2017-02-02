@@ -26,7 +26,7 @@ library(iCOBRA)
 # models=c('model_full','model_full_paired','model_full_glm')
 # method_out='drimseq_0_3_3'
 # comparison_out='drimseq_0_3_3_positive_controls'
-# ROC_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotROCx.R'
+# ROC_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotROCx.R'
 # valid_path='5_validation/brooks_validated_genes.txt'
 # strip_text_size=16
 

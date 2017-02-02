@@ -1,7 +1,7 @@
 #!/bin/bash
 ## Define paths to software and reference files
 
-RCODE=/home/gosia/R/drimseq_paper/simulations_dm
+RCODE=/home/gosia/R/drimseq_code/simulations_dm
 RWD=/home/gosia/multinomial_project/simulations_dm/drimseq
 ROUT=$RWD/Rout
 DMPARAMS=$RWD/dm_parameters_drimseq_0_3_3

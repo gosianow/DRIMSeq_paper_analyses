@@ -1,7 +1,7 @@
 #!/bin/bash
 ## Define paths to software and reference files
 
-RCODE=/home/gosia/R/drimseq_paper/analysis_geuvadis
+RCODE=/home/gosia/R/drimseq_code/analysis_geuvadis
 RWD=/home/Shared/data/seq/geuvadis
 ROUT=$RWD/Rout
 
@@ -82,7 +82,7 @@ do
 
   ### CAT (concordance at top) plots for top ranked genes
 
-  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' Overlaps_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_paper/help_functions/dm_plotCAT.R' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
+  R32loc CMD BATCH --no-save --no-restore "--args rwd='$RWD' population='${population}' method_out='${method_out}' comparison_out='${comparison_out}' Overlaps_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotOverlaps.R' CAT_function_path='/home/gosia/R/drimseq_code/help_functions/dm_plotCAT.R' FDR=${FDR}" $RCODE/geuvadis_drimseq_0_3_3_comparison_plots.R $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
   tail $ROUT/geuvadis_drimseq_0_3_3_comparison_plots_${population}.Rout
 
 
